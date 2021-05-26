@@ -85,8 +85,8 @@ function init_model(
     kwargs...,
 )
     rng = MersenneTwister(seed)
-    pr_killed = imfilter(isnan.(food) * pr_killed0, Kernel.gaussian(3))
-    pr_killed = pr_killed / maximum(pr_killed) * pr_killed0
+    pr_killed = imfilter(isnan.(food) * pr_killed0, Kernel.gaussian(2.5))
+    #pr_killed = pr_killed / maximum(pr_killed) * pr_killed0
 
     # PROPERTIES
 
