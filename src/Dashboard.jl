@@ -36,7 +36,7 @@ function parameters_view()
                 ),
                 dbc_label("Kill probability"),
                 dbc_input(;
-                    type="number", id="pr_killed0", value=0.001, step=0.001, max=1, min=0
+                    type="number", id="pr_killed0", value=0.001, step=0.000001, max=1, min=0
                 ),
                 dbc_label("Replications"),
                 dbc_input(; type="number", id="replication", value=50, max=5000, min=1),
