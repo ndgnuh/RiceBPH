@@ -118,16 +118,19 @@ callbacks[:drawmap] = function (app)
         )
         pr_killed = imfilter(isnan.(crop), Kernel.gaussian(3))
         pr_killed = pr_killed / maximum(pr_killed) * pr_killed0
-        dbc_row([#
-            dbc_col() do
-                dcc_graph(; figure=(#
-                    data=[trace2, trace],
-                ))
-            end,
-            dbc_col() do
-                draw_pr_killed(pr_killed)
-            end,
-        ])
+        dbc_row(
+            [#
+                dbc_col("Flower/Total: $(count(isnan, crop))/$(length(crop[:]))"; width=12)
+                dbc_col() do
+                    dcc_graph(; figure=(#
+                        data=[trace2, trace],
+                    ))
+                end
+                dbc_col() do
+                    draw_pr_killed(pr_killed)
+                end
+            ],
+        )
     end
 end
 
