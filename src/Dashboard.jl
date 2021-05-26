@@ -36,7 +36,7 @@ function parameters_view()
                 ),
                 dbc_label("Kill probability"),
                 dbc_input(;
-                    type="number", id="pr_killed0", value=0.001, step=0.000001, max=1, min=0
+                    type="number", id="pr_killed0", value=0.075, step=0.000001, max=1, min=0
                 ),
                 dbc_label("Energy transfer"),
                 dbc_input(;
@@ -67,6 +67,8 @@ function video_paramter()
                 [
                     dbc_label("Number of steps: ")
                     dbc_input(; type="number", id="video-frames", value=2880)
+                    dbc_label("Video seed: ")
+                    dbc_input(; type="number", id="video-seed", value=1)
                     html_br()
                     dbc_cardlink([#
                         html_a("Generate"; id="video-btn", href="javascript:void(0)"),
@@ -204,7 +206,7 @@ callbacks[:run] = function (app)
         ]
 
         bph_layout = (title="BPH", showlegend=false)
-        rice_layout = (title="Rice", showlegend=false)
+        rice_layout = (title="Rice", showlegend=false, ymin=0)
         dbc_row(
             [
                 dbc_col([#
@@ -228,12 +230,13 @@ callbacks[:run_video] = function (app)
         State("nb_bph_init", "value"),
         State("init_position", "value"),
         State("pr_killed0", "value"),
-    ) do ts, frames, map_path, nb_bph_init, init_position, pr_killed0
+        State("video-seed", "value"),
+    ) do ts, frames, map_path, nb_bph_init, init_position, pr_killed0, seed
         if isnothing(ts)
             return "..."
         end
-        seed = 1
-        vname = "BPH-$(nb_bph_init)-$(init_position)-$(pr_killed0)-$(seed).mp4"
+        mapname = split(map_path, r"[/\\]")[end]
+        vname = "BPH-$(mapname)-$(nb_bph_init)-$(init_position)-$(pr_killed0)-$(seed).mp4"
         vpath = normpath(joinpath(@__DIR__, "..", vname))
 
         crop = readdlm(map_path)
