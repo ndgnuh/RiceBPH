@@ -38,6 +38,10 @@ function parameters_view()
                 dbc_input(;
                     type="number", id="pr_killed0", value=0.001, step=0.000001, max=1, min=0
                 ),
+                dbc_label("Energy transfer"),
+                dbc_input(;
+                    type="number", id="energy_transfer", value=0.1, step=0.001, max=1, min=0
+                ),
                 dbc_label("Replications"),
                 dbc_input(; type="number", id="replication", value=50, max=5000, min=1),
             ]),
@@ -160,7 +164,10 @@ callbacks[:run] = function (app)
         State("init_position", "value"),
         State("pr_killed0", "value"),
         State("replication", "value"),
-    ) do ts, map_path, nb_bph_init, init_position, pr_killed0, replication
+        State("energy_transfer", "value"),
+    ) do ts,
+    map_path, nb_bph_init, init_position, pr_killed0, replication,
+    energy_transfer
         if isnothing(ts)
             return "..."
         end
@@ -177,6 +184,7 @@ callbacks[:run] = function (app)
                     nb_bph_init,
                     Symbol(init_position),
                     convert(Float32, pr_killed0);
+                    energy_transfer=energy_transfer,
                     seed=seed,
                 )
                 adf, mdf = Agents.run!(
