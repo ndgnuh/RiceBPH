@@ -13,17 +13,14 @@ using Agents: Agents
 using Base64: Base64
 
 function parameters_view()
-    map_options, map_value = let mapdir = joinpath(@__DIR__, "maps/")
-        labels = readdir(mapdir)
-        values = joinpath.(mapdir, labels)
-        [(value=v, label=l) for (v, l) in zip(values, labels)], first(values)
-    end
     return dbc_card([#
         dbc_cardheader("Parameters"),
         dbc_cardbody([#
             dbc_formgroup([#
                 dbc_label("Map:"),
-                dbc_select(; id="crop", options=map_options, value=map_value),
+                dbc_select(; id="crop", options=[], value=[]),
+                html_a("Refresh"; id="refresh-map", href="javascript:void(0)"),
+                html_br(),
                 dbc_label("Init #BPH"),
                 dbc_input(; type="number", id="nb_bph_init", value=200),
                 dbc_label("Init position"),
@@ -91,6 +88,21 @@ function draw_pr_killed(z)
 end
 
 callbacks = Dict{Symbol,Function}()
+
+callbacks[:refreshmap] = function (app)
+    return callback!(
+        app,#
+        Output("crop", "options"),
+        Output("crop", "value"),
+        Input("refresh-map", "n_clicks"),
+    ) do _
+        map_options, map_value = let mapdir = joinpath(@__DIR__, "maps/")
+            labels = readdir(mapdir)
+            values = joinpath.(mapdir, labels)
+            [(value=v, label=l) for (v, l) in zip(values, labels)], first(values)
+        end
+    end
+end
 
 callbacks[:drawmap] = function (app)
     callback!(
@@ -260,6 +272,7 @@ function simulation_output()
 end
 
 function start(; host="127.0.0.1", port=8000, debug=true)
+	@info "Debug = $debug"
     app = dash(; external_stylesheets=[dbc_themes.BOOTSTRAP])
 
     app.layout = dbc_container(
