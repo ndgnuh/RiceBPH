@@ -213,7 +213,7 @@ callbacks[:run_video] = function (app)
             return "..."
         end
         seed = 1
-        vname = "BPH-$(nb_bph_init)-$(position)-$(pr_killed0)-$(seed).mp4"
+        vname = "BPH-$(nb_bph_init)-$(init_position)-$(pr_killed0)-$(seed).mp4"
         vpath = normpath(joinpath(@__DIR__, "..", vname))
 
         crop = readdlm(map_path)
