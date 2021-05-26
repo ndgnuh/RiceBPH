@@ -259,7 +259,7 @@ function simulation_output()
     )
 end
 
-function start(; host ="localhost", port=8000, debug=true)
+function start(; host="127.0.0.1", port=8000, debug=true)
     app = dash(; external_stylesheets=[dbc_themes.BOOTSTRAP])
 
     app.layout = dbc_container(
