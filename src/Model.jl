@@ -145,7 +145,7 @@ function agent_step!(agent, model)
     agent.energy = agent.energy - (agent.age ≥ model.age_init) * model.energy_consume
 
     # Move conditionally
-    if agent.age ≥ model.age_init && rand(model.rng) ≤ model.pr_move
+    if agent.age ≥ model.age_init && rand(model.rng) ≤ (1 - model.food[x, y])
         walk!(agent, rand(model.rng, model.move_directions), model)
     end
 
@@ -225,7 +225,9 @@ function video(crop, nb_bph_init, position, pr_killed0; seed, kwargs...)
         kwargs...,
     )
 end
-function video(videopath::String, crop, nb_bph_init, position, pr_killed0; seed, frames = 2880, kwargs...)
+function video(
+    videopath::String, crop, nb_bph_init, position, pr_killed0; seed, frames=2880, kwargs...
+)
     model = init_model(crop, nb_bph_init, position, pr_killed0; seed, kwargs...)
     return abm_video(
         videopath,
