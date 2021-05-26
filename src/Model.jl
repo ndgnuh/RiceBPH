@@ -75,14 +75,7 @@ Base.@kwdef mutable struct BPH <: AbstractAgent
     nb_reproduce::Int
 end
 
-function init_model(
-    food::AbstractMatrix,
-    n_bph::Int,
-    init_position::Symbol,
-    pr_killed0::AbstractFloat;
-    seed,
-    kwargs...,
-)
+function init_model(food, n_bph::Int, init_position::Symbol, pr_killed0; seed, kwargs...)
     rng = MersenneTwister(seed)
     pr_killed = imfilter(isnan.(food) * pr_killed0, Kernel.gaussian(2.5))
     #pr_killed = pr_killed / maximum(pr_killed) * pr_killed0
@@ -144,8 +137,9 @@ function agent_step!(agent, model)
     agent.energy = agent.energy - (agent.age ≥ model.age_init) * model.energy_consume
 
     # Move conditionally
-    if agent.age ≥ model.age_init &&
-       (isnan(model.food[x, y]) || rand(model.rng) ≤ (1 - model.food[x, y] / 3 * 2))
+    if agent.age ≥ model.age_init && (
+        isnan(model.food[x, y]) || rand(model.rng) > (model.food[x, y] * 0.6666666666666666)
+    )
         walk!(agent, rand(model.rng, model.move_directions), model)
     end
 
