@@ -203,8 +203,8 @@ callbacks[:run] = function (app)
             end for seed in 1:replication
         ]
 
-        bph_layout = (title="BPH",)
-        rice_layout = (title="Rice",)
+        bph_layout = (title="BPH", showlegend=false)
+        rice_layout = (title="Rice", showlegend=false)
         dbc_row(
             [
                 dbc_col([#
