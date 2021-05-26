@@ -178,11 +178,13 @@ callbacks[:run] = function (app)
         food(model) = count(≥(0.5), model.food)
         adata = [(isbph, count)]
         mdata = [food]
+        crop = readdlm(map_path)
+        total_rice = count(!isnan, crop)
+
         traces = [
             begin
-                crop = readdlm(map_path)
                 model = Model.init_model(
-                    crop,
+                    copy(crop),
                     nb_bph_init,
                     Symbol(init_position),
                     pr_killed0;
@@ -211,20 +213,37 @@ callbacks[:run] = function (app)
                     mode="lines+scatters",
                     name="Seed $seed",
                 )
-                (bph_trace, rice_trace)
+
+                passes = mdf.food[end] < (total_rice ÷ 2)
+                (bph_trace, rice_trace, passes)
             end for seed in 1:replication
         ]
 
+        passes = getindex.(traces, 3)
+        npasses = count(passes)
+        pass_cases = join(findall(passes), ", ")
         bph_layout = (title="BPH", showlegend=false)
         rice_layout = (title="Rice", showlegend=false, ymin=0)
-        dbc_row(
+        html_div(
             [
-                dbc_col([#
-                    dcc_graph(; figure=(data=getindex.(traces, 1), layout=bph_layout)),
-                ])
-                dbc_col([#
-                    dcc_graph(; figure=(data=getindex.(traces, 2), layout=rice_layout)),
-                ])
+                html_b("Số trường hợp qua: $(npasses)/$(replication)")
+                html_br()
+                html_b("Các trường hợp qua: $(pass_cases)")
+                html_br()
+                dbc_row(
+                    [
+                        dbc_col([#
+                            dcc_graph(;
+                                figure=(data=getindex.(traces, 1), layout=bph_layout)
+                            ),
+                        ])
+                        dbc_col([#
+                            dcc_graph(;
+                                figure=(data=getindex.(traces, 2), layout=rice_layout)
+                            ),
+                        ])
+                    ],
+                )
             ],
         )
     end
