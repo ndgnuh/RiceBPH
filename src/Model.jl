@@ -145,7 +145,8 @@ function agent_step!(agent, model)
     agent.energy = agent.energy - (agent.age ≥ model.age_init) * model.energy_consume
 
     # Move conditionally
-    if agent.age ≥ model.age_init && rand(model.rng) ≤ (1 - model.food[x, y])
+    move_pr = isnan(model.food[x, y]) ? 1 : (1 - model.food[x, y])
+    if agent.age ≥ model.age_init && rand(model.rng) ≤ move_pr
         walk!(agent, rand(model.rng, model.move_directions), model)
     end
 
