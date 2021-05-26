@@ -152,9 +152,14 @@ function agent_step!(agent, model)
 
     # Eat conditionally
     if model.food[x, y] > 0 && agent.age ≥ model.age_init
-        transfer = min(model.energy_transfer, model.food[x, y])
+        transfer = min(#
+            model.energy_transfer,
+            model.food[x, y],
+            model.energy_max - agent.energy,
+        )
         model.food[x, y] -= transfer
-        agent.energy = min(agent.energy + transfer, model.energy_max)
+        agent.energy += transfer
+        #min(agent.energy + transfer, model.energy_max)
     end
 
     # Reproduce conditionally
@@ -171,6 +176,7 @@ function agent_step!(agent, model)
             agent = BPH(id, agent.pos, 0.4, 0, 0)
             add_agent_pos!(agent, model)
         end
+        agent.energy -= 0.1
     end
 
     # Die conditionally
