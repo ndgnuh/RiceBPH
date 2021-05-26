@@ -76,7 +76,7 @@ end
 function draw_pr_killed(z)
     trace = (#
         z=collect(eachrow(z)),
-        zmax=1,
+        zmax=maximum(z),
         zmin=0,
         type="heatmap",
         showscale=false,
@@ -272,7 +272,7 @@ function simulation_output()
 end
 
 function start(; host="127.0.0.1", port=8000, debug=true)
-	@info "Debug = $debug"
+    @info "Debug = $debug"
     app = dash(; external_stylesheets=[dbc_themes.BOOTSTRAP])
 
     app.layout = dbc_container(
