@@ -180,12 +180,12 @@ callbacks[:run] = function (app)
         mdata = [food]
         traces = [
             begin
-                crop = readdlm(map_path, Float32)
+                crop = readdlm(map_path)
                 model = Model.init_model(
                     crop,
                     nb_bph_init,
                     Symbol(init_position),
-                    convert(Float32, pr_killed0);
+                    pr_killed0;
                     energy_transfer=energy_transfer,
                     seed=seed,
                 )
@@ -198,9 +198,19 @@ callbacks[:run] = function (app)
                     mdata=mdata,
                 )
                 bph_trace = (
-                    x=adf.step, y=adf.count_isbph, type="scatter", mode="lines+scatters"
+                    x=adf.step,
+                    y=adf.count_isbph,
+                    type="scatter",
+                    mode="lines+scatters",
+                    name="Seed $seed",
                 )
-                rice_trace = (x=mdf.step, y=mdf.food, type="scatter", mode="lines+scatters")
+                rice_trace = (
+                    x=mdf.step,
+                    y=mdf.food,
+                    type="scatter",
+                    mode="lines+scatters",
+                    name="Seed $seed",
+                )
                 (bph_trace, rice_trace)
             end for seed in 1:replication
         ]
