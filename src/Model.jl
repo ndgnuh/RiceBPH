@@ -144,8 +144,11 @@ function agent_step!(agent, model)
     agent.energy = agent.energy - (agent.age ≥ model.age_init) * model.energy_consume
 
     # Move conditionally
-    if agent.age ≥ model.age_init && agent.energy ≥ model.energy_move
-       (isnan(model.food[x, y]) || rand(model.rng) > (model.food[x, y] * 0.5))
+    if (agent.age ≥ model.age_init && agent.energy ≥ model.energy_move) && (
+        isone(agent.energy) ||
+        isnan(model.food[x, y]) ||
+        rand(model.rng) > (model.food[x, y] * 0.5)
+    )
         walk!(agent, rand(model.rng, model.move_directions), model)
     end
 
@@ -218,12 +221,13 @@ function ac(model)
 end
 
 function heatarray(model)
-    return model.food
+    return transpose(model.food)
 end
 
 function video(crop, nb_bph_init, position, pr_killed0; seed, kwargs...)
     return video(
         "BPH-$(nb_bph_init)-$(position)-$(pr_killed0)-$(seed).mp4",
+        crop,
         nb_bph_init,
         position,
         pr_killed0;
