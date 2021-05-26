@@ -76,6 +76,7 @@ Base.@kwdef mutable struct BPH <: AbstractAgent
 end
 
 function init_model(food, n_bph::Int, init_position::Symbol, pr_killed0; seed, kwargs...)
+    food = collect(transpose(food))
     rng = MersenneTwister(seed)
     pr_killed = imfilter(isnan.(food) * pr_killed0, Kernel.gaussian(2.5))
     #pr_killed = pr_killed / maximum(pr_killed) * pr_killed0
@@ -117,9 +118,9 @@ function init_model(food, n_bph::Int, init_position::Symbol, pr_killed0; seed, k
         bph = BPH(; #
             id=nextid(model),
             pos=rand(model.rng, positions),
-            energy=rand(model.rng, 0.35:0.01:0.45),
-            age=rand(model.rng, 0:299),
-            nb_reproduce=rand(model.rng, 0:299),
+            energy=rand(model.rng, 0.4:0.01:0.6),
+            age=rand(model.rng, 0:300),
+            nb_reproduce=0,
         )
         add_agent_pos!(bph, model)
     end
@@ -212,7 +213,9 @@ end
 # Plotting ultilities
 function ac(model)
     return function (agent)
-        if agent.age < model.age_init
+        if isnan(model.food[agent.pos...])
+            return RGBf0(0, 0, 0)
+        elseif agent.age < model.age_init
             RGBf0(0.0f0, 0.0f0, 1.0f0)
         else
             RGBf0(1.0f0, 0.0f0, 0.0f0)
@@ -221,7 +224,7 @@ function ac(model)
 end
 
 function heatarray(model)
-    return transpose(model.food)
+    return model.food
 end
 
 function video(crop, nb_bph_init, position, pr_killed0; seed, kwargs...)
