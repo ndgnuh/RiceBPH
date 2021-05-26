@@ -138,7 +138,7 @@ function agent_step!(agent, model)
 
     # Move conditionally
     if agent.age ≥ model.age_init && (
-        isnan(model.food[x, y]) || rand(model.rng) > (model.food[x, y] * 0.6666666666666666)
+        isnan(model.food[x, y]) || rand(model.rng) > (model.food[x, y] * 0.5)
     )
         walk!(agent, rand(model.rng, model.move_directions), model)
     end
