@@ -34,7 +34,6 @@ const default_parameters = (#
     age_reproduce=504,
     age_old=600,
     age_die=720,
-    pr_move=0.99,
     pr_reproduce=0.07,
     pr_egg_death=0.0025,
     pr_old_death=0.04,
@@ -145,8 +144,8 @@ function agent_step!(agent, model)
     agent.energy = agent.energy - (agent.age ≥ model.age_init) * model.energy_consume
 
     # Move conditionally
-    move_pr = isnan(model.food[x, y]) ? 1 : (1 - model.food[x, y])
-    if agent.age ≥ model.age_init && rand(model.rng) ≤ move_pr
+    if agent.age ≥ model.age_init &&
+       (isnan(model.food[x, y]) || rand(model.rng) ≤ (1 - model.food[x, y]))
         walk!(agent, rand(model.rng, model.move_directions), model)
     end
 
