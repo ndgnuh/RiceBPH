@@ -250,23 +250,8 @@ callbacks[:run_video] = function (app)
             seed=seed,
         )
 
-        video64 = String(Base64.encode.(read(vpath)))
-        video64 = "data:video/mp4;base64,$video64"
         if isfile(vpath)
-            html_div(
-                [
-                    "Video saved in $(vpath)"
-                    html_br()
-                    html_video(
-                        [
-                            html_source(; src=vpath, type="video/mp4")
-                            html_source(; src=video64, type="video/mp4")
-                            "Your browser doesn't support HTML5 video player"
-                        ];
-                        controls=true,
-                    )
-                ],
-            )
+            html_div("Video saved in:\n$(vpath)")
         else
             "Some thing is wrong with video: please check $vpath"
         end
