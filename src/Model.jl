@@ -98,13 +98,13 @@ function init_model(food, n_bph::Int, init_position::Symbol, pr_killed0; seed, k
 
     positions =
         let p = if init_position === :corner
-                Iterators.product(1:10, 1:10)
+                Iterators.product(1:5, 1:5)
             elseif init_position === :random_c1
                 Iterators.product(1:(size(food, 1) ÷ 2), 1:size(food, 1))
             elseif init_position === :random_c2
                 Iterators.product(1:(size(food, 1) ÷ 3), 1:size(food, 1))
             elseif init_position === :border
-                Iterators.product(1:10, 1:size(food, 1))
+                Iterators.product(1:5, 1:size(food, 1))
             else
                 @assert false "Postition not in [:corner, :random_c1, :random_c2, :border]"
             end
