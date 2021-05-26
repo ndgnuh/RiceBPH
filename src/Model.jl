@@ -84,6 +84,9 @@ function init_model(food, n_bph::Int, init_position::Symbol, pr_killed0; seed, k
 
     properties = (#
         food=food,
+        total_bph=n_bph,
+        death_natural=0,
+        death_predator=0,
         pr_killed=pr_killed,
         merge(default_parameters, kwargs)...,
     )
@@ -125,6 +128,10 @@ function init_model(food, n_bph::Int, init_position::Symbol, pr_killed0; seed, k
     return model
 end
 
+function init_model(; food, n_bph::Int, init_position, pr_killed0, seed, kwargs...)
+    return init_model(food, n_bph, Symbol(init_position), pr_killed; seed=seed, kwargs...)
+end
+
 # Agents behaviors
 function agent_step!(agent, model)
     # position
@@ -137,9 +144,8 @@ function agent_step!(agent, model)
     agent.energy = agent.energy - (agent.age ≥ model.age_init) * model.energy_consume
 
     # Move conditionally
-    if agent.age ≥ model.age_init && (
-        isnan(model.food[x, y]) || rand(model.rng) > (model.food[x, y] * 0.5)
-    )
+    if agent.age ≥ model.age_init && agent.energy ≥ model.energy_move
+       (isnan(model.food[x, y]) || rand(model.rng) > (model.food[x, y] * 0.5))
         walk!(agent, rand(model.rng, model.move_directions), model)
     end
 
@@ -225,6 +231,7 @@ function video(crop, nb_bph_init, position, pr_killed0; seed, kwargs...)
         kwargs...,
     )
 end
+
 function video(
     videopath::String, crop, nb_bph_init, position, pr_killed0; seed, frames=2880, kwargs...
 )
