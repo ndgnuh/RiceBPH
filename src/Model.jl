@@ -234,7 +234,7 @@ function video(crop, nb_bph_init, position, pr_killed0; seed, kwargs...)
         nb_bph_init,
         position,
         pr_killed0;
-        seed,
+        seed=seed,
         kwargs...,
     )
 end
@@ -242,7 +242,8 @@ end
 function video(
     videopath::String, crop, nb_bph_init, position, pr_killed0; seed, frames=2880, kwargs...
 )
-    model = init_model(crop, nb_bph_init, position, pr_killed0; seed, kwargs...)
+    @info "Video seed: $seed"
+    model = init_model(crop, nb_bph_init, position, pr_killed0; seed=seed, kwargs...)
     return abm_video(
         videopath,
         model,

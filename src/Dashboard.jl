@@ -11,6 +11,15 @@ using PlotlyJS
 using ImageFiltering
 using Agents: Agents
 using Base64: Base64
+using JSON3
+using DataFrames
+
+heatmapkwargs = (zauto=true, transpose=true, showscale=false)
+
+function figure(p; kwargs...)
+    figure = JSON3.read(json(p), NamedTuple{(:data, :layout, :frames)})
+    return dcc_graph(; figure=figure, kwargs...)
+end
 
 function parameters_view()
     return dbc_card([#
@@ -38,10 +47,6 @@ function parameters_view()
                 dbc_input(;
                     type="number", id="pr_killed0", value=0.075, step=0.000001, max=1, min=0
                 ),
-                dbc_label("Energy transfer"),
-                dbc_input(;
-                    type="number", id="energy_transfer", value=0.1, step=0.001, max=1, min=0
-                ),
                 dbc_label("Replications"),
                 dbc_input(; type="number", id="replication", value=50, max=5000, min=1),
             ]),
@@ -55,7 +60,7 @@ end
 function map_view()
     return dbc_card([#
         dbc_cardheader("Map preview"),
-        dbc_cardbody([]; id="map-pv"),
+        dcc_loading(dbc_cardbody([]; id="map-pv")),
     ])
 end
 
@@ -77,20 +82,6 @@ function video_paramter()
             )
         ],
     )
-end
-
-function draw_pr_killed(z)
-    trace = (#
-        z=collect(eachrow(z)),
-        zmax=maximum(z),
-        zmin=0,
-        type="heatmap",
-        showscale=false,
-        colorscale=[(i, "rgba(1.0, 0.0, 0.0, $i)") for i in 0:0.1:1],
-    )
-    return dcc_graph(; figure=(#
-        data=[trace],
-    ))
 end
 
 callbacks = Dict{Symbol,Function}()
@@ -118,41 +109,32 @@ callbacks[:drawmap] = function (app)
         Input("pr_killed0", "value"),
     ) do mappath, pr_killed0
         crop = readdlm(mappath)
-        trace = (#
-            z=collect(eachrow(crop)),
-            zmin=0,
-            zmax=1,
-            type="heatmap",
-            showscale=false,
+        trace = heatmap(;#
+            z=crop,
+            heatmapkwargs...,
             colorscale=[(i, "rgba(0.0, 1.0, 0.0, $i)") for i in 0:0.1:1],
         )
-        trace2 = (#
-            z=collect(eachrow(isnan.(crop) * 1.0)),
-            zmax=1,
-            zmin=0,
-            type="heatmap",
-            showscale=false,
+        trace2 = heatmap(;#
+            z=isnan.(crop) * 1.0,
             colorscale=[(i, "rgba(1.0, 1.0, 0.0, 0.5)") for i in 0:0.1:1],
+            heatmapkwargs...,
         )
         pr_killed = imfilter(isnan.(crop), Kernel.gaussian(3))
         pr_killed = pr_killed / maximum(pr_killed) * pr_killed0
-        html_div(
-            [#
-                dbc_col("Flower/Total: $(count(isnan, crop))/$(length(crop[:]))"; width=12)
-                dbc_row(
-                    [#
-                        dbc_col() do
-                            dcc_graph(; figure=(#
-                                data=[trace2, trace],
-                            ))
-                        end
-                        dbc_col() do
-                            draw_pr_killed(pr_killed)
-                        end
-                    ],
-                )
-            ],
+        trace3 = heatmap(;
+            z=pr_killed,
+            colorscale=[(i, "rgba(1.0, 0.0, 0.0, $i)") for i in 0:0.1:1],
+            heatmapkwargs...,
         )
+        surface_flower = count(isnan, crop)
+        surface_all = length(crop[:])
+        surface_flower_pc = round(surface_flower / surface_all * 100; digits=2)
+        layout = Layout(;
+            title="<b>Crop size: $(size(crop)). Flower/Total: $(surface_flower)/$(surface_all) ($surface_flower_pc%)</b>",
+        )
+        fig = hcat(plot([trace2, trace]), plot([trace3]))
+        relayout!(fig.plot, layout)
+        figure(fig)
     end
 end
 
@@ -166,86 +148,78 @@ callbacks[:run] = function (app)
         State("init_position", "value"),
         State("pr_killed0", "value"),
         State("replication", "value"),
-        State("energy_transfer", "value"),
-    ) do ts,
-    map_path, nb_bph_init, init_position, pr_killed0, replication,
-    energy_transfer
+    ) do ts, map_path, nb_bph_init, init_position, pr_killed0, replication
         if isnothing(ts)
             return "..."
         end
+        adata = let bph(x) = true
+            [(bph, count)]
+        end
+        mdata = let rice(model) = count(≥(0.5), model.food)
+            [rice]
+        end
+
+        function run_simulation(seed)
+            crop = readdlm(map_path)
+            init_position = Symbol(init_position)
+            model = Model.init_model(
+                crop, nb_bph_init, init_position, pr_killed0; seed=seed
+            )
+            adf, mdf = Agents.run!(
+                model,
+                Model.agent_step!,
+                Model.model_step!,
+                2880;
+                adata=adata,
+                mdata=mdata,
+            )
+            df = innerjoin(adf, mdf; on=:step)
+            return (seed, df)
+        end
         # Run the model
-        isbph(x) = true
-        food(model) = count(≥(0.5), model.food)
-        adata = [(isbph, count)]
-        mdata = [food]
-        crop = readdlm(map_path)
-        total_rice = count(!isnan, crop)
 
-        traces = [
-            begin
-                model = Model.init_model(
-                    copy(crop),
-                    nb_bph_init,
-                    Symbol(init_position),
-                    pr_killed0;
-                    energy_transfer=energy_transfer,
-                    seed=seed,
-                )
-                adf, mdf = Agents.run!(
-                    model,
-                    Model.agent_step!,
-                    Model.model_step!,
-                    2880;
-                    adata=adata,
-                    mdata=mdata,
-                )
-                bph_trace = (
-                    x=adf.step,
-                    y=adf.count_isbph,
-                    type="scatter",
-                    mode="lines+scatters",
-                    name="Seed $seed",
-                )
-                rice_trace = (
-                    x=mdf.step,
-                    y=mdf.food,
-                    type="scatter",
-                    mode="lines+scatters",
-                    name="Seed $seed",
-                )
+        total_rice = count(!isnan, readdlm(map_path))
+        data = [run_simulation(sd) for sd in 1:replication]
+        passes = [seed for (seed, df) in data if df.rice[end] < total_rice ÷ 2]
+        npasses = length(passes)
 
-                passes = mdf.food[end] < (total_rice ÷ 2)
-                (bph_trace, rice_trace, passes)
-            end for seed in 1:replication
+        # Data traces
+        bph_traces = [
+            scatter(;#
+                x=df.step,
+                y=df.count_bph,
+                name="Seed $(seed)",
+            ) for (seed, df) in data
         ]
+        rice_traces = [
+            scatter(;#
+                x=df.step,
+                y=df.rice,
+                name="Seed $(seed)",
+            ) for (seed, df) in data
+        ]
+        bph_layout = Layout(; title="<b>BPH</b>")
+        rice_layout = Layout(; title="<b>Rice ≥ 50%</b>")
+        plt = hcat(plot(bph_traces, bph_layout), plot(rice_traces, rice_layout))
 
-        passes = getindex.(traces, 3)
-        npasses = count(passes)
-        pass_cases = join(findall(passes), ", ")
-        bph_layout = (title="BPH", showlegend=false)
-        rice_layout = (title="Rice", showlegend=false, ymin=0)
-        html_div(
-            [
-                html_b("Số trường hợp qua: $(npasses)/$(replication)")
-                html_br()
-                html_b("Các trường hợp qua: $(pass_cases)")
-                html_br()
-                dbc_row(
-                    [
-                        dbc_col([#
-                            dcc_graph(;
-                                figure=(data=getindex.(traces, 1), layout=bph_layout)
-                            ),
-                        ])
-                        dbc_col([#
-                            dcc_graph(;
-                                figure=(data=getindex.(traces, 2), layout=rice_layout)
-                            ),
-                        ])
-                    ],
-                )
-            ],
-        )
+        # Plot layout
+        mapname = split(map_path, r"[\\/]")[end]
+        str_passed = if npasses === 0
+            "(No passed cases)"
+        else
+            """
+            Passed cases: $(join(passes, ", ")). ($(npasses)/$(replication))
+            """
+        end
+        title = """
+        <b>Map: $(mapname), #BPH: $(nb_bph_init),
+        pos: $(init_position), pr_killed: $(pr_killed0),
+        $str_passed
+        </b>
+        """
+        relayout!(plt.plot, Layout(; showlegend=false, ymin=0, title=title))
+
+        return figure(plt)
     end
 end
 
@@ -291,8 +265,8 @@ function simulation_output()
     return dbc_card(
         [
             dbc_cardheader("Output")
-            dbc_cardbody(["Output"]; id="simulation-output")
-        ]
+            dcc_loading(dbc_cardbody(["Output"]; id="simulation-output"))
+        ],
     )
 end
 
@@ -319,8 +293,8 @@ function start(; host="127.0.0.1", port=8000, debug=true)
                         dbc_card(
                             [
                                 dbc_cardheader("Video")
-                                dbc_cardbody(; id="video-output")
-                            ]
+                                dcc_loading(dbc_cardbody(; id="video-output"))
+                            ],
                         );
                         width=9,
                     )
