@@ -13,6 +13,15 @@ using Agents: Agents
 using JSON3
 using DataFrames
 
+function readmapfile(filepath)
+    content = read(filepath, String)
+    if occursin(",", content)
+        readdlm(filepath, ',')
+    else
+        readdlm(filepath)
+    end
+end
+
 heatmapkwargs = (zauto=true, transpose=true, showscale=false)
 
 function figure(p; kwargs...)
@@ -107,7 +116,7 @@ callbacks[:drawmap] = function (app)
         Input("crop", "value"),
         Input("pr_killed0", "value"),
     ) do mappath, pr_killed0
-        crop = readdlm(mappath)
+        crop = readmapfile(mappath)
         trace = heatmap(;#
             z=crop,
             heatmapkwargs...,
@@ -159,7 +168,7 @@ callbacks[:run] = function (app)
         end
 
         function run_simulation(seed)
-            crop = readdlm(map_path)
+            crop = readmapfile(map_path)
             init_position = Symbol(init_position)
             model = Model.init_model(
                 crop, nb_bph_init, init_position, pr_killed0; seed=seed
@@ -177,7 +186,7 @@ callbacks[:run] = function (app)
         end
         # Run the model
 
-        total_rice = count(!isnan, readdlm(map_path))
+        total_rice = count(!isnan, readmapfile(map_path))
         data = [run_simulation(sd) for sd in 1:replication]
         passes = [seed for (seed, df) in data if df.rice[end] < total_rice ÷ 2]
         npasses = length(passes)
@@ -246,7 +255,7 @@ callbacks[:run_video] = function (app)
         vname = "BPH-$(mapname)-$(nb_bph_init)-$(init_position)-$(pr_killed0)-$(seed).mp4"
         vpath = normpath(joinpath(@__DIR__, "..", vname))
 
-        crop = readdlm(map_path)
+        crop = readmapfile(map_path)
         Model.video(
             vpath,
             crop,
