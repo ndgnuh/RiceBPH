@@ -10,7 +10,6 @@ using DelimitedFiles
 using PlotlyJS
 using ImageFiltering
 using Agents: Agents
-using Base64: Base64
 using JSON3
 using DataFrames
 
