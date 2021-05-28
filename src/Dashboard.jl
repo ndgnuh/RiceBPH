@@ -207,9 +207,14 @@ callbacks[:run] = function (app)
         str_passed = if npasses === 0
             "(No passed cases)"
         else
+            aux = """
+            Passed cases: $(npasses)/$(replication)
             """
-            Passed cases: $(join(passes, ", ")). ($(npasses)/$(replication))
-            """
+            if npasses ≤ 3
+                aux = aux * "(" * join(passes, ", ") * ")"
+            else
+                aux
+            end
         end
         title = """
         <b>Map: $(mapname), #BPH: $(nb_bph_init),
