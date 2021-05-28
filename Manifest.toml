@@ -19,7 +19,9 @@ version = "3.3.0"
 
 [[Agents]]
 deps = ["DataFrames", "DataStructures", "Distributed", "GraphRecipes", "LightGraphs", "LinearAlgebra", "OpenStreetMapX", "ProgressMeter", "Random", "RecipesBase", "Requires", "StatsBase"]
-git-tree-sha1 = "ee5459df71f05c51c580fd0248cf4f663f78be3b"
+git-tree-sha1 = "8523db452bc259aa31f0e31b8f2747bcf160e5af"
+repo-rev = "master"
+repo-url = "https://github.com/ndgnuh/Agents.jl"
 uuid = "46ada45e-f475-11e8-01d0-f70cc89e6671"
 version = "4.2.4"
 
