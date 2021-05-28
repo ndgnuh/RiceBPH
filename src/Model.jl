@@ -95,7 +95,7 @@ function init_model(food, n_bph::Int, init_position::Symbol, pr_killed0; seed, k
     # MODEL
 
     space = GridSpace(size(food); periodic=false)
-    scheduler = Schedulers.randomly
+    scheduler = Schedulers.fastest
     model = ABM(BPH, space; scheduler=scheduler, properties=properties, rng=rng)
 
     # AGENTS CREATION
