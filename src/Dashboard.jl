@@ -162,7 +162,7 @@ callbacks[:run] = function (app, state)
         if isnothing(ts)
             return ""
         end
-        state["simulation-output-progress"] = 0
+        #state["simulation-output-progress"] = 0
         adata = let bph(x) = true
             [(bph, count)]
         end
@@ -185,7 +185,7 @@ callbacks[:run] = function (app, state)
                 mdata=mdata,
             )
             df = innerjoin(adf, mdf; on=:step)
-            state["simulation-output-progress"] = round(seed / replication * 100)
+            #state["simulation-output-progress"] = round(seed / replication * 100)
             return (seed, df)
         end
         # Run the model
@@ -237,12 +237,13 @@ callbacks[:run] = function (app, state)
         relayout!(plt.plot, Layout(; showlegend=false, ymin=0, title=title))
 
         # disable counter
-        state["simulation-output-progress"] = -1
+        #state["simulation-output-progress"] = -1
         return figure(plt)
     end
 end
 
-callbacks[:simulation_output_progress] = function (app, state)
+#callbacks[:simulation_output_progress]
+_ = function (app, state)
     return callback!(
         app,
         Output("simulation-output-progress", "value"),
@@ -310,11 +311,11 @@ function simulation_output()
         [
             dbc_cardheader("Output")
             dbc_cardbody([#
-                dcc_interval(; id="simulation-output-watcher"),
-                dbc_progress(;
-                    id="simulation-output-progress", value=25, striped=true, animated=true
-                ),
-                html_div(""; id="simulation-output"),
+                #dcc_interval(; id="simulation-output-watcher"),
+                #dbc_progress(;
+                #    id="simulation-output-progress", value=25, striped=true, animated=true
+                #),
+                dcc_loading(html_div(""; id="simulation-output")),
             ],)
         ],
     )
