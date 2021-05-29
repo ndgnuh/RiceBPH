@@ -89,6 +89,7 @@ function init_model(food, n_bph::Int, init_position::Symbol, pr_killed0; seed, k
         death_natural=0,
         death_predator=0,
         pr_killed=pr_killed,
+        pr_killed_positions=convert.(Tuple, findall(!iszero, pr_killed)),
         merge(default_parameters, kwargs)...,
     )
 
@@ -185,7 +186,6 @@ function agent_step!(agent, model)
     # Die conditionally
     if (agent.energy ≤ 0) || # Exausted
        (agent.age ≥ model.age_die) || # Too old
-       (rand(model.rng) ≤ model.pr_killed[x, y]) || # Bad luck, caught by predator
        (
            model.age_die > agent.age ≥ model.age_old && # Old
            rand(model.rng) ≤ model.pr_old_death # And weak
@@ -208,6 +208,17 @@ function model_step!(model)
     # Dead rice receive no energy
     alive = @.(model.food > 0)
     @. model.food = min(model.food + model.food * 0.008f0 * alive, 1.0f0)
+
+    # Randomly select a bph at every flower
+    for pos in model.pr_killed_positions
+        pos = Tuple(pos)
+        if isempty(pos, model)
+            continue
+        elseif rand(model.rng) < model.pr_killed[pos...]
+            agents_to_kill = collect(agents_in_position(pos, model))
+            kill_agent!(rand(model.rng, agents_to_kill), model)
+        end
+    end
 end
 
 # Plotting ultilities
