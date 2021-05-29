@@ -222,11 +222,7 @@ callbacks[:run] = function (app, state)
             aux = """
             Passed cases: $(npasses)/$(replication)
             """
-            if npasses ≤ 10
-                aux = aux * "(" * join(passes, ", ") * ")"
-            else
-                aux
-            end
+            aux = aux * "(" * join(Iterators.take(passes, 10), ", ") * ")"
         end
         title = """
         <b>Map: $(mapname), #BPH: $(nb_bph_init),
