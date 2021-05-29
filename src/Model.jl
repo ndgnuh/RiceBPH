@@ -218,7 +218,7 @@ function model_step!(model)
             agents_to_kill = collect(agents_in_position(pos, model))
             n = length(agents_to_kill)
             perm = randperm(model.rng, n)
-            for i in Iterators.take(perm, rand(model.rng, 1:n))
+            for i in Iterators.take(perm, rand(model.rng, 1:3))
                 @inbounds kill_agent!(agents_to_kill[i], model)
             end
         end
