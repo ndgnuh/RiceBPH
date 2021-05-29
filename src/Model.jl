@@ -6,6 +6,7 @@ using DataFrames
 using ImageFiltering
 using CairoMakie: RGBf0, RGBAf0
 using InteractiveDynamics
+using DelimitedFiles
 
 name = "Rice-Brown Plant Hopper"
 
@@ -308,11 +309,21 @@ function video(
         ac=ac(model),
         heatarray=heatarray,
         heatkwargs=(
-            nan_color=nan_color = RGBAf0(1.0, 1.0, 0.0, 0.5),
+            nan_color=RGBAf0(1.0, 1.0, 0.0, 0.5),
             colormap=[RGBAf0(0, 1.0, 0, i) for i in 0:0.01:1],
             colorrange=(0, 1),
         ),
     )
+end
+
+# Data collection
+
+adata, mdata = let food(model) = count(model.food .≥ 0.5), bph(agent) = agent.energy > 0
+    [(bph, count)], [food]
+end
+
+post_process = function(adf, mdf)
+	rightjoin(adf, mdf; on=:step)
 end
 
 # END MODULE
