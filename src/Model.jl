@@ -75,17 +75,20 @@ Base.@kwdef mutable struct BPH <: AbstractAgent
     nb_reproduce::Int
 end
 
-function init_model(food, n_bph::Int, init_position::Symbol, pr_killed0; seed, kwargs...)
-    food = collect(transpose(food))
+function init_model(envmap, nb_bph_init, init_position, pr_killed; seed, kwargs...)
+    return init_model(; envmap, nb_bph_init, init_position, pr_killed, seed, kwargs...)
+end
+function init_model(; envmap, nb_bph_init::Int, init_position, pr_killed, seed, kwargs...)
     rng = MersenneTwister(seed)
-    pr_killed = imfilter(isnan.(food) * pr_killed0, Kernel.gaussian(2.5))
-    #pr_killed = pr_killed / maximum(pr_killed) * pr_killed0
+    food = collect(transpose(init_envmap(envmap)))
+    pr_killed = init_pr_killed(pr_killed, food)
+    init_position = Symbol(init_position)
 
     # PROPERTIES
 
     properties = (#
         food=food,
-        total_bph=n_bph,
+        total_bph=nb_bph_init,
         death_natural=0,
         death_predator=0,
         pr_killed=pr_killed,
@@ -115,7 +118,7 @@ function init_model(food, n_bph::Int, init_position::Symbol, pr_killed0; seed, k
             end
             filter(pos -> !isnan(food[pos...]), collect(p))
         end
-    for _ in 1:n_bph
+    for _ in 1:nb_bph_init
         bph = BPH(; #
             id=nextid(model),
             pos=rand(model.rng, positions),
@@ -130,8 +133,44 @@ function init_model(food, n_bph::Int, init_position::Symbol, pr_killed0; seed, k
     return model
 end
 
-function init_model(; food, n_bph::Int, init_position, pr_killed0, seed, kwargs...)
-    return init_model(food, n_bph, Symbol(init_position), pr_killed; seed=seed, kwargs...)
+"""
+	init_envmap(filepath::abstractstring)
+
+Return the food map
+"""
+function init_envmap(filepath::AbstractString)
+    content = read(filepath, String)
+    if occursin(",", content)
+        readdlm(filepath, ',')
+    else
+        readdlm(filepath)
+    end
+end
+
+"""
+	init_envmap(envmap::AbstractMatrix)
+
+Guard function
+"""
+function init_envmap(envmap::AbstractMatrix)
+    return envmap
+end
+
+"""
+	init_pr_killed(pr_killed::Real, food; gauss=2.5)
+
+Return matrix of death pr. Obtained by using gauss kernel to filter the food matrix.
+"""
+function init_pr_killed(pr_killed::Real, food; gauss=2.5)
+    return imfilter(isnan.(food) * pr_killed, Kernel.gaussian(gauss))
+end
+"""
+	init_pr_killed(pr_killed::AbstractMatrix)
+
+Identity, guard function
+"""
+function init_pr_killed(pr_killed::AbstractMatrix, args...)
+    return pr_killed
 end
 
 # Agents behaviors
