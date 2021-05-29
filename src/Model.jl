@@ -216,7 +216,11 @@ function model_step!(model)
             continue
         elseif rand(model.rng) < model.pr_killed[pos...]
             agents_to_kill = collect(agents_in_position(pos, model))
-            kill_agent!(rand(model.rng, agents_to_kill), model)
+            n = length(agents_to_kill)
+            perm = randperm(model.rng, n)
+            for i in Iterators.take(perm, rand(model.rng, 1:n))
+                @inbounds kill_agent!(agents_to_kill[i], model)
+            end
         end
     end
 end
