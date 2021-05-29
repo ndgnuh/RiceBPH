@@ -222,7 +222,7 @@ callbacks[:run] = function (app, state)
             aux = """
             Passed cases: $(npasses)/$(replication)
             """
-            if npasses ≤ 3
+            if npasses ≤ 10
                 aux = aux * "(" * join(passes, ", ") * ")"
             else
                 aux
