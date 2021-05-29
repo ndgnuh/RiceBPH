@@ -41,13 +41,6 @@ function replication(
         adf, mdf = run!(model, agent_step!, model_step!, steps; adata=adata, mdata=mdata)
         seed => post_process(adf, mdf)
     end
-    filename = generate_filename(; kwargs...)
-    jldopen(filename) do f
-        f["metadata"] = kwargs
-        for (seed, df) in data
-            f[seed] = df
-        end
-    end
     return data
 end
 
