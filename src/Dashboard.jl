@@ -13,6 +13,8 @@ using Agents: Agents
 using JSON3
 using DataFrames
 
+state = Dict()
+
 function readmapfile(filepath)
     content = read(filepath, String)
     if occursin(",", content)
@@ -94,7 +96,7 @@ end
 
 callbacks = Dict{Symbol,Function}()
 
-callbacks[:refreshmap] = function (app)
+callbacks[:refreshmap] = function (app, state)
     return callback!(
         app,#
         Output("crop", "options"),
@@ -109,7 +111,7 @@ callbacks[:refreshmap] = function (app)
     end
 end
 
-callbacks[:drawmap] = function (app)
+callbacks[:drawmap] = function (app, state)
     callback!(
         app,
         Output("map-pv", "children"),
@@ -146,7 +148,7 @@ callbacks[:drawmap] = function (app)
     end
 end
 
-callbacks[:run] = function (app)
+callbacks[:run] = function (app, state)
     callback!(
         app,
         Output("simulation-output", "children"),
@@ -158,8 +160,9 @@ callbacks[:run] = function (app)
         State("replication", "value"),
     ) do ts, map_path, nb_bph_init, init_position, pr_killed0, replication
         if isnothing(ts)
-            return "..."
+            return ""
         end
+        state["simulation-output-progress"] = 0
         adata = let bph(x) = true
             [(bph, count)]
         end
@@ -182,6 +185,7 @@ callbacks[:run] = function (app)
                 mdata=mdata,
             )
             df = innerjoin(adf, mdf; on=:step)
+            state["simulation-output-progress"] = round(seed / replication * 100)
             return (seed, df)
         end
         # Run the model
@@ -232,11 +236,38 @@ callbacks[:run] = function (app)
         """
         relayout!(plt.plot, Layout(; showlegend=false, ymin=0, title=title))
 
+        # disable counter
+        state["simulation-output-progress"] = -1
         return figure(plt)
     end
 end
 
-callbacks[:run_video] = function (app)
+callbacks[:simulation_output_progress] = function (app, state)
+    return callback!(
+        app,
+        Output("simulation-output-progress", "value"),
+        Output("simulation-output-progress", "children"),
+        Output("simulation-output-progress", "style"),
+        Output("simulation-output-watcher", "disabled"),
+        Input("simulation-output-watcher", "n_intervals"),
+        Input("run-btn", "n_clicks"),
+    ) do nintervals, run_btn_clicks
+        run_btn_clicks_prev = get(state, "run-btn-clicks", 0)
+        run_btn_clicks = something(run_btn_clicks, 0)
+        value = get(state, "simulation-output-progress", -1)
+        value_str = "$(value)%"
+        isloading = 100 > value ≥ 0 || run_btn_clicks > run_btn_clicks_prev
+        state["run-btn-clicks"] = run_btn_clicks
+        style = if isloading
+            Dict()
+        else
+            Dict("display" => "none")
+        end
+        return (value, value_str, style, !isloading)
+    end
+end
+
+callbacks[:run_video] = function (app, state)
     return callback!(
         app,
         Output("video-output", "children"),
@@ -249,7 +280,7 @@ callbacks[:run_video] = function (app)
         State("video-seed", "value"),
     ) do ts, frames, map_path, nb_bph_init, init_position, pr_killed0, seed
         if isnothing(ts)
-            return "..."
+            return ""
         end
         mapname = split(map_path, r"[/\\]")[end]
         vname = "BPH-$(mapname)-$(nb_bph_init)-$(init_position)-$(pr_killed0)-$(seed).mp4"
@@ -278,7 +309,13 @@ function simulation_output()
     return dbc_card(
         [
             dbc_cardheader("Output")
-            dcc_loading(dbc_cardbody(["Output"]; id="simulation-output"))
+            dbc_cardbody([#
+                dcc_interval(; id="simulation-output-watcher"),
+                dbc_progress(;
+                    id="simulation-output-progress", value=25, striped=true, animated=true
+                ),
+                html_div(""; id="simulation-output"),
+            ],)
         ],
     )
 end
@@ -306,8 +343,8 @@ function start(; host="127.0.0.1", port=8000, debug=true)
                         dbc_card(
                             [
                                 dbc_cardheader("Video")
-                                dcc_loading(dbc_cardbody(; id="video-output"))
-                            ],
+                                (dbc_cardbody(; id="video-output"))
+                            ]
                         );
                         width=9,
                     )
@@ -318,7 +355,7 @@ function start(; host="127.0.0.1", port=8000, debug=true)
     )
 
     for (k, f!) in callbacks
-        f!(app)
+        f!(app, state)
     end
 
     return run_server(app, host, port; debug=debug)
