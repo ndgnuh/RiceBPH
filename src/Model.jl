@@ -87,6 +87,7 @@ function init_model(; envmap, nb_bph_init::Int, init_position, pr_killed, seed, 
 
     # PROPERTIES
 
+    params = merge(default_parameters, kwargs)
     properties = (#
         food=food,
         total_bph=nb_bph_init,
@@ -94,7 +95,8 @@ function init_model(; envmap, nb_bph_init::Int, init_position, pr_killed, seed, 
         death_predator=0,
         pr_killed=pr_killed,
         pr_killed_positions=convert.(Tuple, findall(!iszero, pr_killed)),
-        merge(default_parameters, kwargs)...,
+        energy_full=1.0 - params.energy_transfer,
+        params...,
     )
 
     # MODEL
@@ -187,7 +189,7 @@ function agent_step!(agent, model)
 
     # Move conditionally
     if (agent.age ≥ model.age_init && agent.energy ≥ model.energy_move) && (
-        isone(agent.energy) ||
+        agent.energy ≥ model.energy_full ||
         isnan(model.food[x, y]) ||
         rand(model.rng) > (model.food[x, y] * 0.5)
     )
@@ -322,8 +324,8 @@ adata, mdata = let food(model) = count(model.food .≥ 0.5), bph(agent) = agent.
     [(bph, count)], [food]
 end
 
-post_process = function(adf, mdf)
-	rightjoin(adf, mdf; on=:step)
+post_process = function (adf, mdf)
+    return rightjoin(adf, mdf; on=:step)
 end
 
 # END MODULE
