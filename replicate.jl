@@ -75,6 +75,7 @@ for param in params
         @spawnat pr GC.gc()
     end
     for (seed, df) in data
+        key = string(seed)
         delete!(io, key)
         io[key] = df
     end
