@@ -67,18 +67,20 @@ for param in params
         @error "$filepath exists, and overwrite is false"
         exit(-1)
     end
-    io = jldopen(filepath, "a")
     replication = config[:replication]
     @info "Running $filename"
     data = @time GradProject.replication(param, replication)
-    for pr in workers()
-        @spawnat pr GC.gc()
+    jldopen(filepath, "a") do f
+        if !haskey(f, "metadata")
+            f["metadata"] = param
+        end
+        for (seed, df) in data
+            key = string(seed)
+            if haskey(f, key)
+                @warn "$key already exists, skipping"
+            else
+                f[key] = df
+            end
+        end
     end
-    for (seed, df) in data
-        key = string(seed)
-        delete!(io, key)
-        io[key] = df
-    end
-    close(io)
-    GC.gc()
 end
