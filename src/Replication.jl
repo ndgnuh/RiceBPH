@@ -39,9 +39,6 @@ function replication(
     delete!(kwargs, :seed)
     models = ([seed => init_model(; seed=seed + seed_offset, kwargs...) for seed in 1:n])
     data = pmap(models) do (seed, model)
-        if iszero(seed % 200) # collect garbage every n replication
-            GC.gc()
-        end
         adf, mdf = run!(model, agent_step!, model_step!, steps; adata=adata, mdata=mdata)
         df = post_process(adf, mdf)
         seed => df

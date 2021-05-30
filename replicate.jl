@@ -83,4 +83,5 @@ for param in params
             end
         end
     end
+    @everywhere GC.gc()
 end
