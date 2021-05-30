@@ -340,8 +340,8 @@ function start(; host="127.0.0.1", port=8000, debug=true)
                         dbc_card(
                             [
                                 dbc_cardheader("Video")
-                                (dbc_cardbody(; id="video-output"))
-                            ]
+                                dcc_loading(dbc_cardbody(; id="video-output"))
+                            ],
                         );
                         width=9,
                     )
