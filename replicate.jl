@@ -1,0 +1,83 @@
+using Distributed
+
+function exit(code=0)
+    println("Exitting, press enter three times...")
+    readline()
+    readline()
+    readline()
+    return Base.exit(code)
+end
+
+function usage()
+    return println("""
+             julia replicate.jl [input]
+
+             where input is the file that contains all the parameter sets
+             """)
+end
+
+# PREPROCESS OUTPUT
+
+config_file = "config.jl"
+if !isfile(config_file)
+    @warn "config file not found, generating one"
+    config_str = """
+Dict(#
+    :replication => 1000,
+    :output_directory => "results",
+    :nprocs => 1,
+    :overwrite => true,
+)"""
+    println(config_str)
+    write(config_file, config_str)
+    @info "New config file is generated at $(config_file)"
+    exit()
+end
+config = include(config_file)
+if !isone(config[:nprocs] - 1) # Add process if doing parallel
+    addprocs(config[:nprocs] - 1)
+end
+mkpath(config[:output_directory])
+
+# Preprocess input
+
+if isempty(ARGS)
+    usage()
+    exit(-1)
+end
+if !isfile(ARGS[1])
+    usage()
+    @error "Input file $(ARGS[1]) not found"
+    exit(-1)
+end
+params = include(ARGS[1])
+
+# Load the model in every process
+@everywhere using Pkg
+@everywhere Pkg.activate(@__DIR__)
+@everywhere using GradProject
+@everywhere Model = GradProject.Model
+@everywhere Replication = GradProject.Replication
+@everywhere using JLD2
+
+for param in params
+    filename = Replication.generate_filename(; param...)
+    filepath = joinpath(config[:output_directory], filename * ".jld2")
+    if isfile(filepath) && !config[:overwrite]
+        @error "$filepath exists, and overwrite is false"
+        exit(-1)
+    end
+    io = jldopen(filepath, "a")
+    replication = config[:replication]
+    @info "Running $filename"
+    data = @time GradProject.replication(param, replication)
+    for pr in workers()
+        @spawnat pr GC.gc()
+    end
+    for (seed, df) in data
+        delete!(io, key)
+        io[key] = df
+    end
+    close(io)
+    GC.gc()
+end

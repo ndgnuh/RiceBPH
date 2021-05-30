@@ -30,18 +30,20 @@ function replication(
     steps,
     n::Integer;
     post_process=(adf, mdf) -> (adf, mdf),
+    seed_offset=0,
     adata,
     mdata,
     kwargs...,
 )
     kwargs = Dict(kwargs)
     delete!(kwargs, :seed)
-    models = [init_model(; seed=seed, kwargs...) for seed in 1:n]
-    data = pmap(enumerate(models)) do (seed, model)
+    models = ([seed => init_model(; seed=seed + seed_offset, kwargs...) for seed in 1:n])
+    data = pmap(models) do (seed, model)
         adf, mdf = run!(model, agent_step!, model_step!, steps; adata=adata, mdata=mdata)
-        seed => post_process(adf, mdf)
+        df = post_process(adf, mdf)
+        seed => df
     end
-    return data
+    return Dict(data)
 end
 
 end

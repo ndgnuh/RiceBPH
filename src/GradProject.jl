@@ -17,15 +17,16 @@ function run_model(params, laststep=2880; seed=rand(1:2000))
     )
 end
 
-function replication(params, n)
+function replication(params, n; seed_offset=0)
     return Replication.replication(
         Model.init_model,
         Model.agent_step!,
         Model.model_step!,
         2880,
         n;
+        seed_offset=seed_offset,
         adata=Model.adata,
-        mdata=model.mdata,
+        mdata=Model.mdata,
         post_process=Model.post_process,
         params...,
     )
