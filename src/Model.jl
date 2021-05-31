@@ -74,6 +74,7 @@ Base.@kwdef mutable struct BPH <: AbstractAgent
     energy
     age::Int
     nb_reproduce::Int
+    isfemale::Bool
 end
 
 function init_model(envmap, nb_bph_init, init_position, pr_killed; seed, kwargs...)
@@ -128,6 +129,7 @@ function init_model(; envmap, nb_bph_init::Int, init_position, pr_killed, seed, 
             energy=rand(model.rng, 0.4:0.01:0.6),
             age=rand(model.rng, 0:300),
             nb_reproduce=0,
+            isfemale=rand(model.rng, Bool),
         )
         add_agent_pos!(bph, model)
     end
@@ -210,6 +212,7 @@ function agent_step!(agent, model)
 
     # Reproduce conditionally
     if (
+        agent.isfemale && # is female
         agent.age ≥ model.age_reproduce && # Old enough
         agent.energy ≥ model.energy_reproduce && # Energy requirement
         agent.nb_reproduce < 21 && # Not too much reproduction
@@ -219,7 +222,7 @@ function agent_step!(agent, model)
         nb_offspring = rand(model.rng, (model.offspring_min):(model.offspring_max))
         for _ in 1:nb_offspring
             id = nextid(model)
-            agent = BPH(id, agent.pos, 0.4, 0, 0)
+            agent = BPH(id, agent.pos, 0.4, 0, 0, rand(model.rng, Bool))
             add_agent_pos!(agent, model)
         end
         agent.energy -= 0.1
