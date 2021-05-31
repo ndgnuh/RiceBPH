@@ -45,7 +45,7 @@ const default_parameters = (#
     energy_consume=0.025,
     energy_move=0.2,
     energy_reproduce=0.8,
-    move_directions=neighbors_at(2),
+    move_directions=Dict(true => neighbors_at(2), false => neighbors_at(3)),
 )
 
 """
@@ -75,6 +75,7 @@ Base.@kwdef mutable struct BPH <: AbstractAgent
     age::Int
     nb_reproduce::Int
     isfemale::Bool
+    isshortwing::Bool
 end
 
 function init_model(envmap, nb_bph_init, init_position, pr_killed; seed, kwargs...)
@@ -130,6 +131,7 @@ function init_model(; envmap, nb_bph_init::Int, init_position, pr_killed, seed, 
             age=rand(model.rng, 0:300),
             nb_reproduce=0,
             isfemale=rand(model.rng, Bool),
+            isshortwing=rand(model.rng, Bool),
         )
         add_agent_pos!(bph, model)
     end
@@ -195,7 +197,7 @@ function agent_step!(agent, model)
         isnan(model.food[x, y]) ||
         rand(model.rng) > (model.food[x, y] * 0.5)
     )
-        walk!(agent, rand(model.rng, model.move_directions), model)
+        walk!(agent, rand(model.rng, model.move_directions[agent.isshortwing]), model)
     end
 
     # Eat conditionally
@@ -222,7 +224,15 @@ function agent_step!(agent, model)
         nb_offspring = rand(model.rng, (model.offspring_min):(model.offspring_max))
         for _ in 1:nb_offspring
             id = nextid(model)
-            agent = BPH(id, agent.pos, 0.4, 0, 0, rand(model.rng, Bool))
+            agent = BPH(;
+                id=id,
+                pos=agent.pos,
+                energy=0.4,
+                age=0,
+                nb_reproduce=0,
+                isfemale=rand(model.rng, Bool),
+                isshortwing=agent.isshortwing,
+            )
             add_agent_pos!(agent, model)
         end
         agent.energy -= 0.1
