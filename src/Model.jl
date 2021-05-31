@@ -45,7 +45,8 @@ const default_parameters = (#
     energy_consume=0.025,
     energy_move=0.2,
     energy_reproduce=0.8,
-    move_directions=Dict(true => neighbors_at(2), false => neighbors_at(3)),
+    move_directions=Dict(true => neighbors_at(1), false => neighbors_at(2)),
+    nb_reproduce=Dict(true => 300, false => 250),
 )
 
 """
@@ -124,14 +125,15 @@ function init_model(; envmap, nb_bph_init::Int, init_position, pr_killed, seed, 
             filter(pos -> !isnan(food[pos...]), collect(p))
         end
     for _ in 1:nb_bph_init
+        isshortwing = rand(model.rng, Bool)
         bph = BPH(; #
             id=nextid(model),
             pos=rand(model.rng, positions),
             energy=rand(model.rng, 0.4:0.01:0.6),
             age=rand(model.rng, 0:300),
-            nb_reproduce=0,
+            nb_reproduce=model.nb_reproduce[isshortwing],
             isfemale=rand(model.rng, Bool),
-            isshortwing=rand(model.rng, Bool),
+            isshortwing=isshortwing,
         )
         add_agent_pos!(bph, model)
     end
@@ -217,11 +219,15 @@ function agent_step!(agent, model)
         agent.isfemale && # is female
         agent.age ≥ model.age_reproduce && # Old enough
         agent.energy ≥ model.energy_reproduce && # Energy requirement
-        agent.nb_reproduce < 21 && # Not too much reproduction
+        agent.nb_reproduce > 0 && # Not too much reproduction
         rand(model.rng) ≤ model.pr_reproduce # Have RNG Jesus by your side
     )
-        agent.nb_reproduce = agent.nb_reproduce + 1
-        nb_offspring = rand(model.rng, (model.offspring_min):(model.offspring_max))
+        nb_offspring = min(
+            agent.nb_reproduce, rand(model.rng, (model.offspring_min):(model.offspring_max))
+        )
+        agent.nb_reproduce = agent.nb_reproduce - nb_offspring
+        isshortwing = rand(model.rng, Bool)
+        nb_reproduce = model.nb_reproduce[isshortwing]
         for _ in 1:nb_offspring
             id = nextid(model)
             agent = BPH(;
@@ -229,9 +235,9 @@ function agent_step!(agent, model)
                 pos=agent.pos,
                 energy=0.4,
                 age=0,
-                nb_reproduce=0,
+                nb_reproduce=nb_reproduce,
                 isfemale=rand(model.rng, Bool),
-                isshortwing=agent.isshortwing,
+                isshortwing=isshortwing,
             )
             add_agent_pos!(agent, model)
         end
@@ -293,6 +299,11 @@ function ac(model)
     end
 end
 
+agent_markers = Dict(true => :circle, false => :utriangle)
+function am(agent)
+    return agent_markers[agent.isshortwing]
+end
+
 function heatarray(model)
     return model.food
 end
@@ -322,6 +333,7 @@ function video(
         frames=frames,
         framerate=24,
         ac=ac(model),
+        am=am,
         heatarray=heatarray,
         heatkwargs=(
             nan_color=RGBAf0(1.0, 1.0, 0.0, 0.5),
