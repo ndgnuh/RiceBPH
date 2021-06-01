@@ -35,7 +35,7 @@ const default_parameters = (#
     age_reproduce=504,
     age_old=600,
     age_die=720,
-    pr_reproduce=0.07,
+    pr_reproduce=0.15,
     pr_egg_death=0.0025,
     pr_old_death=0.04,
     offspring_max=12,
@@ -199,7 +199,17 @@ function agent_step!(agent, model)
         isnan(model.food[x, y]) ||
         rand(model.rng) > (model.food[x, y] * 0.5)
     )
-        walk!(agent, rand(model.rng, model.move_directions[agent.isshortwing]), model)
+        directions = model.move_directions[agent.isshortwing]
+        pr_directions = map(directions) do (dx, dy)
+            get(model.food, (x + dx, y + dy), -1.0)
+        end
+        replace!(pr_directions, NaN => 0.5)
+        pos_indices = findall(rand(model.rng) .≤ pr_directions)
+        if isempty(pos_indices)
+            walk!(agent, rand(model.rng, directions), model)
+        else
+            walk!(agent, rand(model.rng, directions[pos_indices]), model)
+        end
     end
 
     # Eat conditionally
