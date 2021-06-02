@@ -3,6 +3,7 @@ module Replication
 using Agents
 using Distributed
 using JLD2
+@everywhere using ProgressMeter
 
 """
 	generate_filename(prefix="")
@@ -38,7 +39,7 @@ function replication(
     kwargs = Dict(kwargs)
     delete!(kwargs, :seed)
     models = ([seed => init_model(; seed=seed + seed_offset, kwargs...) for seed in 1:n])
-    data = pmap(models) do (seed, model)
+    data = @showprogress pmap(models) do (seed, model)
         adf, mdf = run!(model, agent_step!, model_step!, steps; adata=adata, mdata=mdata)
         df = post_process(adf, mdf)
         seed => df
