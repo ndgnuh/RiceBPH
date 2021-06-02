@@ -71,7 +71,7 @@ end
 Base.@kwdef mutable struct BPH <: AbstractAgent
     id::Int
     pos::Dims{2}
-    energy
+    energy::Float16
     age::Int
     isfemale::Bool
     isshortwing::Bool
@@ -196,16 +196,15 @@ function agent_step!(agent, model)
         isnan(model.food[x, y]) ||
         rand(model.rng) > (model.food[x, y] * 0.5)
     )
-        directions = model.move_directions[agent.isshortwing]
-        pr_directions = map(directions) do (dx, dy)
-            get(model.food, (x + dx, y + dy), -1.0)
+        thres = rand(model.rng)
+        directions = filter(model.move_directions[agent.isshortwing]) do (dx, dy)
+            food = get(model.food, (x + dx, y + dy), -1.0)
+            thres ≤ (isnan(food) / 2 + !isnan(food) * food)
         end
-        replace!(pr_directions, NaN => 0.5)
-        pos_indices = findall(rand(model.rng) .≤ pr_directions)
-        if isempty(pos_indices)
-            walk!(agent, rand(model.rng, directions), model)
+        if isempty(directions)
+            walk!(agent, rand(model.rng, model.move_directions[agent.isshortwing]), model)
         else
-            walk!(agent, rand(model.rng, directions[pos_indices]), model)
+            walk!(agent, rand(model.rng, directions), model)
         end
     end
 
@@ -268,8 +267,7 @@ function model_step!(model)
     # Rice getting more energy
     # Energy cap is 1.0
     # Dead rice receive no energy
-    alive = @.(model.food > 0)
-    @. model.food = min(model.food + model.food * 0.008f0 * alive, 1.0f0)
+    @. model.food = min(model.food + model.food * 0.008f0 * (model.food > 0), 1)
 
     # Randomly select a bph at every flower
     for pos in model.pr_killed_positions
