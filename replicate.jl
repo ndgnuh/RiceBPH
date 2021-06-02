@@ -72,8 +72,8 @@ for param in params
     filename = Replication.generate_filename(; param...)
     filepath = joinpath(config[:output_directory], filename * ".jld2")
     if isfile(filepath) && !config[:overwrite]
-        @error "$filepath exists, and overwrite is false"
-        exit(-1)
+        @warn "$filepath exists, and overwrite is false, skipping"
+        continue
     end
     replication = config[:replication]
     @info "Running $filename"
