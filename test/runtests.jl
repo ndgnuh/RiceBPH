@@ -3,6 +3,7 @@ using BenchmarkTools
 using GradProject
 using GradProject.Model
 using GradProject.Model.Agents
+using InteractiveUtils
 
 isbph(x) = true
 food(model) = count(≥(0.5), model.food)
@@ -22,7 +23,7 @@ end
     @test true
     model = Model.init_model(crop, 200, :corner, 0.2f0; seed=1)
     @test true
-    run!(model, Model.agent_step!, Model.model_step!, 1; adata=adata, mdata=mdata)
+    @code_warntype run!(model, Model.agent_step!, Model.model_step!, 1; adata=adata, mdata=mdata)
     @test true
 end
 
@@ -56,7 +57,6 @@ end
 end
 
 @testset "Generate Video" begin
-    crop = Model.gencrop_3x3()
-    Model.video(crop, 200, :random_c2, 0.1; seed=1)
+    Model.video(joinpath("..", "src", "maps", "020-1x2.csv"), 200, :corner, 0.075; seed=9)
     @test true
 end
