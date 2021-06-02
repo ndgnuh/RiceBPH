@@ -41,7 +41,7 @@ mkpath(config[:output_directory])
 
 # Preprocess input
 
-if isempty(ARGS) || !haskey(config, :input)
+if isempty(ARGS) && !haskey(config, :input)
     usage()
     exit(-1)
 end
