@@ -65,6 +65,8 @@ params = include(inputfile)
 @everywhere Replication = GradProject.Replication
 @everywhere using JLD2
 
+@info "Running using $(nprocs()) process(es)"
+
 for param in params
     filename = Replication.generate_filename(; param...)
     filepath = joinpath(config[:output_directory], filename * ".jld2")
