@@ -34,7 +34,8 @@ Dict(#
     exit()
 end
 config = include(config_file)
-if !isone(config[:nprocs] - 1) # Add process if doing parallel
+if !iszero(config[:nprocs] - 1) # Add process if doing parallel
+    @info "Adding more process(es)"
     addprocs(config[:nprocs] - 1)
 end
 mkpath(config[:output_directory])
