@@ -45,7 +45,7 @@ if isempty(ARGS) && !haskey(config, :input)
     usage()
     exit(-1)
 end
-inputfile = if isempty(ARGS)
+inputfile = if !isempty(ARGS)
     ARGS[1]
 else
     config[:input]
