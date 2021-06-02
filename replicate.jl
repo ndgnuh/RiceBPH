@@ -41,16 +41,21 @@ mkpath(config[:output_directory])
 
 # Preprocess input
 
-if isempty(ARGS)
+if isempty(ARGS) || !haskey(config, :input)
     usage()
     exit(-1)
 end
-if !isfile(ARGS[1])
+inputfile = if isempty(ARGS)
+    ARGS[1]
+else
+    config[:input]
+end
+if !isfile(inputfile)
     usage()
-    @error "Input file $(ARGS[1]) not found"
+    @error "Input file $(inputfile) not found"
     exit(-1)
 end
-params = include(ARGS[1])
+params = include(inputfile)
 
 # Load the model in every process
 @everywhere using Pkg
