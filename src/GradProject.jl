@@ -4,6 +4,7 @@ using Agents: run!
 
 Model = include("Model.jl")
 Replication = include("Replication.jl")
+PostProcess = include("PostProcess.jl")
 
 function run_model(params, laststep=2880; seed=rand(1:2000))
     model = Model.init_model(; seed=seed, params...)
