@@ -117,15 +117,14 @@ function result_view()
                     dbc_select(; id="result-dir", options=options)
                     dbc_label("Select result")
                     dcc_loading(dbc_select(; id="result-to-view", options=[]))
+                    html_p(
+                        [
+                            html_span("Static plot")
+                            dbc_checkbox(; checked=true, id="result-static-plot")
+                        ],
+                    )
                     html_br()
-                    dcc_loading([
-                        dbc_row(
-                            [
-                                dbc_col(html_div(; id="result-desc"); width=3)
-                                dbc_col(html_div(; id="result-plot"); width=9)
-                            ],
-                        ),
-                    ])
+                    dcc_loading(html_div(; id="result-plot"))
                 ],
             )
         ],
@@ -163,44 +162,62 @@ callbacks[:result_view] = function (app, state)
         end
     end
 
-    # select result file
-    callback!(
-        app,#
-        Output("result-desc", "children"),
-        Input("result-to-view", "value"),
-    ) do jld2file
-        if isnothing(jld2file)
-            return "Select a file"
-        else
-            jldopen(jld2file) do f
-                meta = f["metadata"]
-                children = map(propertynames(meta)) do name
-                    html_p([
-                        html_b(name)
-                        ": "
-                        html_span(getproperty(meta, name))
-                    ])
-                end
-            end
-        end
-    end
-
     # chose file + plot
     return callback!(
         app, #
         Output("result-plot", "children"),
         Input("result-to-view", "value"),
-    ) do file
+        State("result-static-plot", "checked"),
+    ) do file, staticPlot
         if isnothing(file)
             return ""
         end
-        "Plot TBD"
-        #jldopen(file) do f
-        #    map(1:1000) do seed
-        #        key = string(seed)
-        #        df = f[key]
-        #    end
-        #end
+
+        data = jldopen(file) do f
+            map(seed -> (seed => f[string(seed)]), 1:1000)
+        end
+        bph_traces = [
+            scatter(;#
+                x=df.step,
+                y=df.count_bph,
+                name="Seed $(seed)",
+            ) for (seed, df) in data
+        ]
+        rice_traces = [
+            scatter(;#
+                x=df.step,
+                y=df.food,
+                name="Seed $(seed)",
+            ) for (seed, df) in data
+        ]
+        bph_layout = Layout(; title="<b>BPH</b>")
+        rice_layout = Layout(; title="<b>Rice ≥ 50%</b>")
+        plt = hcat(plot(bph_traces, bph_layout), plot(rice_traces, rice_layout))
+
+        # Plot layout
+        metadata = jldopen(f -> f["metadata"], file)
+        total_rice = data[1][2].food[1]
+        passes = [seed for (seed, df) in data if df.food[end] < total_rice ÷ 2]
+        npasses = length(passes)
+        mapname = split(metadata.envmap, r"[\\/]")[end]
+        str_passed = if npasses === 0
+            "(No passed cases)"
+        else
+            aux = """
+            Passed cases: $(npasses)/1000
+            """
+            aux = aux * "(" * join(Iterators.take(passes, 10), ", ") * ")"
+        end
+        title = """
+        <b>Map: $(mapname), #BPH: $(metadata.nb_bph_init),
+        pos: $(metadata.init_position), pr_killed: $(metadata.pr_killed),
+        $str_passed
+        </b>
+        """
+        relayout!(plt.plot, Layout(; showlegend=false, ymin=0, title=title))
+
+        config = (staticPlot=staticPlot,)
+        return figure(plt; config=config)
     end
 end
 
@@ -440,7 +457,7 @@ function start(; host="127.0.0.1", port=8000, debug=true)
             html_br()
             html_h4("Plot output")
             simulation_output()
-            html_h4("Result view")
+            html_h4("Video output")
             dbc_row(
                 [
                     dbc_col(video_paramter(); width=3)
@@ -456,7 +473,7 @@ function start(; host="127.0.0.1", port=8000, debug=true)
                 ],
             )
             html_br()
-            html_h4("Video output")
+            html_h4("Result view")
             result_view()
         ],
     )
