@@ -12,6 +12,7 @@ using ImageFiltering
 using Agents: Agents
 using JSON3
 using DataFrames
+using JLD2
 
 state = Dict()
 
@@ -94,7 +95,114 @@ function video_paramter()
     )
 end
 
+"""
+    result_view()
+
+View for exploring result (JLD2)
+"""
+function result_view()
+    base_directory = joinpath(@__DIR__, "..")
+    dir_names = readdir(base_directory)
+    dir_paths = joinpath.(base_directory, dir_names)
+    options = [
+        (label=dir_name, value=dir_path) for
+        (dir_name, dir_path) in zip(dir_names, dir_paths) if isdir(dir_path)
+    ]
+    return dbc_card(
+        [
+            dbc_cardheader("-")
+            dbc_cardbody(
+                [
+                    dbc_label("Result folder")
+                    dbc_select(; id="result-dir", options=options)
+                    dbc_label("Select result")
+                    dcc_loading(dbc_select(; id="result-to-view", options=[]))
+                    html_br()
+                    dcc_loading([
+                        dbc_row(
+                            [
+                                dbc_col(html_div(; id="result-desc"); width=3)
+                                dbc_col(html_div(; id="result-plot"); width=9)
+                            ],
+                        ),
+                    ])
+                ],
+            )
+        ],
+    )
+end
+
+# @CALLBACKS
+
 callbacks = Dict{Symbol,Function}()
+
+callbacks[:result_view] = function (app, state)
+    # Select folder
+    callback!(
+        _ -> nothing,
+        app,
+        Output("result-to-view", "value"),
+        Input("result-dir", "value"),
+    )
+
+    # Select folder
+    callback!(#
+        app,
+        Output("result-to-view", "options"),
+        Input("result-dir", "value"),
+    ) do result_path
+        if isnothing(result_path)
+            return []
+        else
+            names = readdir(result_path)
+            paths = joinpath.(result_path, names)
+            [
+                (label=name, value=path) for (name, path) in zip(names, paths) if
+                isfile(path) && endswith(name, ".jld2")
+            ]
+        end
+    end
+
+    # select result file
+    callback!(
+        app,#
+        Output("result-desc", "children"),
+        Input("result-to-view", "value"),
+    ) do jld2file
+        if isnothing(jld2file)
+            return "Select a file"
+        else
+            jldopen(jld2file) do f
+                meta = f["metadata"]
+                children = map(propertynames(meta)) do name
+                    html_p([
+                        html_b(name)
+                        ": "
+                        html_span(getproperty(meta, name))
+                    ])
+                end
+            end
+        end
+    end
+
+    # chose file + plot
+    return callback!(
+        app, #
+        Output("result-plot", "children"),
+        Input("result-to-view", "value"),
+    ) do file
+        if isnothing(file)
+            return ""
+        end
+        "Plot TBD"
+        #jldopen(file) do f
+        #    map(1:1000) do seed
+        #        key = string(seed)
+        #        df = f[key]
+        #    end
+        #end
+    end
+end
 
 callbacks[:refreshmap] = function (app, state)
     return callback!(
@@ -332,7 +440,7 @@ function start(; host="127.0.0.1", port=8000, debug=true)
             html_br()
             html_h4("Plot output")
             simulation_output()
-            html_h4("Video output")
+            html_h4("Result view")
             dbc_row(
                 [
                     dbc_col(video_paramter(); width=3)
@@ -348,6 +456,8 @@ function start(; host="127.0.0.1", port=8000, debug=true)
                 ],
             )
             html_br()
+            html_h4("Video output")
+            result_view()
         ],
     )
 
