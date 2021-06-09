@@ -64,7 +64,7 @@ function test_rice(filepath, p0)
     passed = map(1:1000) do seed
         key = string(seed)
         df = f[key]
-        df.food[end] < df.food[begin] ÷ 2
+        df.food[end] < df.food[begin] ÷ 2 - 100
     end
     close(f)
     return t = BinomialTest(count(passed), length(passed), p0)
@@ -92,6 +92,19 @@ function test_rice(files::AbstractVector, p0; alpha=0.05)
         :test => ByRow(t -> is_flower_effective(t; alpha=alpha)) => :accept,
     )
     return df
+end
+
+function batch_test_rice(dir::AbstractString, p0; alpha=0.05, clean=false)
+    files = joinpath.(dir, readdir(dir))
+    files = filter(files) do f
+        isfile(f) && endswith(f, ".jld2")
+    end
+    df = test_rice(files, p0; alpha=alpha)
+    if clean
+        select(df, Not("test"))
+    else
+        df
+    end
 end
 
 export JLD2, PlotlyJS, ProgressMeter, HypothesisTest, plot, savefig, test_rice

@@ -197,7 +197,7 @@ callbacks[:result_view] = function (app, state)
         # Plot layout
         metadata = jldopen(f -> f["metadata"], file)
         total_rice = data[1][2].food[1]
-        passes = [seed for (seed, df) in data if df.food[end] < total_rice ÷ 2]
+        passes = [seed for (seed, df) in data if df.food[end] < total_rice ÷ 2 - 100]
         npasses = length(passes)
         mapname = split(metadata.envmap, r"[\\/]")[end]
         str_passed = if npasses === 0
@@ -317,7 +317,7 @@ callbacks[:run] = function (app, state)
 
         total_rice = count(!isnan, readmapfile(map_path))
         data = [run_simulation(sd) for sd in 1:replication]
-        passes = [seed for (seed, df) in data if df.rice[end] < total_rice ÷ 2]
+        passes = [seed for (seed, df) in data if df.rice[end] < total_rice ÷ 2 - 100]
         npasses = length(passes)
 
         # Data traces
