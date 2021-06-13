@@ -1,6 +1,6 @@
 using Test
 using BenchmarkTools
-using GradProject
+using RiceBPH
 
 #include("simutest.jl")
 

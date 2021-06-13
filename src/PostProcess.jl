@@ -71,9 +71,11 @@ function test_rice(filepath, p0)
 end
 
 function is_flower_effective(t; alpha=0.05)
-    # H0: p ≤ p0, Ha: p ≥ p0
-    # H0: flower is effective
-    return alpha ≤ pvalue(t; tail=:right)
+    # H0: flower is not effective -> p = p0
+    # Ha: flower is effective -> p < p0 -> tail = left
+    # good -> reject H0 -> alpha > pvalue
+    #a, b = confint(t; tail=:right, level=1-alpha)
+    return alpha ≥ pvalue(t, tail=:left)
 end
 
 function test_rice(files::AbstractVector, p0; alpha=0.05)
@@ -94,7 +96,7 @@ function test_rice(files::AbstractVector, p0; alpha=0.05)
     return df
 end
 
-function batch_test_rice(dir::AbstractString, p0; alpha=0.05, clean=false)
+function batch_test_rice(dir::AbstractString, p0; alpha, clean=false)
     files = joinpath.(dir, readdir(dir))
     files = filter(files) do f
         isfile(f) && endswith(f, ".jld2")

@@ -1,5 +1,5 @@
-using GradProject.Model
-using GradProject.Model.Agents
+using RiceBPH.Model
+using RiceBPH.Model.Agents
 using InteractiveUtils
 
 isbph(x) = true

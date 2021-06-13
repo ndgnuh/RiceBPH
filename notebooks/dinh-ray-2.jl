@@ -8,7 +8,7 @@ using InteractiveUtils
 begin
 	using Pkg
 	Pkg.activate("..")
-	using GradProject.PostProcess
+	using RiceBPH.PostProcess
 end
 
 # ╔═╡ f329fe9e-cb9b-11eb-1e8b-e7b224d1d323

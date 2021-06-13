@@ -1,4 +1,4 @@
-using GradProject.PostProcess
+using RiceBPH.PostProcess
 
 result_dir = joinpath("..", "results")
 result_files = joinpath.(result_dir, readdir(result_dir))

@@ -17,7 +17,7 @@ end
 begin
 	using Pkg
 	Pkg.activate("..")
-	using GradProject
+	using RiceBPH
 	using InteractiveDynamics
 	using CairoMakie
 end
@@ -32,7 +32,7 @@ using DelimitedFiles
 using Statistics
 
 # ╔═╡ 8e1f5590-b7b6-4b2c-a3b1-1ec573e25a1f
-Model = GradProject.Model
+Model = RiceBPH.Model
 
 # ╔═╡ 93a151a3-a978-44a4-b93e-b3f3916a202a
 function ac(model)

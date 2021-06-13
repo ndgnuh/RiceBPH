@@ -61,9 +61,9 @@ params = include(inputfile)
 # Load the model in every process
 @everywhere using Pkg
 @everywhere Pkg.activate(@__DIR__)
-@everywhere using GradProject
-@everywhere Model = GradProject.Model
-@everywhere Replication = GradProject.Replication
+@everywhere using RiceBPH
+@everywhere Model = RiceBPH.Model
+@everywhere Replication = RiceBPH.Replication
 @everywhere using JLD2
 
 @info "Running using $(nprocs()) process(es)"
@@ -77,7 +77,7 @@ for param in params
     end
     replication = config[:replication]
     @info "Running $filename"
-    data = @time GradProject.replication(param, replication)
+    data = @time RiceBPH.replication(param, replication)
     jldopen(filepath, "a") do f
         if !haskey(f, "metadata")
             f["metadata"] = param

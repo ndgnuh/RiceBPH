@@ -1,6 +1,6 @@
 using Pkg
 Pkg.activate(@__DIR__)
-using GradProject
+using RiceBPH
 debug = let d = get(ENV, "DEBUG", "false")
     try
         d = parse(Bool, d)
@@ -9,4 +9,4 @@ debug = let d = get(ENV, "DEBUG", "false")
     end
     d
 end
-GradProject.Dashboard.start(; debug=debug)
+RiceBPH.Dashboard.start(; debug=debug)
