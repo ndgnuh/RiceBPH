@@ -1,0 +1,9 @@
+test/sample-results/ filter=lfs diff=lfs merge=lfs -text
+test/sample-results/{envmap_020-1x2.csv}_{nb+bph+init_20}_{pr+killed_0.15}_{init+position_border}.jld2 filter=lfs diff=lfs merge=lfs -text
+test/sample-results/{envmap_020-1x2.csv}_{nb+bph+init_20}_{pr+killed_0.15}_{init+position_corner}.jld2 filter=lfs diff=lfs merge=lfs -text
+test/sample-results/{envmap_20-3x3.csv}_{nb+bph+init_200}_{pr+killed_0.15}_{init+position_border}.jld2 filter=lfs diff=lfs merge=lfs -text
+test/sample-results/{envmap_20-3x3.csv}_{nb+bph+init_200}_{pr+killed_0.15}_{init+position_corner}.jld2 filter=lfs diff=lfs merge=lfs -text
+test/sample-results/{envmap_20-3x3.csv}_{nb+bph+init_20}_{pr+killed_0.15}_{init+position_border}.jld2 filter=lfs diff=lfs merge=lfs -text
+test/sample-results/{envmap_20-3x3.csv}_{nb+bph+init_20}_{pr+killed_0.15}_{init+position_corner}.jld2 filter=lfs diff=lfs merge=lfs -text
+test/sample-results/{envmap_020-1x2.csv}_{nb+bph+init_200}_{pr+killed_0.15}_{init+position_border}.jld2 filter=lfs diff=lfs merge=lfs -text
+test/sample-results/{envmap_020-1x2.csv}_{nb+bph+init_200}_{pr+killed_0.15}_{init+position_corner}.jld2 filter=lfs diff=lfs merge=lfs -text
