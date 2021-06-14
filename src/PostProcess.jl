@@ -5,6 +5,7 @@ using JLD2
 using PlotlyJS
 using HypothesisTests
 using Clustering
+using Statistics
 
 function ma(X, k)
     pad = zeros(eltype(X), k ÷ 2)
@@ -111,7 +112,7 @@ function plot_rice(filepath)
     return plot(filepath, :food)
 end
 
-function test_rice(filepath, p0)
+function test_rice(filepath::AbstractString, p0)
     f = jldopen(filepath, "r")
     passed = map(1:1000) do seed
         key = string(seed)
