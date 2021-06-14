@@ -1,125 +1,124 @@
-### A Pluto.jl notebook ###
-# v0.14.7
+module PostProcess
 
-using Markdown
-using InteractiveUtils
+using DataFrames
+using JLD2
+using PlotlyJS
+using HypothesisTests
+using Clustering
 
-# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
-macro bind(def, element)
-    quote
-        local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
-        el
+function ma(X, k)
+    pad = zeros(eltype(X), k ÷ 2)
+    return [pad; [mean(X[i:(i + k)]) for i in 1:(length(X) - k)]; pad]
+end
+
+function bname(fpath)
+    return split(fpath, r"[\\/]")[end]
+end
+
+"""
+    metadata(file::AbstractString)
+
+Get metadata from file
+"""
+function metadata(file::AbstractString)
+    return jldopen(f -> f["metadata"], file, "r")
+end
+
+function merge_result(file::AbstractString)
+    io = jldopen(file, "r")
+    df = DataFrame(; step=0:2880)
+    foreach(keys(io)) do k
+        if all(isdigit.(collect(k)))
+            seed = parse(Int, k)
+            df_seed = io[k]
+            for name in names(df_seed)
+                if name === "step"
+                    continue
+                end
+                df[!, "$(name)_$(string(seed; pad=4))"] = df_seed[!, name]
+            end
+        end
+    end
+    columns = ["step"; sort(setdiff(names(df), ["step"]))]
+    close(io)
+    return select!(df, columns)
+end
+
+function PlotlyJS.plot(filepath::AbstractString, attr)
+    f = jldopen(filepath, "r")
+    traces = map(1:1000) do seed
+        key = string(seed)
+        df = f[key]
+        scatter(; x=df.step, y=df[:, attr], name="Seed $key")
+    end
+    filebasename = splitpath(filepath)[end]
+    title = replace(filebasename, "_" => "\n")
+    layout = Layout(; title="$title", xaxis_title="Step", yaxis_title="$attr")
+    close(f)
+    return plot(traces, layout)
+end
+
+function plot_bph(filepath)
+    return plot(filepath, :count_bph)
+end
+function plot_rice(filepath)
+    return plot(filepath, :food)
+end
+
+function test_rice(filepath, p0)
+    f = jldopen(filepath, "r")
+    passed = map(1:1000) do seed
+        key = string(seed)
+        df = f[key]
+        df.food[end] < df.food[begin] ÷ 2 - 100
+    end
+    close(f)
+    return t = BinomialTest(count(passed), length(passed), p0)
+end
+
+function is_flower_effective(t; alpha=0.05)
+    # H0: flower is not effective -> p = p0
+    # Ha: flower is effective -> p < p0 -> tail = left
+    # good -> reject H0 -> alpha > pvalue
+    #a, b = confint(t; tail=:right, level=1-alpha)
+    return alpha ≥ pvalue(t; tail=:left)
+end
+
+function test_rice(files::AbstractVector, p0; alpha=0.05)
+    metadata = map(files) do file
+        jldopen(f -> f["metadata"], file)
+    end
+    df = DataFrame(metadata)
+    df.test = map(files) do file
+        test_rice(file, p0)
+    end
+    df = transform(
+        df,
+        :envmap => ByRow(bname) => :envmap,
+        :test => ByRow(t -> t.x) => :k,
+        :test => ByRow(t -> t.n) => :n,
+        :test => ByRow(t -> is_flower_effective(t; alpha=alpha)) => :accept,
+    )
+    return df
+end
+
+function batch_test_rice(dir::AbstractString, p0; alpha, clean=false)
+    files = joinpath.(dir, readdir(dir))
+    files = filter(files) do f
+        isfile(f) && endswith(f, ".jld2")
+    end
+    df = test_rice(files, p0; alpha=alpha)
+    if clean
+        select(df, Not("test"))
+    else
+        df
     end
 end
 
-# ╔═╡ ed7b7fa2-ca12-11eb-3142-830f24a474d2
-using JLD2, PlutoUI, CairoMakie, DataFrames, CSV, Statistics
+export JLD2, PlotlyJS, ProgressMeter, HypothesisTest, plot, savefig, test_rice
 
-# ╔═╡ b3ed17c4-213a-4547-b4be-2fd43612b563
-using Clustering
-
-# ╔═╡ 7280ad9b-5a95-44c0-9a48-2b90195c176f
-using Dates
-
-# ╔═╡ ee13068b-f94a-4c4d-9749-faa27e4c1d4e
-using DataFramesMeta
-
-# ╔═╡ 5b8f13a4-fbc8-470e-99d6-33cbbfdb9030
-using Latexify
-
-# ╔═╡ 20e4a147-4f6f-4c21-97f4-a62cc6d24745
-PlutoUI.TableOfContents()
-
-# ╔═╡ 9023aa1e-509a-4ca9-b35b-2d2875dda584
-files = let files = readdir("../results")
-	files = filter(files) do f
-		occursin("19-", f) &&
-		(occursin("pr+killed_0.15", f) || occursin("pr+killed_0.0}", f))
-	end
-	joinpath.("..", "results", files)
+# end module
 end
-
-# ╔═╡ 28d52568-c5de-4d0c-b2fc-a1e3a3690042
-function ma(X, k)
-	pad = zeros(eltype(X), k ÷ 2)
-	[pad; [mean(X[i:(i+k)]) for i in 1:length(X) - k]; pad]
-end
-
-# ╔═╡ 22f38eaa-8e10-4dcd-a469-635cbb390480
-function get_time(Y)
-	times = Int[]
-	for i in 1:length(Y) - 1
-		if isone(abs(Y[i] - Y[i+1]))
-			push!(times, i)
-		end
-	end
-	map(Iterators.partition(times, 2)) do (a, b)
-		_, idx = findmax(Y[a:b])
-		a + idx
-	end
-end
-
-# ╔═╡ 86e45cf0-0290-4350-bfdb-056073630021
-function peak_population(X; smooth = 48 * 7 ÷ 2, threshold=0.0)
-	# Smooth signal
-	Y = X
-	Y = ma(X, smooth)
-	# Normlize
-	MX = maximum(Y)
-	mX = minimum(Y)
-	Y = (Y .- mean(Y)) ./ std(Y)
-	
-	# Find the peaks	
-	peaks = let r = Y .≥ threshold
-		ranges = findall(isone, abs.(diff(r)))
-		if isodd(length(ranges))
-			push!(range, length(X))
-		end
-		map(Iterators.partition(ranges, 2)) do (a, b)
-			_, offset = findmax(@view X[a:b])
-			a + offset
-		end
-	end
-end
-
-# ╔═╡ c9e69c07-2b3b-40c5-9aaa-88407040e882
-md"# Select file"
-
-# ╔═╡ d9bcb11b-61c0-48d0-a90a-72e0e766c22e
-@bind file PlutoUI.Select(files)
-
-# ╔═╡ 5639f9fe-660c-430f-a7d2-3d1aad4d6152
-@bind seed PlutoUI.NumberField(1:1000)
-
-# ╔═╡ 087175fd-bc09-4623-91a5-b779c0fc62c8
-df = jldopen(f -> f["$seed"], file);
-
-# ╔═╡ e18bc7ed-15c3-4e1d-a90b-75fc2367ae1b
-let x = df.count_bph
-	Mx = maximum(x)
-	mx = minimum(x)
-	y = (x .- mx) / (Mx - mx) / std(x)
-	minimum(y), maximum(y), mean(y), std(y)
-end
-
-# ╔═╡ 62586022-2d8a-43ef-98f0-a039d446cd25
-@bind thres PlutoUI.Slider(-1:0.01:1, default=0, show_value=true)
-
-# ╔═╡ a3ab9801-22f8-4ee1-8be6-c33acf9007bb
-function proc(X)
-	X = ma(X, 24 * 4)
-	X = (X .- mean(X)) ./ std(X)
-	@. X ≥ thres
-end
-
-# ╔═╡ fbfd993c-3897-4c5c-b504-d8ace62762de
-peak_population(df.count_bph, threshold=thres)
-
-# ╔═╡ 6aa63ead-af1e-4e1d-b3e7-60d3a0f700d4
-let X = df.count_bph
-	f = Figure()
-	a1 = Axis(f[1,1])
 	smooth = 4
 	# a2 = Axis(f[1,2])
 	n = length(X)
