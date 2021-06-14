@@ -1,0 +1,6 @@
+*.mp4
+*.png
+*.csv
+*.tex
+result*
+*.ipynb_checkpoints*
