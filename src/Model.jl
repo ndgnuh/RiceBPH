@@ -4,14 +4,15 @@ using Random
 using Agents
 using DataFrames
 using ImageFiltering
-using CairoMakie: RGBf0, RGBAf0
+using CairoMakie: RGBf, RGBAf
 using InteractiveDynamics
 using DelimitedFiles
+using Base: @kwdef
 
 name = "Rice-Brown Plant Hopper"
 
 """
-	neighbors_at(n::Integer)
+    neighbors_at(n::Integer)
 
 Return the directions on the grid.
 """
@@ -29,31 +30,34 @@ function neighbors_at(n::Integer)
     end
 end
 
-const default_parameters = (#
-    energy_miss=0.025,
-    age_init=168,
-    age_reproduce=504,
-    age_old=600,
-    age_die=720,
-    pr_reproduce=Dict(true => 0.188, false => 0.157),
-    pr_egg_death=0.0025,
-    pr_old_death=0.04,
-    offspring_max=12,
-    offspring_min=5,
-    energy_max=1.0,
-    energy_transfer=0.1,
-    energy_consume=0.025,
-    energy_move=0.2,
-    energy_reproduce=0.8,
-    move_directions=Dict(true => neighbors_at(1), false => neighbors_at(2)),
-)
+@kwdef struct ModelParams
+    energy_miss::Float32 = 0.025
+    age_init::Int16 = 168
+    age_reproduce::Int16 = 504
+    age_old::Int16 = 600
+    age_die::Int16 = 720
+    pr_reproduce::Dict{Bool,Float32} = Dict(true => 0.188, false => 0.157)
+    pr_egg_death::Float32 = 0.0025
+    pr_old_death::Float32 = 0.04
+    offspring_max::Int8 = 12
+    offspring_min::Int8 = 5
+    energy_max::Float32 = 1.0
+    energy_transfer::Float32 = 0.1
+    energy_consume::Float32 = 0.025
+    energy_move::Float32 = 0.2
+    energy_reproduce::Float32 = 0.8
+    move_directions::Dict{Bool,Vector} =
+        Dict(true => neighbors_at(1), false => neighbors_at(2))
+end
+
+const default_parameters::ModelParams = ModelParams()
 
 """
-	gencrop_3x3(::Type{T})
+           	gencrop_3x3(::Type{T})
 
 Generate a 3x3 rice map with type `T`.
 """
-function gencrop_3x3(T::DataType=Float32)
+function gencrop_3x3(T::DataType = Float32)
     flower_position = [31:35; 61:65]
     nan = convert(T, NaN)
     one_ = one(T)
@@ -90,21 +94,21 @@ function init_model(; envmap, nb_bph_init::Int, init_position, pr_killed, seed, 
 
     params = merge(default_parameters, kwargs)
     properties = (#
-        food=food,
-        total_bph=nb_bph_init,
-        death_natural=0,
-        death_predator=0,
-        pr_killed=pr_killed,
-        pr_killed_positions=convert.(Tuple, findall(!iszero, pr_killed)),
-        energy_full=1.0 - params.energy_transfer,
+        food = food,
+        total_bph = nb_bph_init,
+        death_natural = 0,
+        death_predator = 0,
+        pr_killed = pr_killed,
+        pr_killed_positions = convert.(Tuple, findall(!iszero, pr_killed)),
+        energy_full = 1.0 - params.energy_transfer,
         params...,
     )
 
     # MODEL
 
-    space = GridSpace(size(food); periodic=false)
+    space = GridSpace(size(food); periodic = false)
     scheduler = Schedulers.by_id
-    model = ABM(BPH, space; scheduler=scheduler, properties=properties, rng=rng)
+    model = ABM(BPH, space; scheduler = scheduler, properties = properties, rng = rng)
 
     # AGENTS CREATION
 
@@ -122,15 +126,15 @@ function init_model(; envmap, nb_bph_init::Int, init_position, pr_killed, seed, 
             end
             filter(pos -> !isnan(food[pos...]), collect(p))
         end
-    for _ in 1:nb_bph_init
+    for _ = 1:nb_bph_init
         isshortwing = rand(model.rng, Bool)
         bph = BPH(; #
-            id=nextid(model),
-            pos=rand(model.rng, positions),
-            energy=rand(model.rng, 0.4:0.01:0.6),
-            age=rand(model.rng, 0:300),
-            isfemale=rand(model.rng, Bool),
-            isshortwing=isshortwing,
+            id = nextid(model),
+            pos = rand(model.rng, positions),
+            energy = rand(model.rng, 0.4:0.01:0.6),
+            age = rand(model.rng, 0:300),
+            isfemale = rand(model.rng, Bool),
+            isshortwing = isshortwing,
         )
         add_agent_pos!(bph, model)
     end
@@ -140,7 +144,7 @@ function init_model(; envmap, nb_bph_init::Int, init_position, pr_killed, seed, 
 end
 
 """
-	init_envmap(filepath::abstractstring)
+           	init_envmap(filepath::abstractstring)
 
 Return the food map
 """
@@ -154,7 +158,7 @@ function init_envmap(filepath::AbstractString)
 end
 
 """
-	init_envmap(envmap::AbstractMatrix)
+           	init_envmap(envmap::AbstractMatrix)
 
 Guard function
 """
@@ -163,15 +167,15 @@ function init_envmap(envmap::AbstractMatrix)
 end
 
 """
-	init_pr_killed(pr_killed::Real, food; gauss=2.5)
+           	init_pr_killed(pr_killed::Real, food; gauss=2.5)
 
 Return matrix of death pr. Obtained by using gauss kernel to filter the food matrix.
 """
-function init_pr_killed(pr_killed::Real, food; gauss=2.5)
+function init_pr_killed(pr_killed::Real, food; gauss = 2.5)
     return imfilter(isnan.(food) * pr_killed, Kernel.gaussian(gauss))
 end
 """
-	init_pr_killed(pr_killed::AbstractMatrix)
+           	init_pr_killed(pr_killed::AbstractMatrix)
 
 Identity, guard function
 """
@@ -217,7 +221,7 @@ function agent_step!(agent, model)
         )
         model.food[x, y] -= transfer
         agent.energy += transfer
-        #min(agent.energy + transfer, model.energy_max)
+        # min(agent.energy + transfer, model.energy_max)
     end
 
     # Reproduce conditionally
@@ -229,15 +233,15 @@ function agent_step!(agent, model)
     )
         nb_offspring = rand(model.rng, (model.offspring_min):(model.offspring_max))
         isshortwing = rand(model.rng, Bool)
-        for _ in 1:nb_offspring
+        for _ = 1:nb_offspring
             id = nextid(model)
             agent = BPH(;
-                id=id,
-                pos=agent.pos,
-                energy=0.4,
-                age=0,
-                isfemale=rand(model.rng, Bool),
-                isshortwing=isshortwing,
+                id = id,
+                pos = agent.pos,
+                energy = 0.4,
+                age = 0,
+                isfemale = rand(model.rng, Bool),
+                isshortwing = isshortwing,
             )
             add_agent_pos!(agent, model)
         end
@@ -289,11 +293,11 @@ end
 function ac(model)
     return function (agent)
         if isnan(model.food[agent.pos...])
-            return RGBf0(0, 0, 0)
+            return RGBf(0, 0, 0)
         elseif agent.age < model.age_init
-            RGBf0(0.0f0, 0.0f0, 1.0f0)
+            RGBf(0.0f0, 0.0f0, 1.0f0)
         else
-            RGBf0(1.0f0, 0.0f0, 0.0f0)
+            RGBf(1.0f0, 0.0f0, 0.0f0)
         end
     end
 end
@@ -314,30 +318,37 @@ function video(crop, nb_bph_init, position, pr_killed0; seed, kwargs...)
         nb_bph_init,
         position,
         pr_killed0;
-        seed=seed,
+        seed = seed,
         kwargs...,
     )
 end
 
 function video(
-    videopath::String, crop, nb_bph_init, position, pr_killed0; seed, frames=2880, kwargs...
+    videopath::String,
+    crop,
+    nb_bph_init,
+    position,
+    pr_killed0;
+    seed,
+    frames = 2880,
+    kwargs...,
 )
     @info "Video seed: $seed"
-    model = init_model(crop, nb_bph_init, position, pr_killed0; seed=seed, kwargs...)
+    model = init_model(crop, nb_bph_init, position, pr_killed0; seed = seed, kwargs...)
     return abm_video(
         videopath,
         model,
         agent_step!,
         model_step!;#
-        frames=frames,
-        framerate=24,
-        ac=ac(model),
-        am=am,
-        heatarray=heatarray,
-        heatkwargs=(
-            nan_color=RGBAf0(1.0, 1.0, 0.0, 0.5),
-            colormap=[RGBAf0(0, 1.0, 0, i) for i in 0:0.01:1],
-            colorrange=(0, 1),
+        frames = frames,
+        framerate = 24,
+        ac = ac(model),
+        am = am,
+        heatarray = heatarray,
+        heatkwargs = (
+            nan_color = RGBAf(1.0, 1.0, 0.0, 0.5),
+            colormap = [RGBAf(0, 1.0, 0, i) for i = 0:0.01:1],
+            colorrange = (0, 1),
         ),
     )
 end
@@ -349,7 +360,7 @@ adata, mdata = let food(model) = count(model.food .≥ 0.5), bph(agent) = agent.
 end
 
 post_process = function (adf, mdf)
-    return rightjoin(adf, mdf; on=:step)
+    return rightjoin(adf, mdf; on = :step)
 end
 
 # END MODULE
