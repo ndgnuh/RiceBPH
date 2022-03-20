@@ -2,7 +2,6 @@ using Base.Iterators
 using Base: @kwdef
 using LinearAlgebra
 
-
 abstract type TilingType end
 
 @kwdef struct HorizontalTile <: TilingType
@@ -35,7 +34,7 @@ function calc_tile_indices(size::Int, tile_size::Int, number::Int)
     remain_size = (size - number * tile_size) ÷ (number + 1)
     aux1 = countfrom(remain_size, remain_size + tile_size)
     aux2 = takewhile(<=(size - tile_size), aux1)
-    map(x -> x:(x + tile_size - 1), aux2)
+    return map(x -> x:(x + tile_size - 1), aux2)
 end
 
 """
@@ -44,7 +43,7 @@ end
 Short hand for `calc_tile_indices(size, tile.size, tile.number)`
 """
 function calc_tile_indices(size::Int, tile::HorizontalTile)
-    calc_tile_indices(size, tile.size, tile.number)
+    return calc_tile_indices(size, tile.size, tile.number)
 end
 
 """
@@ -63,12 +62,12 @@ end
 
 function tile_nan!(M::Matrix{T}, tile::GridTile) where {T<:AbstractFloat}
     width, height = size(M)[2]
-    htile = HorizontalTile(size = tile.xsize, number = tile.xnumber)
-    vtile = HorizontalTile(size = tile.ysize, number = tile.ynumber)
+    htile = HorizontalTile(; size=tile.xsize, number=tile.xnumber)
+    vtile = HorizontalTile(; size=tile.ysize, number=tile.ynumber)
     generate_map!(M, htile)
     transpose!(M)
     generate_map!(M, vtile)
-    transpose!(M)
+    return transpose!(M)
 end
 
 """
@@ -81,8 +80,8 @@ specified by `tile`. By default, the matrix is `Float32`.
 """
 function generate_map(T::Type{<:AbstractFloat}, sz, tile::TilingType)
     M = ones(T, sz)
-    tile_nan!(M, tile)
+    return tile_nan!(M, tile)
 end
 function generate_map(sz, tile::TilingType)
-    generate_map(Float32, sz, tile)
+    return generate_map(Float32, sz, tile)
 end
