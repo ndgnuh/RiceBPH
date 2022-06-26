@@ -1,4 +1,12 @@
-name = "RiceBPH2"
+name = "RiceBPH"
 uuid = "08e23406-df5a-45f2-b9bd-dd2ea387bc6a"
 authors = ["Nguyễn Đức Hùng <ndgnuh@protonmail.com>"]
 version = "0.1.0"
+
+[deps]
+Agents = "46ada45e-f475-11e8-01d0-f70cc89e6671"
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
+InteractiveDynamics = "ec714cd0-5f51-11eb-0b6e-452e7367ff84"
+Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
