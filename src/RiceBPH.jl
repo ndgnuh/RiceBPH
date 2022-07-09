@@ -1,8 +1,7 @@
 module RiceBPH
 
-using Base: @kwdef
+include("Models.jl")
+using .Models
 using Agents
-
-greet() = print("Hello World!")
 
 end # module RiceBPH
