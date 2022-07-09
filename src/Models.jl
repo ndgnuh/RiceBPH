@@ -19,5 +19,28 @@ function get_moving_directions(speed::Integer)
     return Set(directions)
 end
 
+"""
+    BPH{IntType,FloatType}(; keyword_parameters...)
+
+The BPH agent.
+
+## Keyword Parameters
+
+- id: agent identifier
+- pos: agent initial position
+- engergy: agent initial energy
+- age: agent initial age
+- is_female: agent gender
+- is_shortwing: agent form
+"""
+Base.@kwdef mutable struct BPH{IntType,FloatType} <: AbstractAgent
+    id::Int
+    pos::Dims{2}
+    energy::FloatType
+    age::IntType
+    is_female::Bool
+    is_shortwing::Bool
+end
+
 # END MODULE
 end
