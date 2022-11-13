@@ -35,7 +35,7 @@ end
     init_nb_bph::Int = 200
     init_position::Symbol = :corner
     init_pr_eliminate::Float32 = 0.15
-    seed::Union{Nothing,Int} = nothing
+
     # Running paramters
     energy_miss::Float32 = 0.025
     age_init::Int16 = 168
@@ -57,7 +57,7 @@ end
 end
 
 """
-                                                	gencrop_3x3(::Type{T})
+                                                                                                                      	gencrop_3x3(::Type{T})
 
 Generate a 3x3 rice map with type `T`.
 """
@@ -103,15 +103,11 @@ function Base.iterate(x::ModelParams, state)
     return (prop => value, (props, index + 1, max_index))
 end
 
-#= function init_model(; envmap, init_nb_bph::Int, init_position, pr_eliminate, seed, kwargs...) =#
-#= function init_model(; envmap, init_nb_bph::Int, init_position, pr_eliminate, seed, kwargs...) =#
-#=     return init_model(; envmap, init_nb_bph, init_position, pr_eliminate, seed, kwargs...) =#
-#= end =#
-function init_model(; kwargs...)
-    return init_model(ModelParams(; kwargs...))
+function init_model(; seed=nothing, kwargs...)
+    return init_model(ModelParams(; kwargs...); seed=seed)
 end
-function init_model(params::ModelParams)
-    rng = MersenneTwister(params.seed)
+function init_model(params::ModelParams; seed=nothing, kwargs...)
+    rng = MersenneTwister(seed)
     food = collect(transpose(init_envmap(params.envmap)))
     pr_eliminate = init_pr_eliminate(params.init_pr_eliminate, food)
     init_position = Symbol(params.init_position)
@@ -165,7 +161,7 @@ function init_model(params::ModelParams)
 end
 
 """
-                                                	init_envmap(filepath::abstractstring)
+    init_envmap(filepath::abstractstring)
 
 Return the food map
 """
@@ -179,7 +175,7 @@ function init_envmap(filepath::AbstractString)
 end
 
 """
-                                                	init_envmap(envmap::AbstractMatrix)
+    init_envmap(envmap::AbstractMatrix)
 
 Guard function
 """
@@ -188,7 +184,7 @@ function init_envmap(envmap::AbstractMatrix)
 end
 
 """
-                                                	init_pr_eliminate(pr_eliminate::Real, food; gauss=2.5)
+    init_pr_eliminate(pr_eliminate::Real, food; gauss=2.5)
 
 Return matrix of death pr. Obtained by using gauss kernel to filter the food matrix.
 """
@@ -196,7 +192,7 @@ function init_pr_eliminate(pr_eliminate::Real, food; gauss=2.5)
     return imfilter(isnan.(food) * pr_eliminate, Kernel.gaussian(gauss))
 end
 """
-                                                	init_pr_eliminate(pr_eliminate::AbstractMatrix)
+    init_pr_eliminate(pr_eliminate::AbstractMatrix)
 
 Identity, guard function
 """
@@ -367,6 +363,72 @@ end
 
 const AGENT_DATA = [(is_alive, count)]
 const MODEL_DATA = [num_healthy_rice]
+
+"""
+    run_simulation(params::ModelParams; seed=nothing, num_steps::Int)
+    run_simulation(; num_steps::Int, seed=nothing, kwargs...)
+
+Run RiceBPH simulation, return the result dataframe. `kwargs` are passed to `init_model`
+"""
+function run_simulation(model_params::ModelParams;
+                        seed=nothing, num_steps::Int=2880)
+    model, agent_step!, model_step! = init_model(model_params;
+                                                 seed=seed)
+    adf, mdf = run!(model,
+                    agent_step!,
+                    model_step!,
+                    num_steps;
+                    adata=AGENT_DATA,
+                    mdata=MODEL_DATA)
+    return rightjoin(adf, mdf; on=:step)
+end
+function run_simulation(; num_steps::Int=2880,
+                        seed=nothing,
+                        kwargs...)
+    return run_simulation(ModelParams(; kwargs...); seed=seed, num_steps=num_steps)
+end
+
+"""
+    get_result_filename(; prefix="", suffix="", kwargs...)
+
+Return the result file name from of `kwargs`.
+"""
+Base.@pure function get_result_filename(; prefix="", suffix="", kw_...)
+    kw = Dict(kw_)
+    for (k, v) in kw
+        if v isa AbstractString
+            kw[k] = basename(v)
+        end
+    end
+
+    name = join(["$(key)=$(kw[key])"
+                 for (key) in sort!(collect(keys(kw)))], "-")
+    return "$(prefix)$(name)$(suffix)"
+end
+
+"""
+    create_experiments; kwargs...)
+
+Return a list of `ModelParams`, `kwargs` should have the
+same keys as `ModelParams`, but the types are the lifted
+to an iterable container of `{T}` where `T` is the type
+of the parameters.
+"""
+function create_experiments(; mode=Iterators.product, kwargs...)
+    num_values = (k => length(v) for (k, v) in kwargs)
+    params = map(keys(kwargs)) do key
+        values = kwargs[key]
+        map(values) do value
+            return (key => value)
+        end
+    end
+    experiments = map(Iterators.product(params...)) do (paramset)
+        name = get_result_filename(; paramset...)
+        params = ModelParams(; paramset...)
+        return name => params
+    end
+    return experiments[:]
+end
 
 # END MODULE
 end
