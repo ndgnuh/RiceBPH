@@ -8,7 +8,7 @@ using BenchmarkTools
 const MAPSPATH = joinpath(BASEPATH, "assets", "envmaps")
 const MAP = joinpath(MAPSPATH, rand(readdir(MAPSPATH)))
 
-bm = @benchmark RiceBPH.run_simulation(; seed=0,
+bm = @benchmark RiceBPH.run_simulation(; seed=nothing,
                                        init_nb_bph=200,
                                        init_pr_eliminate=0.05,
                                        init_position=:corner,

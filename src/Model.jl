@@ -57,7 +57,7 @@ end
 end
 
 """
-                                                                                                                      	gencrop_3x3(::Type{T})
+                                                                                                                        	gencrop_3x3(::Type{T})
 
 Generate a 3x3 rice map with type `T`.
 """
@@ -294,62 +294,6 @@ function model_step!(model)
             end
         end
     end
-end
-
-# Plotting ultilities
-function ac(model)
-    return function (agent)
-        if isnan(model.food[agent.pos...])
-            return (0, 0, 0)
-        elseif agent.age < model.age_init
-            (0.0f0, 0.0f0, 1.0f0)
-        else
-            (1.0f0, 0.0f0, 0.0f0)
-        end
-    end
-end
-
-agent_markers = Dict(true => :circle, false => :utriangle)
-function am(agent)
-    return agent_markers[agent.isshortwing]
-end
-
-function heatarray(model)
-    return model.food
-end
-
-function video(crop, init_nb_bph, position, pr_eliminate0; seed, kwargs...)
-    return video("BPH-$(init_nb_bph)-$(position)-$(pr_eliminate0)-$(seed).mp4",
-                 crop,
-                 init_nb_bph,
-                 position,
-                 pr_eliminate0;
-                 seed=seed,
-                 kwargs...)
-end
-
-function video(videopath::String,
-               crop,
-               init_nb_bph,
-               position,
-               pr_eliminate0;
-               seed,
-               frames=2880,
-               kwargs...)
-    @info "Video seed: $seed"
-    model = init_model(crop, init_nb_bph, position, pr_eliminate0; seed=seed, kwargs...)
-    return abm_video(videopath,
-                     model,
-                     agent_step!,
-                     model_step!;#
-                     frames=frames,
-                     framerate=24,
-                     ac=ac(model),
-                     am=am,
-                     heatarray=heatarray,
-                     heatkwargs=(nan_color=(1.0, 1.0, 0.0, 0.5),
-                                 colormap=[(0, 1.0, 0, i) for i in 0:0.01:1],
-                                 colorrange=(0, 1)))
 end
 
 # Data collection functions
