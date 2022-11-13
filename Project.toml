@@ -1,0 +1,16 @@
+name = "RiceBPH"
+uuid = "e02f5b06-416e-42de-9837-76cb773a7a31"
+authors = ["hung "]
+version = "0.1.0"
+
+[deps]
+Agents = "46ada45e-f475-11e8-01d0-f70cc89e6671"
+Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
+ImageFiltering = "6a3955dd-da59-5b1f-98d4-e7296123deb5"
+InteractiveDynamics = "ec714cd0-5f51-11eb-0b6e-452e7367ff84"
+JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
+Parameters = "d96e819e-fc66-5662-9728-84c9c7592b0a"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
