@@ -2,6 +2,7 @@ module RiceBPH
 
 include("Model.jl")
 include("visualize.jl")
+include("postprocess.jl")
 
 using .Model: AGENT_DATA, MODEL_DATA, init_model
 using GLMakie
