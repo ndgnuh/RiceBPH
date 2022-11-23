@@ -4,7 +4,7 @@ using Clustering
 using Statistics
 using JLD2
 
-function ma(X, k)
+function moving_average(X, k)
     pad = zeros(eltype(X), k ÷ 2)
     return [pad; [mean(X[i:(i + k)]) for i in 1:(length(X) - k)]; pad]
 end
@@ -12,13 +12,13 @@ end
 function peak_population(X::AbstractVector; smooth=48 * 7 ÷ 2, threshold=0.0)
     # Smooth signal
     Y = X
-    Y = ma(X, smooth)
+    Y = moving_average(X, smooth)
     # Normlize
     MX = maximum(Y)
     mX = minimum(Y)
     Y = (Y .- mean(Y)) ./ std(Y)
     # Find the peaks
-    return peaks = let r = Y .≥ threshold
+    return let r = Y .≥ threshold
         ranges = findall(isone, abs.(diff(r)))
         if isodd(length(ranges))
             push!(range, length(X))
