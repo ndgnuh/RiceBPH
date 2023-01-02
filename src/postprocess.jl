@@ -1,8 +1,6 @@
-using DataFrames
 using HypothesisTests
 using Clustering
 using Statistics
-using JLD2
 
 function ma(X, k)
     pad = zeros(eltype(X), k ÷ 2)
