@@ -1,10 +1,36 @@
 using HypothesisTests
-using Clustering
+using LinearAlgebra
 using Statistics
 
 function moving_average(X, k)
     pad = zeros(eltype(X), k ÷ 2)
     return [pad; [mean(X[i:(i+k)]) for i in 1:(length(X)-k)]; pad]
+end
+
+function kmeans(X::AbstractVector, num_cluster::Integer; max_iterations=100)
+    assignments = ones(typeof(num_cluster), length(X))
+    centroids = rand(X, num_cluster)
+    converged = (false)
+    for iter in 1:max_iterations
+        # Assign each data point to its closest cluster
+        dists = [norm(a - b) for (a, b) in Iterators.product(X, centroids)]
+        new_assignments = [i.I[end] for i in argmin(dists, dims=2)][:]
+
+        # Check if the current assignment is the same as the last one
+        @show iter, assignments, new_assignments
+        if all((a1 == a2) for (a1, a2) in zip(assignments, new_assignments))
+            centroids .= [mean(X[new_assignments.==i]) for i in 1:num_cluster]
+            assignments .= new_assignments
+            converged = true
+            break
+        end
+
+
+        # Update clustering
+        centroids .= [mean(X[new_assignments.==i]) for i in 1:num_cluster]
+        assignments .= new_assignments
+    end
+    return (; assignments, converged, centroids)
 end
 
 function peak_population(X::AbstractVector; smooth=48 * 7 ÷ 2, threshold=0.0)
@@ -27,6 +53,31 @@ function peak_population(X::AbstractVector; smooth=48 * 7 ÷ 2, threshold=0.0)
         end
     end
 end
+
+#= function batch_peak_population(file::AbstractString; kwargs...) =#
+#=     peaks = jldopen(file) do f =#
+#=         map(1:1000) do seed =#
+#=             df = f["$seed"] =#
+#=             peak_population(df.count_bph; kwargs...) =#
+#=         end =#
+#=     end =#
+#=     peaks = let lens = length.(peaks) =#
+#=         s = std(lens) =#
+#=         m = mean(lens) =#
+#=         a, b = m - 3s, m + 3s =#
+#=         filter(x -> a ≤ length(x) ≤ b, peaks) =#
+#=     end =#
+#=     npeaks = maximum(length.(peaks)) =#
+#=     peaks = reduce(vcat, peaks) =#
+
+#=     cl = kmeans(transpose(peaks), npeaks) =#
+#=     peaks = map(1:npeaks) do k =#
+#=         peaks[k.==cl.assignments] =#
+#=     end =#
+#=     mpeaks = mean.(peaks) =#
+#=     perm = sortperm(mpeaks) =#
+#=     return peaks[perm] =#
+#= end =#
 
 function test_effectiveness(foods::AbstractMatrix, p0; alpha=0.05)
     # foods: [time, experiment]
