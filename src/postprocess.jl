@@ -7,7 +7,7 @@ function moving_average(X, k)
     return [pad; [mean(X[i:(i+k)]) for i in 1:(length(X)-k)]; pad]
 end
 
-function kmeans(X::AbstractVector, num_cluster::Integer; max_iterations=100)
+function kmeans(X, num_cluster::Integer; max_iterations=100)
     assignments = ones(typeof(num_cluster), length(X))
     centroids = rand(X, num_cluster)
     converged = (false)
@@ -17,10 +17,7 @@ function kmeans(X::AbstractVector, num_cluster::Integer; max_iterations=100)
         new_assignments = [i.I[end] for i in argmin(dists, dims=2)][:]
 
         # Check if the current assignment is the same as the last one
-        @show iter, assignments, new_assignments
         if all((a1 == a2) for (a1, a2) in zip(assignments, new_assignments))
-            centroids .= [mean(X[new_assignments.==i]) for i in 1:num_cluster]
-            assignments .= new_assignments
             converged = true
             break
         end
@@ -52,6 +49,34 @@ function peak_population(X::AbstractVector; smooth=48 * 7 ÷ 2, threshold=0.0)
             return a + offset
         end
     end
+end
+
+function batch_peak_populations(populations; kwargs...)
+    peakss = map(peak_population, populations)
+    num_peaks = map(length, peakss)
+
+    # Remove anomalies
+    peaks = let μ = mean(num_peaks),
+        σ = std(num_peaks)
+
+        peakss = [
+            peaks for (num_peak, peaks) in zip(num_peaks, peakss)
+            if μ - 3σ <= num_peak <= μ + 3σ
+        ]
+    end
+
+    # Binning to match the peaks
+    num_cluster = maximum(num_peaks)
+    flatten_peaks = convert.(Float32, Iterators.flatten(peakss))
+    kmeans_result = kmeans(flatten_peaks, num_cluster)
+    @assert kmeans_result.converged
+
+    # Find the peaks according to batch results
+    peaks = [
+        mean(flatten_peaks[kmeans_result.assignments.==i])
+        for i in 1:num_cluster
+    ]
+    return peaks
 end
 
 #= function batch_peak_population(file::AbstractString; kwargs...) =#
