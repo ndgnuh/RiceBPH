@@ -29,14 +29,52 @@ function kmeans(X, num_cluster::Integer; max_iterations=100)
     end
     return (; assignments, converged, centroids)
 end
+function peak_population2(
+    X::AbstractVector;
+    smooth=48 * 7 ÷ 2
+)
+    # Smooth signal
+    threshold = mean(X)
 
-function peak_population(X::AbstractVector; smooth=48 * 7 ÷ 2, threshold=0.0)
+    # Whether the previous step is larger than the threshold
+    flag::Bool = first(X) >= threshold
+
+    # Peaks
+    left = 0
+    peaks = Int[]
+    sizehint!(peaks, 5)
+
+    # Count the peaks iteratively
+    for step in smooth:(lastindex(X)-smooth)
+        avg = mean(X[i] for i in step-smooth+1:step+smooth)
+        next_flag = avg >= threshold
+        if next_flag && !flag
+            left = step
+        end
+        if !next_flag && flag
+            peak = argmax((X[i] for i in left:step)) + left
+            push!(peaks, peak)
+        end
+        flag = next_flag
+    end
+
+    # The BPH didn't die out at the end, count the last peak
+    if flag
+        peak = argmax((X[i] for i in left:step)) + left
+        push!(peaks, peak)
+    end
+
+    resize!(peaks, length(peaks))
+    return peaks
+end
+
+function peak_population(X::AbstractVector;
+    smooth=48 * 7 ÷ 2,
+    threshold=0.0f0)
     # Smooth signal
     Y = X
     Y = moving_average(X, smooth)
     # Normlize
-    MX = maximum(Y)
-    mX = minimum(Y)
     Y = (Y .- mean(Y)) ./ std(Y)
     # Find the peaks
     return let r = Y .≥ threshold
@@ -52,7 +90,7 @@ function peak_population(X::AbstractVector; smooth=48 * 7 ÷ 2, threshold=0.0)
 end
 
 function batch_peak_populations(populations; strict::Bool=false, kwargs...)
-    peakss = map(peak_population, populations)
+    peakss = map(peak_population2, populations)
     num_peaks = map(length, peakss)
 
     # Remove anomalies
