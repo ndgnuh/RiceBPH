@@ -86,6 +86,7 @@ function create_model_properties(; model_params...)
     catch e
         food = readdlm(params.envmap, '\t', Float32)
     end
+
     pr_eliminate = init_pr_eliminate(params.init_pr_eliminate, food)
     eliminate_positions = let P = findall(!iszero, pr_eliminate)
         convert.(Tuple, P)
