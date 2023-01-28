@@ -51,7 +51,7 @@ function peak_population(X::AbstractVector; smooth=48 * 7 ÷ 2, threshold=0.0)
     end
 end
 
-function batch_peak_populations(populations; kwargs...)
+function batch_peak_populations(populations; strict::Bool=false, kwargs...)
     peakss = map(peak_population, populations)
     num_peaks = map(length, peakss)
 
@@ -69,7 +69,9 @@ function batch_peak_populations(populations; kwargs...)
     num_cluster = maximum(num_peaks)
     flatten_peaks = convert.(Float32, Iterators.flatten(peakss))
     kmeans_result = kmeans(flatten_peaks, num_cluster)
-    @assert kmeans_result.converged
+    if strict
+        @assert kmeans_result.converged
+    end
 
     # Find the peaks according to batch results
     peaks = [
@@ -79,30 +81,6 @@ function batch_peak_populations(populations; kwargs...)
     return peaks
 end
 
-#= function batch_peak_population(file::AbstractString; kwargs...) =#
-#=     peaks = jldopen(file) do f =#
-#=         map(1:1000) do seed =#
-#=             df = f["$seed"] =#
-#=             peak_population(df.count_bph; kwargs...) =#
-#=         end =#
-#=     end =#
-#=     peaks = let lens = length.(peaks) =#
-#=         s = std(lens) =#
-#=         m = mean(lens) =#
-#=         a, b = m - 3s, m + 3s =#
-#=         filter(x -> a ≤ length(x) ≤ b, peaks) =#
-#=     end =#
-#=     npeaks = maximum(length.(peaks)) =#
-#=     peaks = reduce(vcat, peaks) =#
-
-#=     cl = kmeans(transpose(peaks), npeaks) =#
-#=     peaks = map(1:npeaks) do k =#
-#=         peaks[k.==cl.assignments] =#
-#=     end =#
-#=     mpeaks = mean.(peaks) =#
-#=     perm = sortperm(mpeaks) =#
-#=     return peaks[perm] =#
-#= end =#
 
 function test_effectiveness(foods::AbstractMatrix, p0; alpha=0.05)
     # foods: [time, experiment]
