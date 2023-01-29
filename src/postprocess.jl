@@ -60,7 +60,7 @@ function peak_population2(
 
     # The BPH didn't die out at the end, count the last peak
     if flag
-        peak = argmax((X[i] for i in left:step)) + left
+        peak = argmax((X[i] for i in left:lastindex(X))) + left
         push!(peaks, peak)
     end
 
@@ -97,7 +97,7 @@ function batch_peak_populations(populations; strict::Bool=false, kwargs...)
     peaks = let μ = mean(num_peaks),
         σ = std(num_peaks)
 
-        peakss = [
+        [
             peaks for (num_peak, peaks) in zip(num_peaks, peakss)
             if μ - 3σ <= num_peak <= μ + 3σ
         ]
