@@ -40,7 +40,7 @@ function peak_population2(
     flag::Bool = first(X) >= threshold
 
     # Peaks
-    left = 0
+    left = 1
     peaks = Int[]
     sizehint!(peaks, 5)
 
