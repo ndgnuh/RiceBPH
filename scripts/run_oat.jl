@@ -61,17 +61,21 @@ function julia_main(oat_config, num_replications)
     return Dict("outputs" => rows_d)
 end
 
-function julia_main(oat_configs::Vector, num_replications::Int)
-    return [julia_main(oat_config, num_replications)
-            for oat_config in oat_configs]
-end
-
-@main function main(oat_config_file; num_replications::Int=100)
-    oat_config = TOML.parse(read(oat_config_file, String))
-    output_file = splitext(oat_config_file)[begin] * ".output.toml"
-    @info "output_file=$output_file"
-    outputs = julia_main(oat_config, num_replications)
-    open(output_file, "w") do io
-        TOML.print(io, outputs)
+@main function main(oat_config; num_replications::Int=50)
+    oat_config_files = if isfile(oat_config)
+        [oat_config]
+    elseif isdir(oat_config)
+        joinpath.(oat_config, readdir(oat_config))
+    end
+    outputdir = "oat_outputs"
+    mkpath(outputdir)
+    for oat_config_file in oat_config_files
+        config = TOML.parse(read(oat_config_file, String))
+        output_file = joinpath(outputdir, basename(oat_config_file))
+        @info "Processing $oat_config_file"
+        outputs = julia_main(config, num_replications)
+        open(output_file, "w") do io
+            TOML.print(io, outputs)
+        end
     end
 end

@@ -39,7 +39,7 @@ end
     init_pr_eliminate::Float32 = 0.15
 
     # Running paramters
-    energy_miss::Float32 = 0.025
+    #= energy_miss::Float32 = 0.025 =#
     age_init::Int16 = 168
     age_reproduce::Int16 = 504
     age_old::Int16 = 600

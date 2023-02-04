@@ -3,6 +3,10 @@ using LinearAlgebra
 using Statistics
 using Parameters
 
+function second(x)
+    first(Iterators.drop(x, 1))
+end
+
 function moving_average(X, k)
     pad = zeros(eltype(X), k ÷ 2)
     return [pad; [mean(X[i:(i+k)]) for i in 1:(length(X)-k)]; pad]
@@ -117,7 +121,11 @@ function batch_peak_populations(populations; strict::Bool=false, kwargs...)
         mean(flatten_peaks[kmeans_result.assignments.==i])
         for i in 1:num_cluster
     ]
-    return peaks
+    std_peaks = [
+        std(flatten_peaks[kmeans_result.assignments.==i])
+        for i in 1:num_cluster
+    ]
+    return peaks, std_peaks
 end
 
 
@@ -181,10 +189,14 @@ end
     num_outcomes::Int32
     num_good_outcomes::Int32
     num_peaks::Int32
-    first_peak::Float32
-    second_peak::Float32
-    first_peak_value::Float32
-    second_peak_value::Float32
+    mean_first_peak::Float32
+    mean_second_peak::Float32
+    std_first_peak::Float32
+    std_second_peak::Float32
+    mean_first_peak_value::Float32
+    mean_second_peak_value::Float32
+    std_first_peak_value::Float32
+    std_second_peak_value::Float32
     peaks_time_diff::Float32
     peaks_value_diff::Float32
 end
@@ -196,6 +208,7 @@ function replication_statistics(;
     only_bad=false
 )
     @assert !(only_good == only_bad == true)
+
     # Food related statistics
     pct_healthy_rices = map(rices) do R
         R[end] / R[begin]
@@ -213,36 +226,54 @@ function replication_statistics(;
     num_good_outcomes = count(good_outcomes)
 
     # BPH related statistics
-    peaks = RiceBPH.batch_peak_populations(populations)
-    num_peaks = length(peaks)
-    first_peak = first(peaks)
-    second_peak = first(Iterators.drop(peaks, 1))
-    first_peak_value = let
-        if isnan(first_peak)
-            first_peak # Returns NaN of same type
+    mean_peaks, std_peaks = RiceBPH.batch_peak_populations(populations)
+    num_peaks = length(mean_peaks)
+    mean_first_peak = length(mean_peaks) > 1 ? first(mean_peaks) : NaN32
+    std_first_peak = length(std_peaks) > 1 ? first(std_peaks) : NaN32
+    mean_second_peak = length(mean_peaks) > 2 ? second(mean_peaks) : NaN32
+    std_second_peak = length(std_peaks) > 2 ? second(std_peaks) : NaN32
+
+    # First BPH peak value
+    (
+        mean_first_peak_value,
+        std_first_peak_value
+    ) = let
+        if isnan(mean_first_peak)
+            (mean_first_peak, mean_first_peak)
         else
-            peak = trunc(Int, first_peak)
-            mean(population[peak] for population in populations)
+            peak = trunc(Int, mean_first_peak)
+            itr = (population[peak] for population in populations)
+            mean(itr), std(itr)
         end
     end
-    second_peak_value = let
-        if isnan(second_peak)
-            second_peak # Returns NaN of same type
+
+    # Second BPH peak value
+    (
+        mean_second_peak_value,
+        std_second_peak_value
+    ) = let
+        if isnan(mean_second_peak)
+            (mean_second_peak, mean_second_peak) # Returns NaN of same type
         else
-            peak = trunc(Int, second_peak)
-            mean(population[peak] for population in populations)
+            peak = trunc(Int, mean_second_peak)
+            itr = (population[peak] for population in populations)
+            mean(itr), std(itr)
         end
     end
-    peaks_time_diff = second_peak - first_peak
-    peaks_value_diff = second_peak_value - first_peak_value
+
+    # Difference between peaks
+    peaks_time_diff = mean_second_peak - mean_first_peak
+    peaks_value_diff = mean_second_peak_value - mean_first_peak_value
 
     rep_stats = ReplicationStatistics(;
         mean_pct_healthy_rice=mean(pct_healthy_rices),
         std_pct_healthy_rice=std(pct_healthy_rices),
         num_outcomes, num_good_outcomes,
         num_peaks,
-        first_peak, second_peak,
-        first_peak_value, second_peak_value,
+        mean_first_peak, mean_second_peak,
+        std_first_peak, std_second_peak,
+        mean_first_peak_value, mean_second_peak_value,
+        std_first_peak_value, std_second_peak_value,
         peaks_time_diff, peaks_value_diff
     )
     return Tuple(k => getproperty(rep_stats, k)
