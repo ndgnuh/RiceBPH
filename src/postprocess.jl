@@ -1,6 +1,7 @@
 using HypothesisTests
 using LinearAlgebra
 using Statistics
+using Parameters
 
 function moving_average(X, k)
     pad = zeros(eltype(X), k ÷ 2)
@@ -171,4 +172,79 @@ function test_effectiveness(foods::AbstractMatrix; alpha=0.05)
     # The result shown in the test repr is for BOTH size test
     # Don't trust those
     return (; test, pass, pvalue)
+end
+
+
+@with_kw struct ReplicationStatistics
+    mean_pct_healthy_rice::Float32
+    std_pct_healthy_rice::Float32
+    num_outcomes::Int32
+    num_good_outcomes::Int32
+    num_peaks::Int32
+    first_peak::Float32
+    second_peak::Float32
+    first_peak_value::Float32
+    second_peak_value::Float32
+    peaks_time_diff::Float32
+    peaks_value_diff::Float32
+end
+
+function replication_statistics(;
+    populations, rices,
+    good_threshold::AbstractFloat=0.45f0,
+    only_good=false,
+    only_bad=false
+)
+    @assert !(only_good == only_bad == true)
+    # Food related statistics
+    pct_healthy_rices = map(rices) do R
+        R[end] / R[begin]
+    end
+    good_outcomes = pct_healthy_rices .>= good_threshold
+    populations, rices = if only_good
+        populations[good_outcomes], rices[good_outcomes]
+    elseif only_bad
+        bad_outcomes = .!(good_outcomes)
+        populations[bad_outcomes], rices[bad_outcomes]
+    else
+        populations, rices
+    end
+    num_outcomes = length(populations)
+    num_good_outcomes = count(good_outcomes)
+
+    # BPH related statistics
+    peaks = RiceBPH.batch_peak_populations(populations)
+    num_peaks = length(peaks)
+    first_peak = first(peaks)
+    second_peak = first(Iterators.drop(peaks, 1))
+    first_peak_value = let
+        if isnan(first_peak)
+            first_peak # Returns NaN of same type
+        else
+            peak = trunc(Int, first_peak)
+            mean(population[peak] for population in populations)
+        end
+    end
+    second_peak_value = let
+        if isnan(second_peak)
+            second_peak # Returns NaN of same type
+        else
+            peak = trunc(Int, second_peak)
+            mean(population[peak] for population in populations)
+        end
+    end
+    peaks_time_diff = second_peak - first_peak
+    peaks_value_diff = second_peak_value - first_peak_value
+
+    rep_stats = ReplicationStatistics(;
+        mean_pct_healthy_rice=mean(pct_healthy_rices),
+        std_pct_healthy_rice=std(pct_healthy_rices),
+        num_outcomes, num_good_outcomes,
+        num_peaks,
+        first_peak, second_peak,
+        first_peak_value, second_peak_value,
+        peaks_time_diff, peaks_value_diff
+    )
+    return Tuple(k => getproperty(rep_stats, k)
+                 for k in propertynames(rep_stats))
 end

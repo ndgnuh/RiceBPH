@@ -57,7 +57,7 @@ function replication_statistic(;
     num_peaks = length(peaks)
     first_peak = first(peaks)
     second_peak = first(Iterators.drop(peaks, 1))
-    first_peak_value = 0
+    first_peak_value = mean(pop
     second_peak_value = 0
     peaks_time_diff = second_peak - first_peak
     peaks_value_diff = second_peak_value - first_peak_value
