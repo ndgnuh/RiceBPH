@@ -8,7 +8,9 @@ using Colors
 using DelimitedFiles
 using Base: @kwdef
 
-name = "Rice-Brown Plant Hopper"
+const SHORT_WING = true
+const LONG_WING = false
+const MODEL_NAME = "Rice-Brown Plant Hopper"
 
 """
     neighbors_at(n::Integer)
@@ -42,9 +44,10 @@ end
     age_reproduce::Int16 = 504
     age_old::Int16 = 600
     age_die::Int16 = 720
-    pr_reproduce::Dict{Bool,Float32} = Dict(true => 0.188, false => 0.157)
     pr_egg_death::Float32 = 0.0025
     pr_old_death::Float32 = 0.04
+    pr_reproduce_shortwing::Float32 = 0.188f0
+    pr_reproduce_longwing::Float32 = 0.157f0
     offspring_max::Int8 = 12
     offspring_min::Int8 = 5
     energy_max::Float32 = 1.0
@@ -52,8 +55,63 @@ end
     energy_consume::Float32 = 0.025
     energy_move::Float32 = 0.2
     energy_reproduce::Float32 = 0.8
-    move_directions::Dict{Bool,Vector} = Dict(true => neighbors_at(1),
-                                              false => neighbors_at(2))
+    moving_speed_shortwing::Int8 = 1
+    moving_speed_longwing::Int8 = 2
+end
+
+function Base.iterate(params::ModelParams)
+    (k => getproperty(params, k) for k in propertynames(params))
+end
+
+"""
+    create_model_properties(; model_params...)::NamedTuple
+
+Return model properties from raw model properties. 
+Parameters are the fields of `ModelParams`.
+The return has all the parameters plus some extra properties,
+it also has a `parameters` key to access to all the raw parameters.
+Not all keys have to be provided since there are default parematers.
+See `ModelParams`.
+"""
+function create_model_properties(; model_params...)
+    # Constructing a ModelParams helps us guard which parameters
+    # is needed, while customizing modified parameters without
+    # having to write a tons of repetitive code
+    params = ModelParams(; model_params...)
+
+    # Maps initialization
+    local food
+    try
+        food = readdlm(params.envmap, ',', Float32)
+    catch e
+        food = readdlm(params.envmap, '\t', Float32)
+    end
+
+    pr_eliminate = init_pr_eliminate(params.init_pr_eliminate, food)
+    eliminate_positions = let P = findall(!iszero, pr_eliminate)
+        convert.(Tuple, P)
+    end
+
+    # Model properties
+    props = (;
+        iterate(params)..., # put thiss first because it should be overriden
+        parameters=Dict(iterate(params)), # For easy result saving
+        food=food,
+        death_natural=0,
+        death_predator=0,
+        pr_eliminate=pr_eliminate,
+        pr_eliminate_positions=eliminate_positions,
+        energy_full=1.0 - params.energy_transfer,
+        moving_directions=Dict(
+            SHORT_WING => neighbors_at(params.moving_speed_shortwing),
+            LONG_WING => neighbors_at(params.moving_speed_longwing)
+        ),
+        pr_reproduce=Dict(
+            SHORT_WING => params.pr_reproduce_shortwing,
+            LONG_WING => params.pr_reproduce_longwing
+        )
+    )
+    return props
 end
 
 """
@@ -65,14 +123,16 @@ function gencrop_3x3(T::DataType=Float32)
     flower_position = [31:35; 61:65]
     nan = convert(T, NaN)
     one_ = one(T)
-    return food = [begin
-                       if x in flower_position || y in flower_position
-                           nan
-                       else
-                           one_
-                       end
-                   end
-                   for (x, y) in Iterators.product(1:100, 1:100)]
+    return food = [
+        begin
+            if x in flower_position || y in flower_position
+                nan
+            else
+                one_
+            end
+        end
+        for (x, y) in Iterators.product(1:100, 1:100)
+    ]
 end
 
 Base.@kwdef mutable struct BPH <: AbstractAgent
@@ -84,59 +144,24 @@ Base.@kwdef mutable struct BPH <: AbstractAgent
     isshortwing::Bool
 end
 
-function Base.iterate(x::ModelParams)
-    props = propertynames(x)
-    prop = first(props)
-    value = getproperty(x, prop)
-    max_index = length(props)
-    state = (props, 2, max_index)
-    return (prop => value, state)
-end
-
-function Base.iterate(x::ModelParams, state)
-    props, index, max_index = state
-    if index > max_index
-        return nothing
-    end
-    prop = props[index]
-    value = getproperty(x, prop)
-    return (prop => value, (props, index + 1, max_index))
-end
-
 function init_model(; seed=nothing, kwargs...)
-    return init_model(ModelParams(; kwargs...); seed=seed)
-end
-function init_model(params::ModelParams; seed=nothing, kwargs...)
     rng = MersenneTwister(seed)
-    food = collect(transpose(init_envmap(params.envmap)))
-    pr_eliminate = init_pr_eliminate(params.init_pr_eliminate, food)
-    init_position = Symbol(params.init_position)
-
-    # PROPERTIES
-
-    properties = (food=food,
-                  total_bph=params.init_nb_bph,
-                  death_natural=0,
-                  death_predator=0,
-                  pr_eliminate=pr_eliminate,
-                  pr_eliminate_positions=convert.(Tuple, findall(!iszero, pr_eliminate)),
-                  energy_full=1.0 - params.energy_transfer,
-                  params...)
+    properties = create_model_properties(; kwargs...)
 
     # MODEL
-
+    food = properties.food
     space = GridSpace(size(food); periodic=false)
     scheduler = Schedulers.by_id
     model = ABM(BPH, space; scheduler=scheduler, properties=properties, rng=rng)
 
     # AGENTS CREATION
-
+    init_position = Symbol(properties.init_position)
     positions = let p = if init_position === :corner
             Iterators.product(1:5, 1:5)
         elseif init_position === :random_c1
-            Iterators.product(1:(size(food, 1) ÷ 2), 1:size(food, 1))
+            Iterators.product(1:(size(food, 1)÷2), 1:size(food, 1))
         elseif init_position === :random_c2
-            Iterators.product(1:(size(food, 1) ÷ 3), 1:size(food, 1))
+            Iterators.product(1:(size(food, 1)÷3), 1:size(food, 1))
         elseif init_position === :border
             Iterators.product(1:5, 1:size(food, 1))
         else
@@ -144,15 +169,15 @@ function init_model(params::ModelParams; seed=nothing, kwargs...)
         end
         filter(pos -> !isnan(food[pos...]), collect(p))
     end
-    for _ in 1:(params.init_nb_bph)
+    for _ in 1:(properties.init_nb_bph)
         isshortwing = rand(model.rng, Bool)
         bph = BPH(; #
-                  id=nextid(model),
-                  pos=rand(model.rng, positions),
-                  energy=rand(model.rng, 0.4:0.01:0.6),
-                  age=rand(model.rng, 0:300),
-                  isfemale=rand(model.rng, Bool),
-                  isshortwing=isshortwing)
+            id=nextid(model),
+            pos=rand(model.rng, positions),
+            energy=rand(model.rng, 0.4:0.01:0.6),
+            age=rand(model.rng, 0:300),
+            isfemale=rand(model.rng, Bool),
+            isshortwing=isshortwing)
         add_agent_pos!(bph, model)
     end
 
@@ -217,12 +242,12 @@ function agent_step!(agent, model)
         isnan(model.food[x, y]) ||
         rand(model.rng) > (model.food[x, y] * 0.5))
         thres = rand(model.rng)
-        directions = filter(model.move_directions[agent.isshortwing]) do (dx, dy)
+        directions = filter(model.moving_directions[agent.isshortwing]) do (dx, dy)
             food = get(model.food, (x + dx, y + dy), -1.0)
             return thres ≤ (isnan(food) / 2 + !isnan(food) * food)
         end
         if isempty(directions)
-            walk!(agent, rand(model.rng, model.move_directions[agent.isshortwing]), model)
+            walk!(agent, rand(model.rng, model.moving_directions[agent.isshortwing]), model)
         else
             walk!(agent, rand(model.rng, directions), model)
         end
@@ -231,8 +256,8 @@ function agent_step!(agent, model)
     # Eat conditionally
     if model.food[x, y] > 0 && agent.age ≥ model.age_init
         transfer = min(model.energy_transfer,
-                       model.food[x, y],
-                       model.energy_max - agent.energy)
+            model.food[x, y],
+            model.energy_max - agent.energy)
         model.food[x, y] -= transfer
         agent.energy += transfer
         # min(agent.energy + transfer, model.energy_max)
@@ -248,12 +273,12 @@ function agent_step!(agent, model)
         for _ in 1:nb_offspring
             id = nextid(model)
             agent = BPH(;
-                        id=id,
-                        pos=agent.pos,
-                        energy=0.4,
-                        age=0,
-                        isfemale=rand(model.rng, Bool),
-                        isshortwing=isshortwing)
+                id=id,
+                pos=agent.pos,
+                energy=0.4,
+                age=0,
+                isfemale=rand(model.rng, Bool),
+                isshortwing=isshortwing)
             add_agent_pos!(agent, model)
         end
         agent.energy -= 0.1
@@ -309,27 +334,24 @@ const AGENT_DATA = [(is_alive, count)]
 const MODEL_DATA = [num_healthy_rice]
 
 """
-    run_simulation(params::ModelParams; seed=nothing, num_steps::Int)
     run_simulation(; num_steps::Int, seed=nothing, kwargs...)
 
 Run RiceBPH simulation, return the result dataframe. `kwargs` are passed to `init_model`
 """
-function run_simulation(model_params::ModelParams;
-                        seed=nothing, num_steps::Int=2880)
-    model, agent_step!, model_step! = init_model(model_params;
-                                                 seed=seed)
-    adf, mdf = run!(model,
-                    agent_step!,
-                    model_step!,
-                    num_steps;
-                    adata=AGENT_DATA,
-                    mdata=MODEL_DATA)
+function run_simulation(; num_steps::Int=2880, seed=nothing, kwargs...)
+    model, agent_step!, model_step! = init_model(;
+        kwargs...,
+        seed=seed
+    )
+    adf, mdf = run!(
+        model,
+        agent_step!,
+        model_step!,
+        num_steps;
+        adata=AGENT_DATA,
+        mdata=MODEL_DATA
+    )
     return rightjoin(adf, mdf; on=:step)
-end
-function run_simulation(; num_steps::Int=2880,
-                        seed=nothing,
-                        kwargs...)
-    return run_simulation(ModelParams(; kwargs...); seed=seed, num_steps=num_steps)
 end
 
 """

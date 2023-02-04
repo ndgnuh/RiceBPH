@@ -5,14 +5,12 @@ include("visualize.jl")
 include("postprocess.jl")
 
 using .Model: AGENT_DATA,
-              MODEL_DATA,
-              init_model,
-              create_experiments,
-              run_simulation
-using GLMakie
-using InteractiveDynamics
+    MODEL_DATA,
+    init_model,
+    create_experiments,
+    run_simulation
 
-export Model, abmplot, GLMakie,
-       AGENT_DATA, MODEL_DATA, init_model
+export Model,
+    AGENT_DATA, MODEL_DATA, init_model
 
 end # module RiceBPH
