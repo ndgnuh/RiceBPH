@@ -102,7 +102,7 @@ function create_model_properties(; model_params...)
         pr_eliminate=pr_eliminate,
         pr_eliminate_positions=eliminate_positions,
         energy_full=1.0 - params.energy_transfer,
-        moving_directions=Dict(
+        move_directions=Dict(
             SHORT_WING => neighbors_at(params.moving_speed_shortwing),
             LONG_WING => neighbors_at(params.moving_speed_longwing)
         ),
@@ -237,17 +237,18 @@ function agent_step!(agent, model)
     agent.energy = agent.energy - (agent.age ≥ model.age_init) * model.energy_consume
 
     # Move conditionally
-    if (agent.age ≥ model.age_init && agent.energy ≥ model.energy_move) &&
-       (agent.energy ≥ model.energy_full ||
+    if (agent.age ≥ model.age_init && agent.energy ≥ model.energy_move) && (
+        agent.energy ≥ model.energy_full ||
         isnan(model.food[x, y]) ||
-        rand(model.rng) > (model.food[x, y] * 0.5))
+        rand(model.rng) > (model.food[x, y] * 0.5)
+    )
         thres = rand(model.rng)
-        directions = filter(model.moving_directions[agent.isshortwing]) do (dx, dy)
+        directions = filter(model.move_directions[agent.isshortwing]) do (dx, dy)
             food = get(model.food, (x + dx, y + dy), -1.0)
-            return thres ≤ (isnan(food) / 2 + !isnan(food) * food)
+            thres ≤ (isnan(food) / 2 + !isnan(food) * food)
         end
         if isempty(directions)
-            walk!(agent, rand(model.rng, model.moving_directions[agent.isshortwing]), model)
+            walk!(agent, rand(model.rng, model.move_directions[agent.isshortwing]), model)
         else
             walk!(agent, rand(model.rng, directions), model)
         end
@@ -255,22 +256,26 @@ function agent_step!(agent, model)
 
     # Eat conditionally
     if model.food[x, y] > 0 && agent.age ≥ model.age_init
-        transfer = min(model.energy_transfer,
+        transfer = min(#
+            model.energy_transfer,
             model.food[x, y],
-            model.energy_max - agent.energy)
+            model.energy_max - agent.energy,
+        )
         model.food[x, y] -= transfer
         agent.energy += transfer
         # min(agent.energy + transfer, model.energy_max)
     end
 
     # Reproduce conditionally
-    if (agent.isfemale && # is female
+    if (
+        agent.isfemale && # is female
         agent.age ≥ model.age_reproduce && # Old enough
         agent.energy ≥ model.energy_reproduce && # Energy requirement
-        rand(model.rng) ≤ model.pr_reproduce[agent.isshortwing])
+        rand(model.rng) ≤ model.pr_reproduce[agent.isshortwing] # Have RNG Jesus by your side
+    )
         nb_offspring = rand(model.rng, (model.offspring_min):(model.offspring_max))
         isshortwing = rand(model.rng, Bool)
-        for _ in 1:nb_offspring
+        for _ = 1:nb_offspring
             id = nextid(model)
             agent = BPH(;
                 id=id,
@@ -278,7 +283,8 @@ function agent_step!(agent, model)
                 energy=0.4,
                 age=0,
                 isfemale=rand(model.rng, Bool),
-                isshortwing=isshortwing)
+                isshortwing=isshortwing
+            )
             add_agent_pos!(agent, model)
         end
         agent.energy -= 0.1
@@ -287,10 +293,14 @@ function agent_step!(agent, model)
     # Die conditionally
     if (agent.energy ≤ 0) || # Exausted
        (agent.age ≥ model.age_die) || # Too old
-       (model.age_die > agent.age ≥ model.age_old && # Old
-        rand(model.rng) ≤ model.pr_old_death) ||
-       (agent.age < model.age_init && # Young
-        rand(model.rng) ≤ model.pr_egg_death) # then
+       (
+           model.age_die > agent.age ≥ model.age_old && # Old
+           rand(model.rng) ≤ model.pr_old_death # And weak
+       ) ||
+       (
+           agent.age < model.age_init && # Young
+           rand(model.rng) ≤ model.pr_egg_death # And weak
+       ) # then
         kill_agent!(agent, model)
         return nothing
     end
