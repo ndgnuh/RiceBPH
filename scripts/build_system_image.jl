@@ -1,5 +1,6 @@
 using Pkg
 Pkg.activate(joinpath(@__DIR__, ".."))
+Pkg.resolve()
 
 #= let orig_load_path = joinpath(first(Base.DEPOT_PATH) , "packages") =#
 #=     push!(Base.LOAD_PATH, orig_load_path) =#
