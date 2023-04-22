@@ -27,7 +27,7 @@ function GLMakie.scatter!(a...; b...)
 end
 
 const MAP = "nf-300.csv"
-#= const MAP = "006-1x2.csv" =#
+const MAP = "006-1x2.csv"
 @info """
 Done!
 Initializing the model...
@@ -54,11 +54,10 @@ end
 Done!
 Please wait while Julia is compiling the code for plotting.
 """
-fig, obs = abmexploration(model;
-    (agent_step!)=agent_step!,
-    (model_step!)=model_step!,
+abm_video(
+    "video.mp4",
+    model,
+    agent_step!,
+    model_step!;
     #= adata=AGENT_DATA, =#
-    mdata=MODEL_DATA,
     get_plot_kwargs(model)...)
-scene = display(fig)
-wait(scene)

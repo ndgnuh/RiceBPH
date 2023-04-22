@@ -7,10 +7,27 @@ using ImageFiltering
 using Colors
 using DelimitedFiles
 using Base: @kwdef
+using Base.Threads: @threads, Atomic, atomic_add!
+using Statistics
 
 const SHORT_WING = true
 const LONG_WING = false
 const MODEL_NAME = "Rice-Brown Plant Hopper"
+const STAGE_EGG = 1
+const STAGE_NYMPH = 2
+const STAGE_ADULT = 3
+const STAGES = [STAGE_EGG, STAGE_NYMPH, STAGE_ADULT]
+
+# 1.69:1
+const FEMALE_RATIO = 0.63f0
+
+# n eggs -> 0.91n eggs survive
+const SR_EGG = 0.915f0
+const SR_NYMPH = 0.97f0
+
+include("model_agent_actions.jl")
+
+include("utils.jl")
 
 """
     neighbors_at(n::Integer)
@@ -35,29 +52,72 @@ end
     # Initialization parameters
     envmap::String
     init_nb_bph::Int = 200
-    init_position::Symbol = :corner
+    init_position::String = "corner"
     init_pr_eliminate::Float32 = 0.15
 
     # Running paramters
     #= energy_miss::Float32 = 0.025 =#
-    age_init::Int16 = 168
-    age_reproduce::Int16 = 504
-    age_old::Int16 = 600
-    age_die::Int16 = 720
-    pr_egg_death::Float32 = 0.0025
-    pr_old_death::Float32 = 0.04
-    pr_reproduce_shortwing::Float32 = 0.188f0
-    pr_reproduce_longwing::Float32 = 0.157f0
-    offspring_max::Int8 = 12
-    offspring_min::Int8 = 5
-    energy_max::Float32 = 1.0
+    #= age_init::Int16 = 168 =#
+    #= age_reproduce::Int16 = 504 =#
+    #= age_old::Int16 = 1100 =#
+    #= age_die::Int16 = 1224 =#
+    #= pr_egg_death::Float32 = 0.0025 =#
+    #= pr_old_death::Float32 = 0.04 =#
+    #= pr_reproduce_shortwing::Float32 = 0.188f0 =#
+    #= pr_reproduce_longwing::Float32 = 0.157f0 =#
+    num_max_offsprings::Int8 = 12
+    num_min_offsprings::Int8 = 5
+    #= energy_max::Float32 = 1.0 =#
     energy_transfer::Float32 = 0.1
     energy_consume::Float32 = 0.025
-    energy_move::Float32 = 0.2
-    energy_reproduce::Float32 = 0.8
+    #= energy_move::Float32 = 0.2 =#
+    #= energy_reproduce::Float32 = 0.8 =#
     moving_speed_shortwing::Int8 = 1
     moving_speed_longwing::Int8 = 2
 end
+
+@kwdef mutable struct ModelProperties
+    # Cache inferable
+    params::ModelParams
+    food::Matrix{Float32}
+    pr_eliminate::Matrix{Float32}
+    eliminate_positions::Vector{Tuple{Int,Int}}
+    move_directions::Dict
+    #= pr_reproduce::Dict =#
+    #= energy_full::Float32 =#
+
+    # Statistics
+    num_eggs::Int = 0
+    num_nymphs::Int = 0
+    num_macros::Int = 0
+    num_brachys::Int = 0
+    num_bphs::Int = 0
+
+    r_nymphs::Float32 = 0.0f0
+    r_macros::Float32 = 0
+    r_brachys::Float32 = 0
+
+    # Moving averages
+    ma_r_nymphs = stream_moving_average(Float32, 24)
+    ma_r_macros = stream_moving_average(Float32, 24)
+    ma_r_brachys = stream_moving_average(Float32, 24)
+
+    previous_num_agents::Int = 999999999
+    num_rices::Float32 = 1.0f0
+
+    # ETC
+    current_step::Int = 0
+end
+
+# Forward property to params
+function Base.getproperty(mp::ModelProperties, k::Symbol)
+    if hasproperty(mp, k)
+        getfield(mp, k)
+    else
+        getfield(mp.params, k)
+    end
+end
+
 
 function Base.iterate(params::ModelParams)
     (k => getproperty(params, k) for k in propertynames(params))
@@ -93,23 +153,23 @@ function create_model_properties(; model_params...)
     end
 
     # Model properties
-    props = (;
-        iterate(params)..., # put thiss first because it should be overriden
-        parameters=Dict(iterate(params)), # For easy result saving
+    props = ModelProperties(;
+        params=params,
         food=food,
-        death_natural=0,
-        death_predator=0,
         pr_eliminate=pr_eliminate,
-        pr_eliminate_positions=eliminate_positions,
-        energy_full=1.0 - params.energy_transfer,
+        eliminate_positions=eliminate_positions,
+        #= energy_full=1.0 - params.energy_transfer, =#
         move_directions=Dict(
             SHORT_WING => neighbors_at(params.moving_speed_shortwing),
-            LONG_WING => neighbors_at(params.moving_speed_longwing)
-        ),
-        pr_reproduce=Dict(
-            SHORT_WING => params.pr_reproduce_shortwing,
-            LONG_WING => params.pr_reproduce_longwing
+            LONG_WING => neighbors_at(params.moving_speed_longwing),
+            3 => neighbors_at(3),
+            10 => neighbors_at(10),
+            4 => neighbors_at(4)
         )
+        #= pr_reproduce=Dict( =#
+        #=     SHORT_WING => params.pr_reproduce_shortwing, =#
+        #=     LONG_WING => params.pr_reproduce_longwing =#
+        #= ) =#
     )
     return props
 end
@@ -139,9 +199,11 @@ Base.@kwdef mutable struct BPH <: AbstractAgent
     id::Int
     pos::Dims{2}
     energy::Float16
-    age::Int
     isfemale::Bool
     isshortwing::Bool
+    stage::Int8
+    stage_cooldown::Int16
+    reproduction_cooldown::Int16
 end
 
 function init_model(; seed=nothing, kwargs...)
@@ -155,14 +217,14 @@ function init_model(; seed=nothing, kwargs...)
     model = ABM(BPH, space; scheduler=scheduler, properties=properties, rng=rng)
 
     # AGENTS CREATION
-    init_position = Symbol(properties.init_position)
-    positions = let p = if init_position === :corner
-            Iterators.product(1:5, 1:5)
-        elseif init_position === :random_c1
+    init_position = (properties.init_position)
+    positions = let p = if init_position === "corner"
+            Iterators.product(1:25, 1:25)
+        elseif init_position === "random_c1"
             Iterators.product(1:(size(food, 1)÷2), 1:size(food, 1))
-        elseif init_position === :random_c2
+        elseif init_position === "random_c2"
             Iterators.product(1:(size(food, 1)÷3), 1:size(food, 1))
-        elseif init_position === :border
+        elseif init_position === "border"
             Iterators.product(1:5, 1:size(food, 1))
         else
             @assert false "Postition not in [:corner, :random_c1, :random_c2, :border]"
@@ -171,13 +233,38 @@ function init_model(; seed=nothing, kwargs...)
     end
     for _ in 1:(properties.init_nb_bph)
         isshortwing = rand(model.rng, Bool)
+        isfemale = rand(model.rng, Float32) < FEMALE_RATIO
+        stage = if rand(model.rng) <= 0.3333
+            STAGE_EGG
+        elseif rand(model.rng) <= 0.7
+            STAGE_NYMPH
+        else
+            STAGE_ADULT
+        end
+
+        stage_cooldown = if stage == STAGE_EGG
+            cooldown_egg(model.rng)
+        elseif stage == STAGE_NYMPH
+            cooldown_nymph(model.rng, isfemale)
+        else
+            cooldown_adult(model.rng, isfemale, isshortwing)
+        end
+
+        reproduction_cooldown = if stage == STAGE_ADULT && rand(model.rng, Bool)
+            cooldown_reproduction(model.rng, isshortwing)
+        else
+            cooldown_preoviposition(model.rng, isshortwing)
+        end
+
         bph = BPH(; #
             id=nextid(model),
             pos=rand(model.rng, positions),
-            energy=rand(model.rng, 0.4:0.01:0.6),
-            age=rand(model.rng, 0:300),
-            isfemale=rand(model.rng, Bool),
-            isshortwing=isshortwing)
+            energy=1,
+            stage=stage,
+            isfemale=isfemale,
+            isshortwing=isshortwing,
+            reproduction_cooldown=reproduction_cooldown,
+            stage_cooldown=stage_cooldown)
         add_agent_pos!(bph, model)
     end
 
@@ -214,7 +301,9 @@ end
 Return matrix of death pr. Obtained by using gauss kernel to filter the food matrix.
 """
 function init_pr_eliminate(pr_eliminate::Real, food; gauss=2.5)
-    return imfilter(isnan.(food) * pr_eliminate, Kernel.gaussian(gauss))
+    m, n = size(food)
+    kern = Kernel.gaussian(gauss)
+    return imfilter(isnan.(food) * pr_eliminate, kern)
 end
 """
     init_pr_eliminate(pr_eliminate::AbstractMatrix)
@@ -226,108 +315,73 @@ function init_pr_eliminate(pr_eliminate::AbstractMatrix, args...)
 end
 
 # Agents behaviors
-function agent_step!(agent, model)
-    # position
-    x, y = agent.pos
-
-    # Older
-    agent.age = agent.age + 1
-
-    # Step wise energy loss
-    agent.energy = agent.energy - (agent.age ≥ model.age_init) * model.energy_consume
-
-    # Move conditionally
-    if (agent.age ≥ model.age_init && agent.energy ≥ model.energy_move) && (
-        agent.energy ≥ model.energy_full ||
-        isnan(model.food[x, y]) ||
-        rand(model.rng) > (model.food[x, y] * 0.5)
-    )
-        thres = rand(model.rng)
-        directions = filter(model.move_directions[agent.isshortwing]) do (dx, dy)
-            food = get(model.food, (x + dx, y + dy), -1.0)
-            thres ≤ (isnan(food) / 2 + !isnan(food) * food)
-        end
-        if isempty(directions)
-            walk!(agent, rand(model.rng, model.move_directions[agent.isshortwing]), model)
-        else
-            walk!(agent, rand(model.rng, directions), model)
-        end
-    end
-
-    # Eat conditionally
-    if model.food[x, y] > 0 && agent.age ≥ model.age_init
-        transfer = min(#
-            model.energy_transfer,
-            model.food[x, y],
-            model.energy_max - agent.energy,
-        )
-        model.food[x, y] -= transfer
-        agent.energy += transfer
-        # min(agent.energy + transfer, model.energy_max)
-    end
-
-    # Reproduce conditionally
-    if (
-        agent.isfemale && # is female
-        agent.age ≥ model.age_reproduce && # Old enough
-        agent.energy ≥ model.energy_reproduce && # Energy requirement
-        rand(model.rng) ≤ model.pr_reproduce[agent.isshortwing] # Have RNG Jesus by your side
-    )
-        nb_offspring = rand(model.rng, (model.offspring_min):(model.offspring_max))
-        isshortwing = rand(model.rng, Bool)
-        for _ = 1:nb_offspring
-            id = nextid(model)
-            agent = BPH(;
-                id=id,
-                pos=agent.pos,
-                energy=0.4,
-                age=0,
-                isfemale=rand(model.rng, Bool),
-                isshortwing=isshortwing
-            )
-            add_agent_pos!(agent, model)
-        end
-        agent.energy -= 0.1
-    end
-
-    # Die conditionally
-    if (agent.energy ≤ 0) || # Exausted
-       (agent.age ≥ model.age_die) || # Too old
-       (
-           model.age_die > agent.age ≥ model.age_old && # Old
-           rand(model.rng) ≤ model.pr_old_death # And weak
-       ) ||
-       (
-           agent.age < model.age_init && # Young
-           rand(model.rng) ≤ model.pr_egg_death # And weak
-       ) # then
-        kill_agent!(agent, model)
-        return nothing
-    end
-
-    # End of agent step
-end
 
 # Environment behaviors
 function model_step!(model)
     # Rice getting more energy
     # Energy cap is 1.0
     # Dead rice receive no energy
-    @. model.food = min(model.food + model.food * 0.008f0 * (model.food > 0), 1)
+    #= @. model.food = min(model.food + model.food * 1 / 10000, 1) =#
+    model.num_rices = let
+        total_food = Iterators.filter(!isnan, model.food)
+        mean(total_food)
+    end
+
+
+    # Statistics
+    num_eggs = 0
+    num_nymphs = 0
+    num_macros = 0
+    num_brachys = 0
+    for (idx, agent) in (model.agents)
+        stage = agent.stage
+        if stage == STAGE_EGG
+            num_eggs += 1
+        elseif stage == STAGE_NYMPH
+            num_nymphs += 1
+        elseif agent.isshortwing
+            num_brachys += 1
+        else
+            num_macros += 1
+        end
+    end
+    model.num_eggs = num_eggs
+    model.num_nymphs = num_nymphs
+    model.num_macros = num_macros
+    model.num_brachys = num_brachys
+
+    num_adults = num_nymphs + num_brachys + num_macros
+    model.num_eggs = num_eggs
+    model.num_bphs = num_adults + num_eggs
+    model.r_nymphs = num_nymphs / num_adults
+    model.r_macros = num_macros / num_adults
+    model.r_brachys = num_brachys / num_adults
+
+    # Collect moving average
+    #= push!(ma_r_nymphs, model.r_nymphs) =#
+    #= push!(ma_r_macros, model.r_macros) =#
+    #= push!(ma_r_brachys, model.r_brachys) =#
 
     # Randomly select a bph at every flower
-    for pos in model.pr_eliminate_positions
+    for pos in model.eliminate_positions
         pos = Tuple(pos)
         if isempty(pos, model)
             continue
-        elseif rand(model.rng) < model.pr_eliminate[pos...]
-            agents_to_kill = collect(agents_in_position(pos, model))
-            n = length(agents_to_kill)
-            perm = randperm(model.rng, n)
-            for i in Iterators.take(perm, rand(model.rng, 1:3))
-                @inbounds kill_agent!(agents_to_kill[i], model)
+        end
+        for agent in agents_in_position(pos, model)
+            pr = sqrt(eps(Float32) + (1 - agent.energy) * model.pr_eliminate[pos...])
+            if rand(model.rng, Float32) < pr
+                kill_agent!(agent, model)
             end
         end
+        #= elseif rand(model.rng) < model.pr_eliminate[pos...] =#
+        #=     agents_to_kill = collect() =#
+        #=     n = length(agents_to_kill) =#
+        #=     perm = randperm(model.rng, n) =#
+        #=     for i in Iterators.take(perm, rand(model.rng, 1:3)) =#
+        #=         @inbounds kill_agent!(agents_to_kill[i], model) =#
+        #=     end =#
+        #= end =#
     end
 end
 
@@ -340,8 +394,26 @@ function is_alive(agent)
     return agent.energy > 0
 end
 
-const AGENT_DATA = [(is_alive, count)]
-const MODEL_DATA = [num_healthy_rice]
+const AGENT_DATA = []
+const MODEL_DATA = let
+    ma_r_nymphs(m) = collect(m.ma_r_nymphs)
+    #= ma_r_macros(m) = collect(m.ma_r_macros) =#
+    #= ma_r_brachys(m) = collect(m.ma_r_brachys) =#
+    [
+        :num_rices,
+        :num_bphs,
+        #= ma_r_nymphs, =#
+        #= ma_r_macros, =#
+        #= ma_r_brachys, =#
+        #= :num_eggs, =#
+        #= :num_nymphs, =#
+        #= :num_macros, =#
+        #= :num_brachys, =#
+        :r_nymphs,
+        :r_macros,
+        #= :r_brachys, =#
+    ]
+end
 
 """
     run_simulation(; num_steps::Int, seed=nothing, kwargs...)
@@ -405,6 +477,7 @@ function create_experiments(; mode=Iterators.product, kwargs...)
     end
     return experiments[:]
 end
+
 
 # END MODULE
 end
