@@ -27,8 +27,6 @@ const SR_NYMPH = 0.97f0
 
 include("model_agent_actions.jl")
 
-include("utils.jl")
-
 """
     neighbors_at(n::Integer)
 
@@ -69,7 +67,6 @@ end
     num_min_offsprings::Int8 = 5
     #= energy_max::Float32 = 1.0 =#
     energy_transfer::Float32 = 0.1
-    energy_consume::Float32 = 0.025
     #= energy_move::Float32 = 0.2 =#
     #= energy_reproduce::Float32 = 0.8 =#
     moving_speed_shortwing::Int8 = 1
@@ -83,26 +80,34 @@ end
     pr_eliminate::Matrix{Float32}
     eliminate_positions::Vector{Tuple{Int,Int}}
     move_directions::Dict
+    energy_consume::Float32
     #= pr_reproduce::Dict =#
     #= energy_full::Float32 =#
 
     # Statistics
+    collect_data::Bool = true
     num_eggs::Int = 0
     num_nymphs::Int = 0
     num_macros::Int = 0
     num_brachys::Int = 0
     num_bphs::Int = 0
 
+    # Death
+    # By age
+    death_eggs::Int = 0
+    death_nymphs::Int = 0
+    death_macros::Int = 0
+    death_brachys::Int = 0
+    # By reason
+    death_flower::Int = 0
+    death_energy::Int = 0
+
+    # Ratio
     r_nymphs::Float32 = 0.0f0
-    r_macros::Float32 = 0
-    r_brachys::Float32 = 0
+    r_macros::Float32 = 0.0f0
+    r_brachys::Float32 = 0.0f0
 
-    # Moving averages
-    ma_r_nymphs = stream_moving_average(Float32, 24)
-    ma_r_macros = stream_moving_average(Float32, 24)
-    ma_r_brachys = stream_moving_average(Float32, 24)
-
-    previous_num_agents::Int = 999999999
+    # Number of rices
     num_rices::Float32 = 1.0f0
 
     # ETC
@@ -133,7 +138,7 @@ it also has a `parameters` key to access to all the raw parameters.
 Not all keys have to be provided since there are default parematers.
 See `ModelParams`.
 """
-function create_model_properties(; model_params...)
+function create_model_properties(; collect_data=true, model_params...)
     # Constructing a ModelParams helps us guard which parameters
     # is needed, while customizing modified parameters without
     # having to write a tons of repetitive code
@@ -158,6 +163,7 @@ function create_model_properties(; model_params...)
         food=food,
         pr_eliminate=pr_eliminate,
         eliminate_positions=eliminate_positions,
+        energy_consume=params.energy_transfer / 3.0f0, # Eat, Grow, Reproduce
         #= energy_full=1.0 - params.energy_transfer, =#
         move_directions=Dict(
             SHORT_WING => neighbors_at(params.moving_speed_shortwing),
@@ -269,7 +275,7 @@ function init_model(; seed=nothing, kwargs...)
     end
 
     # RETURN
-    return model, agent_step!, model_step!
+    return model
 end
 
 """
@@ -322,45 +328,41 @@ function model_step!(model)
     # Energy cap is 1.0
     # Dead rice receive no energy
     #= @. model.food = min(model.food + model.food * 1 / 10000, 1) =#
-    model.num_rices = let
-        total_food = Iterators.filter(!isnan, model.food)
-        mean(total_food)
-    end
-
-
-    # Statistics
-    num_eggs = 0
-    num_nymphs = 0
-    num_macros = 0
-    num_brachys = 0
-    for (idx, agent) in (model.agents)
-        stage = agent.stage
-        if stage == STAGE_EGG
-            num_eggs += 1
-        elseif stage == STAGE_NYMPH
-            num_nymphs += 1
-        elseif agent.isshortwing
-            num_brachys += 1
-        else
-            num_macros += 1
+    if model.collect_data
+        model.num_rices = let
+            total_food = Iterators.filter(!isnan, model.food)
+            mean(total_food)
         end
+
+
+        # Statistics
+        num_eggs = 0
+        num_nymphs = 0
+        num_macros = 0
+        num_brachys = 0
+        for (idx, agent) in (model.agents)
+            stage = agent.stage
+            if stage == STAGE_EGG
+                num_eggs += 1
+            elseif stage == STAGE_NYMPH
+                num_nymphs += 1
+            elseif agent.isshortwing
+                num_brachys += 1
+            else
+                num_macros += 1
+            end
+        end
+        model.num_eggs = num_eggs
+        model.num_nymphs = num_nymphs
+        model.num_macros = num_macros
+        model.num_brachys = num_brachys
+
+        num_adults = num_nymphs + num_brachys + num_macros
+        model.num_bphs = num_adults
+        model.r_nymphs = num_nymphs / num_adults
+        model.r_macros = num_macros / num_adults
+        model.r_brachys = num_brachys / num_adults
     end
-    model.num_eggs = num_eggs
-    model.num_nymphs = num_nymphs
-    model.num_macros = num_macros
-    model.num_brachys = num_brachys
-
-    num_adults = num_nymphs + num_brachys + num_macros
-    model.num_eggs = num_eggs
-    model.num_bphs = num_adults + num_eggs
-    model.r_nymphs = num_nymphs / num_adults
-    model.r_macros = num_macros / num_adults
-    model.r_brachys = num_brachys / num_adults
-
-    # Collect moving average
-    #= push!(ma_r_nymphs, model.r_nymphs) =#
-    #= push!(ma_r_macros, model.r_macros) =#
-    #= push!(ma_r_brachys, model.r_brachys) =#
 
     # Randomly select a bph at every flower
     for pos in model.eliminate_positions
@@ -369,42 +371,25 @@ function model_step!(model)
             continue
         end
         for agent in agents_in_position(pos, model)
-            pr = sqrt(eps(Float32) + (1 - agent.energy) * model.pr_eliminate[pos...])
+            pr = sqrt(max(zero(Float32), (1 - agent.energy) * model.pr_eliminate[pos...]))
             if rand(model.rng, Float32) < pr
                 kill_agent!(agent, model)
+                model.death_flower += 1
             end
         end
-        #= elseif rand(model.rng) < model.pr_eliminate[pos...] =#
-        #=     agents_to_kill = collect() =#
-        #=     n = length(agents_to_kill) =#
-        #=     perm = randperm(model.rng, n) =#
-        #=     for i in Iterators.take(perm, rand(model.rng, 1:3)) =#
-        #=         @inbounds kill_agent!(agents_to_kill[i], model) =#
-        #=     end =#
-        #= end =#
     end
 end
 
 # Data collection functions
 
-function num_healthy_rice(model)
-    return count(@. model.food >= 0.5)
-end
-function is_alive(agent)
-    return agent.energy > 0
-end
-
 const AGENT_DATA = []
 const MODEL_DATA = let
-    ma_r_nymphs(m) = collect(m.ma_r_nymphs)
-    #= ma_r_macros(m) = collect(m.ma_r_macros) =#
-    #= ma_r_brachys(m) = collect(m.ma_r_brachys) =#
+    r_egg_survive(m) = 1 - m.death_eggs / m.num_eggs
+    r_nymph_survive(m) = 1 - m.death_nymphs / m.num_nymphs
     [
         :num_rices,
-        :num_bphs,
-        #= ma_r_nymphs, =#
-        #= ma_r_macros, =#
-        #= ma_r_brachys, =#
+        r_egg_survive,
+        r_nymph_survive,
         #= :num_eggs, =#
         #= :num_nymphs, =#
         #= :num_macros, =#
