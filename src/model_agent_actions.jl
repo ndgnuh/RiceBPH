@@ -1,5 +1,22 @@
-function kill_agent_with_stats!(agent, model)
+function kill_egg!(agent, model)
+    kill_agent!(agent, model)
+    model.death_eggs += 1
 end
+
+function kill_nymph!(agent, model)
+    kill_agent!(agent, model)
+    model.death_nymphs += 1
+end
+
+function kill_adult!(agent, model)
+    kill_agent!(agent, model)
+    if agent.isshortwing
+        model.death_brachys += 1
+    else
+        model.death_macros += 1
+    end
+end
+
 const STEP = 1
 using Random
 using StatsBase
@@ -65,7 +82,7 @@ function agent_action_grow!(
 ) where {F}
     if agent.stage_cooldown == 0
         if agent.stage == STAGE_ADULT
-            kill_agent!(agent, model)
+            kill_adult!(agent, model)
             return true
         else
             agent.stage += 1
@@ -80,6 +97,14 @@ function agent_action_grow!(
     return false
 end
 
+
+function agent_action_die!(agent, model, kill_fn!)
+    if agent.energy <= 0
+        kill_fn!(agent, model)
+        model.death_energy += 1
+    end
+end
+
 const ALL_DIRECTIONS = let
     s = 1
     w = [(i, j) for (i, j)
@@ -89,6 +114,7 @@ const ALL_DIRECTIONS = let
     ]
     w[:]
 end
+
 function agent_action_move!(agent, model)
     x, y = agent.pos
     should_move = (agent.energy >= model.energy_consume)# && (
@@ -100,14 +126,14 @@ function agent_action_move!(agent, model)
     end
 
     agent.energy -= model.energy_consume
-    all_directions = ALL_DIRECTIONS
+    all_directions = copy(ALL_DIRECTIONS)
+    Random.shuffle!(model.rng, all_directions)
     direction_weights = map(all_directions) do (dx, dy)
         food = get(model.food, (x + dx, y + dy), -Inf32)
         weight = isnan(food) ? one(Float32) : food
         # The salt is needed so that when all the weights are
         # equals, the first one is not returned
-        salt = rand(model.rng, -9:9) * eps(Float32)
-        return weight + salt
+        return weight
     end
     direction = wsample(model.rng, all_directions, direction_weights)
     walk!(agent, direction, model)
@@ -173,37 +199,33 @@ function agent_step!(agent, model)
         dead = agent_step_adult!(agent, model)
     end
 
-    if agent.energy <= 1e-3
-        kill_agent!(agent, model)
-    end
-
     return
 end
 
 function agent_step_egg!(agent, model)
     agent_action_grow!(agent, model, SR_EGG, cooldown_nymph)
+    agent_action_die!(agent, model, kill_egg!)
 end
 
 function agent_step_nymph!(agent, model)
-    dead = agent_action_grow!(agent, model, SR_EGG, cooldown_adult)
-    if dead
-        return dead
-    end
+    agent_action_grow!(agent, model, SR_EGG, cooldown_adult)
     agent_action_move!(agent, model)
     agent_action_eat!(agent, model)
+    agent_action_die!(agent, model, kill_nymph!)
     return false
 end
 
 function agent_step_adult!(agent, model)
     dead = agent_action_grow!(agent, model, 0.0f0, (_, _) -> 0)
     if dead
-        return dead
+        return
     end
     agent_action_move!(agent, model)
     agent_action_eat!(agent, model)
     agent_action_reproduce!(agent, model)
+    agent_action_die!(agent, model, kill_adult!)
     return false
 end
 # }}}
 
-# vim: foldmethod=syntax
+# vim: foldmethod=syntax, foldlevel=2
