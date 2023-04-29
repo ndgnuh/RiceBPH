@@ -1,68 +1,32 @@
+using RiceBPH.Models
+using RiceBPH.Visualisations
+using InteractiveDynamics
+using BenchmarkTools
+using GLMakie
 
-using Distributed
-@everywhere using RiceBPH.Model: init_model, run!, ModelParams
-@everywhere using SQLite
-@everywhere using SQLite.DBInterface
-@everywhere using ProgressMeter
-@everywhere using Printf
-@everywhere using CSV, DataFrames
+const MDATA = Models.MDATA_EXPL
+const model = init_model(; seed = 0,
+                         map_size = 100, num_init_bphs = 200,
+                         init_pr_eliminate = 0.05f0, flower_width = 0,
+                         init_position = Models.Corner,
+                         energy_transfer = 0.045f0)
+const _, mdf = run!(model, agent_step!, model_step!, 1; mdata = MDATA)
+#= @btime run!(model, agent_step!, model_step!, 2880) =#
 
+#= const heatkwargs = (nan_color = RGBf(1.0f0, 1.0f0, 0.0f0), =#
+#=                     colormap = [RGBf(0.0f0, i, 0.0f0) for i in 0.0f0:0.001f0:1.0f0], =#
+#=                     colorrange = (0, 1)) =#
 
+const heatkwargs = (;
+                    nan_color = RGBAf(1.0, 1.0, 0.0, 0.5),
+                    colormap = [RGBAf(0, 0.7, 0, i) for i in 0:0.01:1],
+                    colorrange = (0, 1))
 
-function save!(db, param::ModelParams)
-    names = propertynames(param)
-    stmt = """\
-    insert into params($(join(names, ",")) \
-    \nvalues\
-    \n('$(join(((getproperty(param, k)) for k in names), "','"))');\
-    """
-    @show stmt
-end
-
-const db = SQLite.DB("test.db")
-
-@info "Initializing"
-@everywhere const model, as!, ms! = init_model(
-    seed=1,
-    envmap="assets/envmaps/nf-100.csv",
-    init_nb_bph=200,
-    init_pr_eliminate=0.15,
-    energy_transfer=0.08f0,
-    energy_consume=0.08f0 / 3,
-    moving_speed_shortwing=1,
-    moving_speed_longwing=1,
-    init_position="corner",
-)
-
-@info save!(db, model.params)
-
-@info "Running model"
-@time run!(model, as!, ms!, 2880)
-@time run!(model, as!, ms!, 2880)
-#= @time let =#
-#=     model_data = [ =#
-#=         :num_rices, =#
-#=         :num_eggs, =#
-#=         :num_nymphs, =#
-#=         :num_macros, =#
-#=         :num_brachys, =#
-#=     ] =#
-
-#=     @showprogress pmap(1:300) do i =#
-#=         model, _, _ = init_model( =#
-#=             seed=i, =#
-#=             envmap="assets/envmaps/nf-100.csv", =#
-#=             init_nb_bph=200, =#
-#=             init_pr_eliminate=0.05f0, =#
-#=             energy_transfer=0.08f0, =#
-#=             energy_consume=0.08f0 / 3, =#
-#=             moving_speed_shortwing=1, =#
-#=             moving_speed_longwing=1, =#
-#=             init_position="corner", =#
-#=         ) =#
-#=         _, df = run!(model, as!, ms!, 2880; mdata=model_data) =#
-#=         output_file_name = @sprintf "dev/0.5m/output-%04d.csv" i =#
-#=         #= CSV.write(output_file_name, df) =# =#
-#=     end =#
-
-#= end =#
+const fig, _ = abmexploration(model;
+                              (agent_step!) = agent_step!,
+                              (model_step!) = model_step!,
+                              mdata = MDATA,
+                              Visualisations.ac, Visualisations.heatarray,
+                              Visualisations.heatkwargs)
+const scene = display(fig)
+wait(scene)
