@@ -78,8 +78,8 @@ end
 # 5 cells ≈ 1m in length
 #
 @enum InitPosition::Bool Corner Border
-const IP_MAX = 10
-const IP_DST = let dst = Poisson(5)
+const IP_MAX = 15
+const IP_DST = let dst = Poisson(6)
     [1 - cdf(dst, x) for x in 1:IP_MAX]
 end
 const IP_PTS = collect(1:IP_MAX)
