@@ -9,6 +9,6 @@ include("visualize.jl")
 using .Visualisations
 
 #= include("postprocess.jl") =#
-#= include("ofaat.jl") =#
+include("ofaat.jl")
 
 end # module RiceBPH
