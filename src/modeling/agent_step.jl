@@ -54,9 +54,7 @@ end
 #
 function agent_action_growup!(agent, model)
     agent.stage_cd -= 1
-    if agent.stage != Egg
-        agent.energy = agent.energy - model.energy_consume
-    end
+    agent.energy = agent.energy - model.energy_consume
     @return_if agent.stage_cd > 0
     stage, stage_cd = get_next_stage(model.rng,
                                      agent.stage,
@@ -68,7 +66,8 @@ end
 
 function agent_action_move!(agent, model)
     x, y = agent.pos
-    @return_if agent.energy < model.energy_consume
+    @return_if agent.energy < model.energy_consume && (model.rice_map[x, y] > 0) &&
+               model.flower_mask[x, y]
 
     # Energy lost due to action
     agent.energy = agent.energy - model.energy_consume
@@ -106,6 +105,9 @@ function agent_action_eat!(agent, model)
     # Environment cap
     transfer = min(transfer, model.rice_map[x, y])
 
+    # Action cost
+    transfer = transfer - model.energy_consume
+
     # Eat
     model.rice_map[x, y] -= transfer
     agent.energy += transfer
@@ -116,6 +118,7 @@ function agent_action_reproduce!(agent, model)
     @return_if agent.gender == Male
     @return_if agent.energy < model.energy_consume
     @return_if agent.reproduction_cd > 0
+    @return_if model.rice_map[agent.pos...] <= model.parameters.energy_transfer
 
     # 
     # Reproduction

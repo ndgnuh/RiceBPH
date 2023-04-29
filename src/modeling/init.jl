@@ -51,7 +51,7 @@ function init_properties(parameters::ModelParameters)
     flower_width = parameters.flower_width
 
     # properties
-    energy_consume = parameters.energy_transfer / 3.0f0
+    energy_consume = parameters.energy_transfer / 4.0f0
     rice_map = init_rice_map(map_size)
     flower_mask = init_flower_mask(map_size, flower_width)
     pr_eliminate_map = init_pr_eliminate(parameters.init_pr_eliminate, flower_mask)

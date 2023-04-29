@@ -20,10 +20,14 @@ const MIN_NUM_OFFSPRINGS = 5
 const MAX_NUM_OFFSPRINGS = 12
 const CD_B_1ST_REPRODUCE = normal_hour_range(0.8f0, 6.8f0)
 const CD_M_1ST_REPRODUCE = normal_hour_range(4.4f0, 10.4f0)
-const CD_B_NEXT_REPRODUCE = normal_hour_range(AVG_EGGS_B / MAX_NUM_OFFSPRINGS,
-                                              AVG_EGGS_B / MIN_NUM_OFFSPRINGS)
-const CD_M_NEXT_REPRODUCE = normal_hour_range(AVG_EGGS_M / MAX_NUM_OFFSPRINGS,
-                                              AVG_EGGS_M / MIN_NUM_OFFSPRINGS)
+const CD_B_NEXT_REPRODUCE = normal_range(CD_F_B_DEATH.μ / AVG_EGGS_B *
+                                         MIN_NUM_OFFSPRINGS,
+                                         CD_F_B_DEATH.μ / AVG_EGGS_B *
+                                         MAX_NUM_OFFSPRINGS)
+const CD_M_NEXT_REPRODUCE = normal_range(CD_F_M_DEATH.μ / AVG_EGGS_M *
+                                         MIN_NUM_OFFSPRINGS,
+                                         CD_F_M_DEATH.μ / AVG_EGGS_M *
+                                         MAX_NUM_OFFSPRINGS)
 @info CD_B_NEXT_REPRODUCE
 const DST_NUM_OFFSPRINGS = normal_range(MIN_NUM_OFFSPRINGS, MAX_NUM_OFFSPRINGS)
 
@@ -60,7 +64,7 @@ const REPRODUCE_1ST_CDS = Dict(Brachy => CD_B_1ST_REPRODUCE,
 const REPRODUCE_CDS = Dict(Brachy => CD_B_NEXT_REPRODUCE,
                            Macro => CD_M_NEXT_REPRODUCE)
 
-const MOVING_DIRECTIONS = let speed = 1
+const MOVING_DIRECTIONS = let speed = 2
     moving_range = (-speed):speed
     square_radius = speed^2 + speed^2
     [(dx, dy)
