@@ -98,10 +98,6 @@ function agent_action_eat!(agent, model)
     transfer = min(model.parameters.energy_transfer,
                    1 - agent.energy)
 
-    # Bonus energy if less BPH
-    same_positions = length(agents_in_position(agent, model))
-    transfer = transfer + transfer * exp(-same_positions)
-
     # Environment cap
     transfer = min(transfer, model.rice_map[x, y])
 
