@@ -1,17 +1,14 @@
 module RiceBPH
 
-include("Model.jl")
+using Reexport
+
+include("ModelRewrite.jl")
+@reexport using .Models
+
 include("visualize.jl")
-include("postprocess.jl")
-include("ofaat.jl")
+using .Visualisations
 
-using .Model: AGENT_DATA,
-    MODEL_DATA,
-    init_model,
-    create_experiments,
-    run_simulation
-
-export Model,
-    AGENT_DATA, MODEL_DATA, init_model
+#= include("postprocess.jl") =#
+#= include("ofaat.jl") =#
 
 end # module RiceBPH
