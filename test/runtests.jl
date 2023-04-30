@@ -1,14 +1,25 @@
+using RiceBPH.Models
 using Test
-#= using BenchmarkTools =#
-using RiceBPH: init_model, AGENT_DATA, MODEL_DATA, get_plot_kwargs
-using RiceBPH
-using BenchmarkTools
-using InteractiveUtils
 
-RiceBPH.run_simulation(;
-    seed=0,
-    init_nb_bph=200,
-    init_pr_eliminate=0.15,
-    init_position=:corner,
-    envmap="../assets/envmaps/015-1x2.csv"
-)
+function test_replication(seed)
+    energy_transfer = 0.04f0
+    flower_width = 4
+    init_pr_eliminate = 0.05f0
+    map_size = 125
+    num_init_bphs = 200
+    model1 = init_model(; seed, num_init_bphs, energy_transfer, map_size, flower_width, init_pr_eliminate)
+    _, mdf1 = run!(model1, agent_step!, model_step!, 200, mdata=Models.MDATA)
+
+    model2 = init_model(; seed, num_init_bphs, energy_transfer, map_size, flower_width, init_pr_eliminate)
+    _, mdf2 = run!(model2, agent_step!, model_step!, 200, mdata=Models.MDATA)
+
+
+    return mdf1 == mdf2
+end
+
+
+@testset "Replication test" begin
+    for seed in rand(1:1000, 5)
+        @test test_replication(1)
+    end
+end

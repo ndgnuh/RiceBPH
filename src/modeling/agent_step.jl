@@ -76,7 +76,7 @@ function agent_action_move!(agent, model)
     rng = model.rng
     rice_map = model.rice_map
     flower_mask = model.flower_mask
-    directions = shuffle!(model.moving_directions)
+    directions = shuffle!(rng, model.moving_directions)
     direction_weights = map(directions) do (dx, dy)
         x2, y2 = (x + dx, y + dy)
         rice = get(rice_map, (x2, y2), -Inf32)
@@ -147,7 +147,7 @@ end
 
 function agent_action_die!(agent, model)
     if agent.energy <= 0 || agent.stage == Dead
-        kill_agent!(agent, model)
+        remove_agent!(agent, model)
     end
 end
 
