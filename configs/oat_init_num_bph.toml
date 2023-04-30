@@ -1,7 +1,0 @@
-[params]
-envmap = "assets/envmaps/019-1x2.csv"
-
-[params.init_nb_bph]
-start = 20
-stop = 400
-step = 20

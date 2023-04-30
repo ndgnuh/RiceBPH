@@ -1,8 +1,0 @@
-[params]
-envmap = "assets/envmaps/019-1x2.csv"
-init_nb_bph = 200
-
-[params.energy_move]
-start = 0.1
-stop = 0.3
-length = 10

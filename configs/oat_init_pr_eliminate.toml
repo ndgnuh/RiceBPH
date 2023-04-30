@@ -1,9 +1,0 @@
-[params]
-envmap = "assets/envmaps/019-1x2.csv"
-init_nb_bph = 200
-
-[params.init_pr_eliminate]
-start = 0.7
-stop = 2.3
-step = 0.1
-

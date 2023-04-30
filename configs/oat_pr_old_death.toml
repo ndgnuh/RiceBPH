@@ -1,8 +1,0 @@
-[params]
-envmap = "assets/envmaps/019-1x2.csv"
-init_nb_bph = 200
-
-[params.pr_old_death]
-start = 0.0015
-stop = 0.0035
-length = 10
