@@ -1,12 +1,13 @@
 factor = "energy_transfer"
 value_start = 0.3
-value_stop = 0.01
-num_values = 10
+value_stop = 0.3
+num_values = 1
 
 
-num_steps = 2880
-num_replicates = 250
+num_steps = 1
+num_replicates = 20
 map_size = 125
 flower_width = 0
 init_pr_eliminate = 0.0
 num_init_bphs = 200
+
