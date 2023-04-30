@@ -87,7 +87,7 @@ const IP_PTS = collect(1:IP_MAX)
 #
 # DATA COLLECTION
 #
-const MDATA = [:pct_rices, :num_eggs, :num_nymphs, :num_brachys, :num_macros]
+const MDATA = [:pct_rices, :num_eggs, :num_nymphs, :num_brachys, :num_macros, :num_females]
 const MODEL_DATA = MDATA
 num_bphs(m) = m.num_nymphs + m.num_brachys + m.num_macros
 pct_nymphs(m) = m.num_nymphs / num_bphs(m)
