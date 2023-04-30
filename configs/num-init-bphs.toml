@@ -1,0 +1,14 @@
+factor = "num_init_bphs"
+value_start = 20
+value_stop = 1000
+num_values = 50
+
+
+num_steps = 2880
+num_replicates = 250
+map_size = 125
+flower_width = 0
+init_pr_eliminate = 0.0
+energy_transfer = 0.045
+
+
