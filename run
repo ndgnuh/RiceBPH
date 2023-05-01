@@ -1,0 +1,6 @@
+#!/bin/sh
+flags="--project"
+if [ -f ricebph.sys.so ]; then
+	flags="$flags -J ricebph.sys.so"
+fi
+julia $flags $@
