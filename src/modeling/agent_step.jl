@@ -46,9 +46,6 @@ function get_next_stage(rng, stage::Stage, gender::Gender, form::Form)
     get_next_stage(rng, Val(stage), Val(gender), Val(form))
 end
 
-@info get_next_stage(MersenneTwister(0), Egg, Male, Brachy)
-@info get_next_stage(MersenneTwister(0), Nymph, Male, Brachy)
-
 #
 # Agent actions: grow up, move, eat, reproduce and die
 #
