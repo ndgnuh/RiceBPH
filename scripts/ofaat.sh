@@ -7,3 +7,4 @@ alias ofaat="julia $flags $@ scripts/plot-ofaat.jl"
 mkdir outputs -p
 ofaat configs/energy-transfer-01.toml outputs/energy-transfer-01
 ofaat configs/energy-transfer-02.toml outputs/energy-transfer-02
+ofaat configs/energy-transfer-03.toml outputs/energy-transfer-03
