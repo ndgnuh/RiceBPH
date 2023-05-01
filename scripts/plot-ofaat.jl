@@ -7,7 +7,7 @@ using Comonicon
 using Printf
 
 @main function main(jdf_dir::String, output::String;
-                    column::String, fig_size::Int = 1080)
+                    column::String, fig_size::Int = 1080, grid_size = 3)
     # Load and prepare data
     column_name = Symbol(column)
     df = Results.load(jdf_dir)
@@ -22,7 +22,7 @@ using Printf
     # Plotting
     #
     fig = Figure(resolution = (fig_size * 16 ÷ 9, fig_size))
-    positions = vec(CartesianIndices((3, 3)))
+    positions = vec(CartesianIndices((grid_size, grid_size)))
     axs = Axis[]
 
     for (i, position) in enumerate(positions)
