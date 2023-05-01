@@ -51,4 +51,14 @@ Some example configuration files are in the `configs` folder.
 
 ## Reproduce our results
 
-[To be done]
+We setup tests to guarantee that our model is fully reproducible (see `test/runtests.jl`).
+
+To reproduce the data, run this shell script:
+```shell
+bash scripts/ofaat.sh
+```
+
+If you only wish to reproduce the plot, download the provided data at the release page (TBD) and run:
+```shell
+bash scripts/plot.sh
+```
