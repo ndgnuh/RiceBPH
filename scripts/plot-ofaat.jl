@@ -17,27 +17,33 @@ using Printf
     #
     factor = Results.get_factor_name(df)
     df_groups = groupby(df, factor)
-    aspect = DataAspect()
 
     #
     # Plotting
     #
-    fig = Figure(resolution = (fig_size, fig_size))
+    fig = Figure(resolution = (fig_size * 16 ÷ 9, fig_size))
     positions = vec(CartesianIndices((3, 3)))
+    axs = Axis[]
 
     for (i, position) in enumerate(positions)
         # Plot meta data
         sub_df = df_groups[i]
         factor_value = first(sub_df[!, factor])
         title = "$(factor) = $(trunc(factor_value, digits=4))"
-        ax = Axis(fig[position.I...]; title, aspect)
+        @info "Plotting $title"
+        ax = Axis(fig[position.I...]; title)
 
         # The plot
         st = Results.get_stat(sub_df, column_name)
         μ = st.mean
         σ = st.std
         Visualisations.plot_mean_std!(ax, st.step, μ, σ)
+        push!(axs, ax)
     end
 
+    # Sync y axis
+    linkyaxes!(axs...)
+
     save(output, fig)
+    @info "Output saved to $(output)"
 end
