@@ -32,9 +32,15 @@ function run_ofaat!(num_steps::Integer,
                     num_replicates::Integer,
                     factor::Symbol,
                     values;
+                    value_type::String = "float",
                     kw...)
     @info kw
-    result = mapreduce(vcat, values) do value
+    result = mapreduce(vcat, values) do value_
+        value = if value_type == "int"
+            trunc(Int, value_)
+        else
+            value_
+        end
         @info "Running $(factor) = $(value)"
         map_func(seed) = run_replicate!(num_steps, seed, factor, value, kw)
         reduce(vcat, @showprogress pmap(map_func, 1:num_replicates))
