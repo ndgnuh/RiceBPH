@@ -7,7 +7,8 @@ using Comonicon
 using Printf
 
 @main function main(jdf_dir::String, output::String;
-                    column::String, fig_size::Int = 1080, grid_size = 3)
+                    column::String, fig_size::Int = 1080, grid_size = 3,
+                    keepaxis::Bool = false)
     # Load and prepare data
     column_name = Symbol(column)
     df = Results.load(jdf_dir)
@@ -42,7 +43,9 @@ using Printf
     end
 
     # Sync y axis
-    linkyaxes!(axs...)
+    if !keepaxis
+        linkyaxes!(axs...)
+    end
 
     save(output, fig)
     @info "Output saved to $(output)"
