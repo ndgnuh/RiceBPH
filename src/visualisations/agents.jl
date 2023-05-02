@@ -1,5 +1,3 @@
-module Visualisations
-
 using Reexport
 using Colors
 @reexport using GLMakie
@@ -26,20 +24,10 @@ ac(agent) = AGENT_COLORS[agent.stage]
 am(_) = :circle
 
 function heatarray(model)
-    is_rice_cell = (@. model.cell_types == Models.RiceCell)
-    @. (!is_rice_cell * NaN32) + model.rice_map * is_rice_cell
+    is_rice_cell = (model.cell_types .== Models.RiceCell)
+    return @. (!is_rice_cell) * NaN32 + model.rice_map * is_rice_cell
 end
 
 const heatkwargs = (; nan_color = FLOWER_COLOR,
                     colormap = RICE_COLORS,
                     colorrange = (0, 1))
-
-#
-# Result plotting stuffs
-#
-function plot_mean_std!(ax, x, μ, σ)
-    band!(ax, x, μ - σ, μ + σ)
-    lines!(ax, x, μ)
-end
-
-end

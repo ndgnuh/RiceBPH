@@ -5,11 +5,13 @@ using Reexport
 include("ModelRewrite.jl")
 @reexport using .Models
 
-include("visualize.jl")
+include("results.jl")
+using .Results
+
+include("Visualisations.jl")
 using .Visualisations
 
 #= include("postprocess.jl") =#
 include("ofaat.jl")
-include("results.jl")
 
 end # module RiceBPH
