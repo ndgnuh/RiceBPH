@@ -28,7 +28,7 @@ Properties (except `num_rice_cells`) those are used to collect model statistics 
     eliminate_positions::Vector{Tuple{Int, Int}}
     rice_positions::Vector{CartesianIndex}
     num_rice_cells::Int
-    cell_types::Matrix{Bool}
+    cell_types::Matrix{CellType}
     energy_consume::Float32
     moving_directions::Vector{Tuple{Int, Int}}
 
