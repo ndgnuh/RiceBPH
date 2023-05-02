@@ -26,8 +26,8 @@ ac(agent) = AGENT_COLORS[agent.stage]
 am(_) = :circle
 
 function heatarray(model)
-    flower_mask = model.flower_mask
-    @. !flower_mask * NaN32 + model.rice_map * flower_mask
+    is_rice_cell = (@. model.cell_types == Models.RiceCell)
+    @. (!is_rice_cell * NaN32) + model.rice_map * is_rice_cell
 end
 
 const heatkwargs = (; nan_color = FLOWER_COLOR,

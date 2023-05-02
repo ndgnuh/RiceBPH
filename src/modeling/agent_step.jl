@@ -63,8 +63,10 @@ end
 
 function agent_action_move!(agent, model)
     x, y = agent.pos
+
+    # Stay and eat if low energy
     @return_if agent.energy < model.energy_consume && (model.rice_map[x, y] > 0) &&
-               model.flower_mask[x, y]
+               model.cell_types[x, y] == RiceCell
 
     # Energy lost due to action
     agent.energy = agent.energy - model.energy_consume
@@ -72,13 +74,13 @@ function agent_action_move!(agent, model)
     # Sample a direction base on food
     rng = model.rng
     rice_map = model.rice_map
-    flower_mask = model.flower_mask
+    cell_types = model.cell_types
     directions = shuffle!(rng, model.moving_directions)
     direction_weights = map(directions) do (dx, dy)
         x2, y2 = (x + dx, y + dy)
         rice = get(rice_map, (x2, y2), -Inf32)
-        mask = get(flower_mask, (x2, y2), true)
-        weight = mask ? 0.5f0 : rice
+        cell_type = get(cell_types, (x2, y2), RiceCell)
+        weight = (cell_type == FlowerCell) ? 0.5f0 : rice
         weight = weight + (dx == 0) * (dy == 0) * (rice + -Inf32 * (rice == 0))
         return weight
     end
@@ -89,7 +91,7 @@ end
 
 function agent_action_eat!(agent, model)
     x, y = agent.pos
-    @return_if !model.flower_mask[x, y]
+    @return_if model.cell_type[x, y] == FlowerCell
 
     # Self cap
     transfer = min(model.parameters.energy_transfer,

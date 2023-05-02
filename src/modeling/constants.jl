@@ -112,3 +112,11 @@ pct_nymphs(m) = m.num_nymphs / num_bphs(m)
 pct_brachys(m) = m.num_brachys / num_bphs(m)
 pct_females(m) = m.num_females / num_bphs(m)
 const MDATA_EXPL = [:pct_rices, num_bphs, pct_females, pct_nymphs, pct_brachys]
+
+#
+# Misc
+#
+@enum CellType::Bool FlowerCell RiceCell
+function Base.convert(::Type{Bool}, celltype::CellType)
+    return Bool(celltype)
+end
