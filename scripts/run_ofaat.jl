@@ -10,9 +10,7 @@ using TOML
     @info options
 
     factor = Symbol(pop!(options, :factor))
-    values = range(; start = pop!(options, :value_start),
-                   stop = pop!(options, :value_stop),
-                   length = pop!(options, :num_values))
+    values = eval(Meta.parse(pop!(options, :values)))
     num_steps = pop!(options, :num_steps)
     num_replicates = pop!(options, :num_replicates)
     result = run_ofaat!(num_steps, num_replicates, factor, values; options...)

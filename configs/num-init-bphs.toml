@@ -1,9 +1,5 @@
 factor = "num_init_bphs"
-value_start = 20
-value_stop = 1000
-num_values = 9
-value_type = "int"
-
+values = "trunc.(Int, range(start=20, stop=1000, length=9))"
 
 num_steps = 2880
 num_replicates = 250

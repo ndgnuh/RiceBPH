@@ -11,7 +11,7 @@ using ..Models: init_model, agent_step!, model_step!, run!, MDATA
 
 Generate result fraction name. This
 """
-@deprecate function generate_name(seed::Integer, factor::Symbol, value; suffix = ".jdf")
+function generate_name(seed::Integer, factor::Symbol, value; suffix = ".jdf")
     fmt = Format("%s-%.4f+seed-%04d.%s")
     name = format(fmt, factor, value, seed, suffix)
     return joinpath(tempdir(), name)

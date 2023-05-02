@@ -1,8 +1,5 @@
 factor = "energy_transfer"
-value_start = 0.1
-value_stop = 0.01
-num_values = 9
-
+values = "range(start=0.1, stop=0.01, length=9)"
 
 num_steps = 5660
 num_replicates = 100
