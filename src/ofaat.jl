@@ -6,12 +6,25 @@ using DataFrames
 using Printf: Format, format
 using ..Models: init_model, agent_step!, model_step!, run!, MDATA
 
-function generate_name(seed::Integer, factor::Symbol, value; suffix = ".jdf")
+"""
+    generate_name(seed, factor, value; suffix)
+
+Generate result fraction name. This
+"""
+@deprecate function generate_name(seed::Integer, factor::Symbol, value; suffix = ".jdf")
     fmt = Format("%s-%.4f+seed-%04d.%s")
     name = format(fmt, factor, value, seed, suffix)
     return joinpath(tempdir(), name)
 end
 
+"""
+    run_replicate!(num_steps, seed, factor, value, kw)
+
+Run a replication for `num_steps` steps.
+The other parameters are used to initialize the model.
+Returns model dataframe. The final dataframe contains extra columns to
+represent seed and factor.
+"""
 function run_replicate!(num_steps, seed, factor, value, kw)
     # Run the simulation
     model = init_model(; factor => value, kw...)
@@ -28,19 +41,20 @@ function run_replicate!(num_steps, seed, factor, value, kw)
     return mdf
 end
 
+"""
+    run_ofaat!(num_steps, num_reps, factor, values; kw...)
+
+Run one-factor-at-a-time replication experiment.
+Return the combined dataframe created by concatnating the result dataframes from all the replication.
+This function is the same as `paramscan` from `Agents.jl`, but `paramscan` does not do garbage collection, this one does to prevent out of memory error.
+"""
 function run_ofaat!(num_steps::Integer,
                     num_replicates::Integer,
                     factor::Symbol,
                     values;
-                    value_type::String = "float",
                     kw...)
     @info kw
-    result = mapreduce(vcat, values) do value_
-        value = if value_type == "int"
-            trunc(Int, value_)
-        else
-            value_
-        end
+    result = mapreduce(vcat, values) do value
         @info "Running $(factor) = $(value)"
         map_func(seed) = run_replicate!(num_steps, seed, factor, value, kw)
         reduce(vcat, @showprogress pmap(map_func, 1:num_replicates))
