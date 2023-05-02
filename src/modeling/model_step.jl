@@ -23,7 +23,11 @@ function model_action_summarize!(model)
     #
     # Percentage of total rice energy
     #
-    pct_rices = sum(model.rice_map .* model.flower_mask) / sum(model.flower_mask)
+    rice_map = model.rice_map
+    num_heathy_rice_cells = count(model.rice_positions) do idx
+        rice_map[idx] >= 0.5f0
+    end
+    pct_rices = num_heathy_rice_cells / model.num_rice_cells
 
     #
     # Collect BPH population statistics
@@ -60,15 +64,17 @@ function model_action_summarize!(model)
     model.pct_rices = pct_rices
 end
 
+const LOG_OF_2 = log(2.0f0)
+
 @doc raw"""
     model_action_eliminate!(model)
 
 Eliminate BPHs base on their energy and the pr eliminate map.
 The elimination probability is given by 
 
-``(1 - e) \cdot p_e``
+``(\log(2) - \log(E + 1)) \cdot p_e``
 
-where ``e`` is the agent energy and `p_e` is the elimination probability
+where ``E`` is the agent energy and ``p_e`` is the elimination probability
 at the agent's position.
 """
 function model_action_eliminate!(model)
@@ -76,7 +82,7 @@ function model_action_eliminate!(model)
         pos = Tuple(pos)
         for agent in agents_in_position(pos, model)
             pr = sqrt(max(zero(Float32),
-                          (1 - agent.energy) * model.pr_eliminate_map[pos...]))
+                          (LOG_OF_2 - log1p(agent.energy)) * model.pr_eliminate_map[pos...]))
             if rand(model.rng, Float32) < pr
                 remove_agent!(agent, model)
             end

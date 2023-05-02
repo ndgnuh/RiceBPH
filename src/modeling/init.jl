@@ -59,11 +59,16 @@ function init_properties(parameters::ModelParameters)
     pr_eliminate_map = init_pr_eliminate(parameters.init_pr_eliminate, flower_mask)
     moving_directions = copy(MOVING_DIRECTIONS)
 
+    # Rice cell marking
+    rice_positions = findall(==(true), flower_mask)
+    num_rice_cells = length(rice_positions)
+
     eliminate_positions = [idx.I for idx in findall(!iszero, pr_eliminate_map)]
 
     return ModelProperties(; energy_consume, moving_directions,
                            pr_eliminate_map, eliminate_positions,
                            rice_map, flower_mask,
+                           rice_positions, num_rice_cells,
                            parameters)
 end
 

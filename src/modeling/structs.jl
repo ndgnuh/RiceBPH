@@ -1,6 +1,9 @@
 using Base: @kwdef
 using Agents: AbstractAgent
 
+"""
+Model input variables.
+"""
 @kwdef struct ModelParameters
     # Initialization parameters
     map_size::Int
@@ -8,18 +11,23 @@ using Agents: AbstractAgent
     num_init_bphs::Int
     init_pr_eliminate::Float32
     init_position::InitPosition = Corner
-
-    # Running paramters
-    num_max_offsprings::Int8 = 12
-    num_min_offsprings::Int8 = 5
     energy_transfer::Float32 = 0.1f0
 end
 
+"""
+Model properties. There are two types of properties:
+- The first types are properties that are inferred from the input variables to be used during the simulation.
+- The second types are properties to collect statistics during the simulations.
+
+Properties (except `num_rice_cells`) those are used to collect model statistics has the name prefix 
+"""
 @kwdef mutable struct ModelProperties
     parameters::ModelParameters
     rice_map::Matrix{Float32}
     pr_eliminate_map::Matrix{Float32}
     eliminate_positions::Vector{Tuple{Int, Int}}
+    rice_positions::Vector{CartesianIndex}
+    num_rice_cells::Int
     flower_mask::Matrix{Bool}
     energy_consume::Float32
     moving_directions::Vector{Tuple{Int, Int}}
