@@ -1,4 +1,4 @@
-# Rice-BPH Model
+# RiceBPH Model
 
 This is a model to simulate the rice-brown plant hopper dynamic.
 The goal of this model is to research the effect of cultivated flower on the spread inside rice fields of brown plant hopper (a dangerous rice pest).
@@ -53,12 +53,45 @@ Some example configuration files are in the `configs` folder.
 
 We setup tests to guarantee that our model is fully reproducible (see `test/runtests.jl`).
 
-To reproduce the data, run this shell script:
+To reproduce the data, run the replication with these configurations (you can add `-J ricebph.sys.so` or `-p 8` to reduce runtime, but the results would be the same):
 ```shell
-bash scripts/ofaat.sh
+julia --project scripts/run_ofaat.jl configs/energy-transfer-01.toml outputs/energy-transfer-01
+julia --project scripts/run_ofaat.jl configs/energy-transfer-02.toml outputs/energy-transfer-02
+julia --project scripts/run_ofaat.jl configs/energy-transfer-03.toml outputs/energy-transfer-03
 ```
 
 If you only wish to reproduce the plot, download the provided data at the release page (TBD) and run:
 ```shell
+julia --project scripts/run_ofaat.jl --column num_bphs outputs/energy-transfer-01 figures/energy-transfer-1-num_bphs.png
+julia --project scripts/run_ofaat.jl --column num_bphs outputs/energy-transfer-02 figures/energy-transfer-2-num_bphs.png
+julia --project scripts/run_ofaat.jl --column num_bphs outputs/energy-transfer-03 figures/energy-transfer-3-num_bphs.png
+julia --project scripts/run_ofaat.jl --column num_bphs outputs/num-init-bphs/ figures/num-init-bphs-num_bphs.png
+julia --project scripts/run_ofaat.jl --column num_bphs outputs/pr-eliminate/ figures/pr-eliminate-num_bphs.png
+julia --project scripts/run_ofaat.jl --column num_bphs outputs/flower-width figures/flower-width-num_bphs.png
+julia --project scripts/run_ofaat.jl --column pct_nymphs outputs/energy-transfer-01 figures/energy-transfer-1-pct_nymphs.png
+julia --project scripts/run_ofaat.jl --column pct_nymphs outputs/energy-transfer-02 figures/energy-transfer-2-pct_nymphs.png
+julia --project scripts/run_ofaat.jl --column pct_nymphs outputs/energy-transfer-03 figures/energy-transfer-3-pct_nymphs.png
+julia --project scripts/run_ofaat.jl --column pct_nymphs outputs/num-init-bphs/ figures/num-init-bphs-pct_nymphs.png
+julia --project scripts/run_ofaat.jl --column pct_nymphs outputs/pr-eliminate/ figures/pr-eliminate-pct_nymphs.png
+julia --project scripts/run_ofaat.jl --column pct_nymphs outputs/flower-width figures/flower-width-pct_nymphs.png
+julia --project scripts/run_ofaat.jl --column pct_rices outputs/energy-transfer-01 figures/energy-transfer-1-pct_rices.png
+julia --project scripts/run_ofaat.jl --column pct_rices outputs/energy-transfer-02 figures/energy-transfer-2-pct_rices.png
+julia --project scripts/run_ofaat.jl --column pct_rices outputs/energy-transfer-03 figures/energy-transfer-3-pct_rices.png
+julia --project scripts/run_ofaat.jl --column pct_rices outputs/num-init-bphs/ figures/num-init-bphs-pct_rices.png
+julia --project scripts/run_ofaat.jl --column pct_rices outputs/pr-eliminate/ figures/pr-eliminate-pct_rices.png
+julia --project scripts/run_ofaat.jl --column pct_rices outputs/flower-width figures/flower-width-pct_rices.png
+julia --project scripts/run_ofaat.jl --column pct_females outputs/energy-transfer-01 figures/energy-transfer-1-pct_females.png
+julia --project scripts/run_ofaat.jl --column pct_females outputs/energy-transfer-02 figures/energy-transfer-2-pct_females.png
+julia --project scripts/run_ofaat.jl --column pct_females outputs/energy-transfer-03 figures/energy-transfer-3-pct_females.png
+julia --project scripts/run_ofaat.jl --column pct_females outputs/num-init-bphs/ figures/num-init-bphs-pct_females.png
+julia --project scripts/run_ofaat.jl --column pct_females outputs/pr-eliminate/ figures/pr-eliminate-pct_females.png
+julia --project scripts/run_ofaat.jl --column pct_females outputs/flower-width figures/flower-width-pct_females.png
+```
+
+For Linux user, we provide this convenience script:
+```shell
+# For the data
+bash scripts/ofaat.sh
+# For the figures
 bash scripts/plot.sh
 ```
