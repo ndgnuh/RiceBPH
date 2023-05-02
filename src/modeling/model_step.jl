@@ -1,10 +1,24 @@
 using Statistics
 
+"""
+    model_step!(model)
+
+Model behaviour in one step, which includes:
+
+- `model_action_eliminate!`
+- `model_action_summarize!`
+
+"""
 function model_step!(model)
     model_action_eliminate!(model)
     model_action_summarize!(model)
 end
 
+"""
+    model_action_summarize!(model)
+
+Collect agent and rice statistics and save them in model properties.
+"""
 function model_action_summarize!(model)
     #
     # Percentage of total rice energy
@@ -46,6 +60,17 @@ function model_action_summarize!(model)
     model.pct_rices = pct_rices
 end
 
+@doc raw"""
+    model_action_eliminate!(model)
+
+Eliminate BPHs base on their energy and the pr eliminate map.
+The elimination probability is given by 
+
+``(1 - e) \cdot p_e``
+
+where ``e`` is the agent energy and `p_e` is the elimination probability
+at the agent's position.
+"""
 function model_action_eliminate!(model)
     for pos in model.eliminate_positions
         pos = Tuple(pos)
