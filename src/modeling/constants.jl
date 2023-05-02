@@ -10,6 +10,11 @@ const CD_M_ADULT = normal_hour_range(13, 15)
 const CD_M_DEATH = normal_hour_range(11, 12)
 const CD_F_M_DEATH = normal_hour_range(27, 28)
 const CD_F_B_DEATH = normal_hour_range(22, 23)
+@doc """
+Distribution of cooldown time from one stage to another
+
+"""
+CD_NYMPH, CD_F_ADULT, CD_M_ADULT, CD_M_DEATH
 
 #
 # Reproduction params
@@ -35,6 +40,19 @@ const DST_NUM_OFFSPRINGS = normal_range(MIN_NUM_OFFSPRINGS, MAX_NUM_OFFSPRINGS)
 # Population structure
 #
 @enum Stage::Int8 Egg Nymph Adult Dead
+"""
+Stages of BPHs agent, represented by a Int8 value. The stages are:
+
+Stage | Value
+--- | ---
+`Egg` | $(Int(Egg))
+`Nymph` | $(Int(Nymph))
+`Adult` | $(Int(Adult))
+`Dead` | $(Int(Dead))
+
+Agents with `$(Dead)` stage will be removed at the end of their step.
+"""
+
 @enum Gender::Bool Male Female
 @enum Form::Bool Brachy Macro
 const NEXT_STAGE = Dict(Egg => Nymph, Nymph => Adult, Adult => Dead)

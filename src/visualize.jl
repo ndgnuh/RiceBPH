@@ -8,7 +8,15 @@ using ..Models
 #
 # Agent plotting stuffs
 #
+"""
+Color of the flower cells on the heatmap (`#FFC107`).
+"""
 const FLOWER_COLOR = colorant"#FFC107"
+
+"""
+Color of the rice cells on the heatmap, the color is `RGB(0.0, 0.8, 0.0, energy)`
+where energy is the energy of the rice cell.
+"""
 const RICE_COLORS = RGBAf.(0.0f0, 0.8f0, 0.0f0, 0.0f0:0.001f0:1.0f0)
 const AGENT_COLORS = Dict(Models.Egg => colorant"#0D47A1",
                           Models.Nymph => colorant"#D32F2F",
