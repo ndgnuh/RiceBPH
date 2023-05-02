@@ -1,5 +1,5 @@
 factor = "flower_width"
-values = "1:2:17"
+values = "1:9"
 
 num_steps = 5660
 num_replicates = 100
