@@ -1,4 +1,9 @@
 # Custom stuffs
+.ipynb_checkpoints/
+*.csv
+*.zip
+*.png
+*.mp4
 notebooks/*
 !notebooks/.gitkeep
 *.so
