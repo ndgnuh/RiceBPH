@@ -1,5 +1,7 @@
 module Visualisations
 
+using DataFrames
+
 include("visualisations/agents.jl")
 include("visualisations/recipes.jl")
 

@@ -34,6 +34,7 @@ function infer_stats!(df)
     df.pct_females = @. Float32((df.num_females + eps(Float32)) /
                                 (df.num_bphs + 2 * eps(Float32)))
     df.pct_males = @. Float32(1 - df.pct_females)
+    df.pct_bphs = Float32.(df.num_bphs ./ maximum(df.num_bphs))
     return df
 end
 
@@ -56,7 +57,7 @@ function get_stat(df, column)
             column => std => :std,
             column => minimum => :min,
             column => maximum => :max,
-           column => median => :median)
+            column => median => :median)
 end
 
 """
