@@ -5,4 +5,4 @@ num_steps = 5660
 num_replicates = 100
 map_size = 125
 init_pr_eliminate = 0.05
-num_init_bphs = 125
+num_init_bphs = 200
