@@ -6,6 +6,7 @@ using StatsBase
 using GLMakie
 using JDF
 using Chain
+using Printf
 
 """
     infer_stats!(df:DataFrame)
@@ -97,6 +98,76 @@ function get_stable_bph_timesteps(num_bphs::Vector)
     t1 = t2 - 7 * 24
     @assert t1 > 0
     return t1:t2
+end
+function get_stable_bph_timesteps(df::AbstractDataFrame)
+    get_stable_bph_timesteps(get_stat(df, :num_bphs).mean)
+end
+
+@enum Preset begin
+    MeanStd
+    MinMax
+end
+
+function get_analysis(group, column, step, ::Val{MeanStd})
+    μ = mean(group[step, column])
+    σ = std(group[step, column])
+    return @sprintf "%.3f ± %.3f" μ σ
+end
+function get_analysis(group, column, step, ::Val{MinMax})
+    x = group[step, column]
+    a = minimum(x)
+    b = maximum(x)
+    return @sprintf "[%.3f, %.3f]" a b
+end
+function get_analysis(group, column, step, preset::Preset)
+    get_analysis(group, column, step, Val(preset))
+end
+
+function show_analysis(df::DataFrame, preset::Int; k...)
+    show_analysis(df, Preset(preset); k...)
+end
+
+function show_analysis(df::DataFrame, preset::Nothing; k...)
+    result = reduce(vcat,
+                    [
+                        show_analysis(df, MeanStd; k...),
+                        show_analysis(df, MinMax; k...),
+                    ])
+    sort(result, get_factor_name(df))
+end
+
+function show_analysis(df::DataFrame, preset::Preset;
+                       stable_steps::Bool = false)
+    #
+    # Analyse per value of the factor
+    #
+    factor = get_factor_name(df)
+    groups = groupby(df, factor)
+    values = [getproperty(key, factor) for key in keys(groups)]
+
+    #
+    # Which time step to view data?
+    #
+    steps = if stable_steps
+        [get_stable_bph_timesteps(group) for group in groups]
+    else
+        [Colon() for _ in groups]
+    end
+
+    #
+    # Collect the result format base on preset
+    #
+    result = DataFrame(factor => values)
+    for column in names(df)
+        if column in ["step", "seed", String(factor)] || startswith(column, "num_")
+            continue
+        end
+        result[!, column] = map(zip(steps, Tuple(groups))) do (step, group)
+            get_analysis(group, column, step, preset)
+        end
+    end
+
+    return result
 end
 
 end # module Results
