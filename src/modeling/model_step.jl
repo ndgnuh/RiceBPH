@@ -81,8 +81,9 @@ function model_action_eliminate!(model)
     for pos in model.eliminate_positions
         pos = Tuple(pos)
         for agent in agents_in_position(pos, model)
-            pr = sqrt(max(zero(Float32),
-                          (LOG_OF_2 - log1p(agent.energy)) * model.pr_eliminate_map[pos...]))
+            #= pr = sqrt(max(zero(Float32), =#
+            #=               (LOG_OF_2 - log1p(agent.energy)) * model.pr_eliminate_map[pos...])) =#
+            pr = model.pr_eliminate_map[pos...]
             if rand(model.rng, Float32) < pr
                 remove_agent!(agent, model)
             end
