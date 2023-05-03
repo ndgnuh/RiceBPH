@@ -91,7 +91,7 @@ end
 
 function agent_action_eat!(agent, model)
     x, y = agent.pos
-    @return_if model.cell_type[x, y] == FlowerCell
+    @return_if model.cell_types[x, y] == FlowerCell
 
     # Self cap
     transfer = min(model.parameters.energy_transfer,
