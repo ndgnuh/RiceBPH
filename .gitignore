@@ -1,4 +1,6 @@
 # Custom stuffs
+notebooks/*
+!notebooks/.gitkeep
 *.so
 outputs/*
 !outputs/.gitkeep
