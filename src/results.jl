@@ -77,6 +77,20 @@ function get_factor_name(df)
 end
 
 """
+    get_data_columns(df)
+
+Returns a vector of `df`'s columns, excluding `:step`, `:seed` and the ofaat factor.
+"""
+function get_data_columns(df)
+    factor = Symbol(get_factor_name(df))
+    @chain begin
+        names(df)
+        Iterators.map(Symbol, _)
+        filter(!in([:step, :seed, factor]), _)
+    end
+end
+
+"""
     load(path_to_jdf_folder)
 
 Load the result, apply some inference on the results (to get extra statistics).
@@ -168,6 +182,29 @@ function show_analysis(df::DataFrame, preset::Preset;
     end
 
     return result
+end
+
+
+"""
+    analyse(result::DataFrame)
+
+Return a dataframe containing statistics of data columns
+from result dataframe. Statistics includes mean, standard deviation
+minimum and maximum.
+"""
+function analyse(result::DataFrame)
+    factor = get_factor_name(result)
+    columns = get_data_columns(column)
+    functions = [(:μ, mean),
+                 (:σ, std),
+                 (:min, minimum),
+                 (:max, maximum)]
+    combine(groupby(result, factor)) do group
+        mapreduce(vcat, columns) do column
+            data = group[!, column]
+            [key => value(data) for (k, v) in functions]
+        end
+    end
 end
 
 end # module Results
