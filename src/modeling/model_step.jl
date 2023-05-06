@@ -14,10 +14,27 @@ function model_step!(model)
     model_action_summarize!(model)
 end
 
-"""
+@doc raw"""
     model_action_summarize!(model)
 
 Collect agent and rice statistics and save them in model properties.
+The collected is the percentage of healthy rice ``r_R`` and the number of BPHs, matching stages, forms and genders.
+
+Metric  | Description
+:---    | :---
+``r_R`` | Percentage of healthy rice
+``n_E`` | Number of eggs
+``n_N`` | Number of nymphs
+``n_M`` | Number of adults with fully-winged form
+``n_B`` | Number of adults with truncate-winged form
+``n_B`` | Number of females
+
+The percentage of healthy rices is calculated by
+```math
+\begin{align}
+r_{R}=\frac{\left|\left\{ \left(i,j\right)\colon t_{i,j}=1\land e_{i,j}\ge0.5\right\} \right|}{\left|\left\{ \left(i,j\right)\colon t_{i,j}=1\right\} \right|}
+\end{align}
+```
 """
 function model_action_summarize!(model)
     #

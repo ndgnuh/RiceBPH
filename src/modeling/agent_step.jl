@@ -45,6 +45,12 @@ end
 function get_next_stage(rng, stage::Stage, gender::Gender, form::Form)
     get_next_stage(rng, Val(stage), Val(gender), Val(form))
 end
+@doc raw"""
+    get_next_stage(rng, stage::Stage, gender::Gender, form::Form)
+
+Return next stage and next stage countdown according to stage, gender and form.
+"""
+get_next_stage
 
 #
 # Agent actions: grow up, move, eat, reproduce and die
@@ -176,9 +182,9 @@ First, decrease the reproduction cooldown of the agent.
 After that, check for the reproduction conditions, if one of the following condition meets, *stop the action*:
 - the `agent` is a male,
 - the agent energy ``e`` is less than the energy consumption ``e_C`` (see [`ModelProperties`](@ref)),
-- the [reproduction cooldown](@ref BPH) is greater than zero, 
-- the energy of rice cell at agent position ``e_{x,y}`` is less than the energy transfere parameter [``e_T``](@ref ModelParameters).
-Otherwise, sample a random number of offsprings ``N`` from the [distributions of offspring quantity](@ref DST_NUM_OFFSPRINGS).
+- the reproduction cooldown is greater than zero (see [`BPH`](@ref)),
+- the energy of rice cell at agent position ``e_{x,y}`` is less than the energy transfere parameter ``e_T`` (see [`ModelParameters`](@ref)).
+Otherwise, sample a random number of offsprings ``N`` from the distributions of offspring quantity (see [`DST_NUM_OFFSPRINGS`](@ref)).
 """
 function agent_action_reproduce!(agent, model)
     agent.reproduction_cd = agent.reproduction_cd - 1
