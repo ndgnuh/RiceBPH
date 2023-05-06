@@ -10,11 +10,6 @@ const CD_M_ADULT = normal_hour_range(13, 15)
 const CD_M_DEATH = normal_hour_range(11, 12)
 const CD_F_M_DEATH = normal_hour_range(27, 28)
 const CD_F_B_DEATH = normal_hour_range(22, 23)
-@doc """
-Distribution of cooldown time from one stage to another
-
-"""
-CD_NYMPH, CD_F_ADULT, CD_M_ADULT, CD_M_DEATH
 
 #
 # Reproduction params
@@ -120,3 +115,22 @@ const MDATA_EXPL = [:pct_rices, num_bphs, pct_females, pct_nymphs, pct_brachys]
 function Base.convert(::Type{Bool}, celltype::CellType)
     return Bool(celltype)
 end
+
+#
+# Documentations
+#
+"""
+The enum `CellType` is based on `Bool` values, indicates a cell is
+a rice cell or flower cell:
+
+Value | Bool | Int
+--- | --- | ---
+`FlowerCell` | `$(FlowerCell |> Bool)` | $(FlowerCell |> Int)
+`RiceCell` | `$(RiceCell |> Bool)` | $(RiceCell |> Int)
+"""
+CellType, FlowerCell, RiceCell
+
+@doc """
+Distribution of cooldown time from one stage to another. See [Distributions](@ref model-distributions).
+"""
+CD_NYMPH, CD_F_ADULT, CD_M_ADULT, CD_M_DEATH, CD_F_M_DEATH, CD_F_B_DEATH

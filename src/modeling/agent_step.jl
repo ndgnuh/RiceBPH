@@ -49,6 +49,17 @@ end
 #
 # Agent actions: grow up, move, eat, reproduce and die
 #
+"""
+    agent_action_growup!(agent, model)
+
+Perform the grow up action on `agent`:
+
+1. The stage cooldown of the agent is decresed by one.
+2. The agent consumes energy.
+3. If stage cooldown is greater than zero, end the action.
+4. Otherwise, get the next stage and sample the next stage cooldown,
+    assign the stage and cooldown to the agent.
+"""
 function agent_action_growup!(agent, model)
     agent.stage_cd -= 1
     agent.energy = agent.energy - model.energy_consume
@@ -61,6 +72,29 @@ function agent_action_growup!(agent, model)
     agent.stage_cd = stage_cd
 end
 
+@doc raw"""
+    agent_action_move!(agent, model)
+
+Perform the move action of the `agent`:
+
+- Check the conditions, either:
+    - energy is greater or equal to energy consumption,
+    - rice at current position is zero,
+    - the cell type is flower,
+If the condition is not satisfied, stop the action,
+- The agent consumes energy,
+- Get all the directions within 2 cells (approx 30cm),
+- Assign each direction ``\text{d}x, \text{d}y`` to a weight, the weight is calculated by
+```math
+w_{\text{d}x,\text{d}y}=\begin{cases}
+e_{x+\text{d}x,y+\text{d}y}, & x+\text{d}x,y+\text{d}y\text{ is rice cell},\\
+0.5, & \text{otherwise}
+\end{cases}
+```
+where ``x, y`` is the position of `agent` on the grid, ``e_{\cdot,\cdot}`` is the rice cell energy.
+- Perform weighted sampling on the directions to select one direction.
+- The agent move along the sampled direction.
+"""
 function agent_action_move!(agent, model)
     x, y = agent.pos
 
@@ -153,11 +187,27 @@ end
 #
 # Agent steps by age stages
 #
+"""
+    agent_step_egg!(agent, model)
+
+The eggs have the following actions (performed in order):
+- [`agent_action_growup!`](@ref)
+- die
+"""
 function agent_step_egg!(agent, model)
     agent_action_growup!(agent, model)
     agent_action_die!(agent, model)
 end
 
+"""
+    agent_step_nymph!(agent, model)
+
+The nymphs have the following actions (performed in order):
+- [`agent_action_growup!`](@ref)
+- [`agent_action_move!`](@ref)
+- eat
+- die
+"""
 function agent_step_nymph!(agent, model)
     agent_action_growup!(agent, model)
     agent_action_move!(agent, model)
@@ -165,6 +215,16 @@ function agent_step_nymph!(agent, model)
     agent_action_die!(agent, model)
 end
 
+"""
+    agent_step_adult!(agent, model)
+
+The adult BPHs have the following actions (performed in order):
+- [`agent_action_growup!`](@ref)
+- [`agent_action_move!`](@ref)
+- eat
+- reproduce
+- die
+"""
 function agent_step_adult!(agent, model)
     agent_action_growup!(agent, model)
     agent_action_move!(agent, model)
@@ -180,6 +240,16 @@ const STEPS = Dict(Egg => agent_step_egg!,
 #
 # Agent step entry point function
 #
+"""
+    agent_step!(agent, model)
+
+Perform agent actions in step, actions are determined by their stages.
+Each stage's actions is defined in its respective step function.
+
+- eggs: [`agent_step_egg!`](@ref)
+- nymphs: [`agent_step_nymph!`](@ref)
+- adults: [`agent_step_adult!`](@ref)
+"""
 function agent_step!(agent, model)
     step_fn! = STEPS[agent.stage]
     step_fn!(agent, model)

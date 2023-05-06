@@ -20,3 +20,7 @@ Order   = [:function]
 Modules = [RiceBPH.Visualisations]
 Order   = [:function, :type, :constant]
 ```
+
+## [Distributions](@id model-distributions)
+
+TODO
