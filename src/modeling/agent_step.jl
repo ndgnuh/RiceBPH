@@ -123,6 +123,31 @@ function agent_action_move!(agent, model)
     walk!(agent, (dx, dy), model)
 end
 
+@doc raw"""
+    agent_action_eat!(agent, model)
+
+Perform eat action of `agent`.
+
+First, check if the current cell is a [`FlowerCell`](@ref), if it is, stop the action.
+Otherwise, let:
+- ``x,y`` the position of `agent`,
+- ``e`` the `agent`'s energy,
+- ``e_{x,y}`` the [`RiceCell`](@ref)'s energy,
+- ``e_T`` is the `energy_transfer` parameter (see [`ModelParameters`](@ref)),
+the transfered energy ``\Delta e`` is calculated by:
+```math
+\begin{equation}
+\Delta e=\min\left(1-e,e_{x,y},e_{T}\right).
+\end{equation}
+```
+Then, the transfered value is subtracted from the [`RiceCell`](@ref) and added to the agent.
+```math
+\begin{align}
+e_{x, y} & \coloneqq e_{x,y} - \Delta e.\\
+e & \coloneqq e - \Delta e.
+\end{align}
+```
+"""
 function agent_action_eat!(agent, model)
     x, y = agent.pos
     @return_if model.cell_types[x, y] == FlowerCell
@@ -142,6 +167,19 @@ function agent_action_eat!(agent, model)
     agent.energy += transfer
 end
 
+"""
+    agent_action_reproduce!(agent, model)
+
+Perform the reproductive action of `agent`.
+
+First, decrease the reproduction cooldown of the agent.
+After that, check for the reproduction conditions, if one of the following condition meets, *stop the action*:
+- the `agent` is a male,
+- the agent energy ``e`` is less than the energy consumption ``e_C`` (see [`ModelProperties`](@ref)),
+- the [reproduction cooldown](@ref BPH) is greater than zero, 
+- the energy of rice cell at agent position ``e_{x,y}`` is less than the energy transfere parameter [``e_T``](@ref ModelParameters).
+Otherwise, sample a random number of offsprings ``N`` from the [distributions of offspring quantity](@ref DST_NUM_OFFSPRINGS).
+"""
 function agent_action_reproduce!(agent, model)
     agent.reproduction_cd = agent.reproduction_cd - 1
     @return_if agent.gender == Male
@@ -178,6 +216,15 @@ function agent_action_reproduce!(agent, model)
     agent.energy = agent.energy - model.energy_consume
 end
 
+"""
+    agent_action_die!(agent, model)
+
+Check if the `agent` should be eliminated from the simulation.
+
+The condition of elimination is either:
+- The agent energy is zero or less,
+- The agent is adult stage and their stage cooldown is zero or less (`agent.stage == Dead`, see also [`Stage`](@ref))
+"""
 function agent_action_die!(agent, model)
     if agent.energy <= 0 || agent.stage == Dead
         remove_agent!(agent, model)
@@ -192,7 +239,7 @@ end
 
 The eggs have the following actions (performed in order):
 - [`agent_action_growup!`](@ref)
-- die
+- [`agent_action_die!`](@ref)
 """
 function agent_step_egg!(agent, model)
     agent_action_growup!(agent, model)
@@ -205,8 +252,8 @@ end
 The nymphs have the following actions (performed in order):
 - [`agent_action_growup!`](@ref)
 - [`agent_action_move!`](@ref)
-- eat
-- die
+- [`agent_action_eat!`](@ref)
+- [`agent_action_die!`](@ref)
 """
 function agent_step_nymph!(agent, model)
     agent_action_growup!(agent, model)
@@ -221,9 +268,9 @@ end
 The adult BPHs have the following actions (performed in order):
 - [`agent_action_growup!`](@ref)
 - [`agent_action_move!`](@ref)
-- eat
+- [`agent_action_eat!`](@ref)
 - reproduce
-- die
+- [`agent_action_die!`](@ref)
 """
 function agent_step_adult!(agent, model)
     agent_action_growup!(agent, model)

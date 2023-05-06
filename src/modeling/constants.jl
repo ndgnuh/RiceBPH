@@ -35,18 +35,6 @@ const DST_NUM_OFFSPRINGS = normal_range(MIN_NUM_OFFSPRINGS, MAX_NUM_OFFSPRINGS)
 # Population structure
 #
 @enum Stage::Int8 Egg Nymph Adult Dead
-"""
-Stages of BPHs agent, represented by a Int8 value. The stages are:
-
-Stage | Value
---- | ---
-`Egg` | $(Int(Egg))
-`Nymph` | $(Int(Nymph))
-`Adult` | $(Int(Adult))
-`Dead` | $(Int(Dead))
-
-Agents with `$(Dead)` stage will be removed at the end of their step.
-"""
 
 @enum Gender::Bool Male Female
 @enum Form::Bool Brachy Macro
@@ -134,3 +122,18 @@ CellType, FlowerCell, RiceCell
 Distribution of cooldown time from one stage to another. See [Distributions](@ref model-distributions).
 """
 CD_NYMPH, CD_F_ADULT, CD_M_ADULT, CD_M_DEATH, CD_F_M_DEATH, CD_F_B_DEATH
+
+@doc """
+Stages of BPHs agent, represented by a Int8 value. The stages are:
+
+Stage | Value | Represents
+--- | --- | ---
+`Egg` | $(Int(Egg)) | BPH's eggs
+`Nymph` | $(Int(Nymph)) | BPHs in nymph stage
+`Adult` | $(Int(Adult)) | BPHs in adult stage
+`Dead` | $(Int(Dead)) | BPHs in adult stage but their time runs out
+
+Agents with `$(Dead)` stage will be removed at the end of their step.
+See also: [`get_next_stage`](@ref)
+"""
+Stage, Egg, Nymph, Adult
