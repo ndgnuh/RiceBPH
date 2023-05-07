@@ -87,16 +87,16 @@ end
 """
 The BPH agents, with the following state variables.
 
-Variable | Type | Description 
-:--- | :--- | :---
-`id`| `Int` | The agent identifier number
-`pos` | `Dims{2}` |  The agent's position on the environment grid
-`energy` | `Float16` | The agent's energy
-`gender` | [`Gender`](@ref) | The agent's gender
-`form` | [`Form`](@ref) | The agent's form
-`stage` | [`Stage`](@ref) | The agent's current stage
-`stage_cd` | `Int16` | The countdown to agent's next stage
-`reproduction_cd` | `Int16` | The countdown to agent's next reproduction
+Symbol | Variable | Type | Description 
+:--- | :--- | :--- | :---
+``i`` | `id`| `Int` | The agent identifier number
+``x_i, y_i`` | `pos` | `Dims{2}` |  The agent's position on the environment grid
+``e_i`` | `energy` | `Float16` | The agent's energy
+``g_i`` | `gender` | [`Gender`](@ref) | The agent's gender
+``f_i`` | `form` | [`Form`](@ref) | The agent's form
+``s_i`` | `stage` | [`Stage`](@ref) | The agent's current stage
+``c^(s)_i`` | `stage_cd` | `Int16` | The countdown to agent's next stage
+``c^(r)_i`` | `reproduction_cd` | `Int16` | The countdown to agent's next reproduction
 """
 @kwdef mutable struct BPH <: AbstractAgent
     id::Int

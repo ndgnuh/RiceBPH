@@ -36,7 +36,6 @@ Order   = [:function, :type, :constant]
 
 ```@docs
 RiceBPH.Models.AVG_EGGS_M
-Models.AVG_EGGS_M
-AVG_EGGS_B
+RiceBPH.Models.AVG_EGGS_B
 ```
 

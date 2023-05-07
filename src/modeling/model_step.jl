@@ -87,12 +87,9 @@ const LOG_OF_2 = log(2.0f0)
     model_action_eliminate!(model)
 
 Eliminate BPHs base on their energy and the pr eliminate map.
-The elimination probability is given by 
+The elimination probability is given by  ``p_{x,y}``.
 
-``(\log(2) - \log(E + 1)) \cdot p_e``
-
-where ``E`` is the agent energy and ``p_e`` is the elimination probability
-at the agent's position.
+For each position ``x, y``, for each agent ``a_i`` whose position ``x_i = x, y_i = y``, the agent is removed from the simulation with the probability ``p_{x, y}``.
 """
 function model_action_eliminate!(model)
     for pos in model.eliminate_positions
