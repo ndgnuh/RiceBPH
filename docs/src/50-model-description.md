@@ -51,7 +51,7 @@ Variable     | Description                                         | Value(s)
 ``y``        | The cell's ``y``-coordinate on the environment grid | ``1, 2,\ldots,S``
 ``t_{x, y}`` | The type of the cell at ``x, y`` (flower, rice)     | ``0, 1``
 ``e_{x, y}`` | The energy of the cell at ``x, y``                  | ``[0, 1]``
-``p_{x, y}`` | The elimination probability of the cell at ``x, y`` | ``[0, p_0]``
+``p_{x, y}`` | The elimination probability of the cell at ``x, y`` | ``[0, P_0]``
 
 ### Scales
 
@@ -208,11 +208,11 @@ Variable  | Description                                          | Value
 :---:     | :---                                                 | ---:
 ``S``     | The environment grid size                            | ``125``
 ``S_F``   | The number of flower cells at the center of the grid | ``0``
-``n_{I}`` | The number of initialized BPH                        | ``200``
-``p_0``   | The base elimination probability                     | ``0``
+``N_{I}`` | The number of initialized BPH                        | ``200``
+``P_0``   | The base elimination probability                     | ``0``
 -         | The BPHs' initial positions                          | [`Corner`](@ref)
-``e_{T}`` | The energy conversion from rice to BPHs              | ``0.032``
-``e_{C}`` | The energy conversion from rice to BPHs              | ``e_T / e_C``
+``E_{T}`` | The energy conversion from rice to BPHs              | ``0.032``
+``E_{C}`` | The energy conversion from rice to BPHs              | ``E_T / 3``
 
 ##### Initialisation actions
 
@@ -239,6 +239,12 @@ RiceBPH.Models.agent_action_move!
 RiceBPH.Models.agent_action_eat!
 RiceBPH.Models.agent_action_reproduce!
 RiceBPH.Models.agent_action_die!
+```
+
+##### Auxilary functions
+
+```@docs
+RiceBPH.Models.get_next_stage
 ```
 
 ##### Data collection

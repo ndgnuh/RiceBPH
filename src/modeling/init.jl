@@ -39,10 +39,13 @@ function init_cell_types(map_size::Integer, flower_width::Integer)
     return cell_types
 end
 
-"""
+raw"""
     init_rice_map(S::Integer)
 
 Returns a matrix filled with ``1`` of size ``S \\times S``.
+```math
+\left[e_{x,y}\right]_{S\times S}\equiv1.
+```
 
 In code terms, it's basically `ones(Float32, S, S)`.
 """
@@ -58,11 +61,11 @@ end
 Returns `Float32` matrix of elimination probability.
 The result matrix is defined by:
 ```math
-\left[p_{x,y}\right]_{S\times S} = p_0 \times (1 - M)) ∗ G(\sigma),
+\left[p_{x,y}\right]_{S\times S} = P_0 \times (1 - M)) ∗ G(\sigma),
 ```
 where:
 - ``G(\sigma)`` is the Gaussian kernel,
-- ``p_0`` is the base elimination probability,
+- ``P_0`` is the base elimination probability,
 - ``M`` is the cell type matrix (see [`init_cell_types`](@ref)).
 """
 function init_pr_eliminate(init_pr::Float32, cell_types::Matrix{CellType};

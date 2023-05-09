@@ -19,6 +19,26 @@ end
 #
 # Mapping current stage to next stage
 #
+"""
+    get_next_stage(rng, stage::Stage, gender::Gender, form::Form)
+
+Return next stage and next stage countdown according to stage, gender and form.
+
+**Note:** The adult BPH only transit to the [`Dead`](@ref) stage but does not get removed immediately from the simulation.
+They carry out the rest of their actions for the rest of the current time step normally.
+
+Stage | Gender | Form          | Next stage | Next stage countdown
+:---  | :---   | :---          | :---       | :---
+Egg   | Male   | -             | Nymph      | [`CD_M_ADULT`](@ref)
+Egg   | Female | -             | Nymph      | [`CD_F_ADULT`](@ref)
+Nymph | Male   | -             | Adult      | [`CD_M_DEATH`](@ref)
+Nymph | Female | Macropterous  | Adult      | [`CD_F_M_DEATH`](@ref)
+Nymph | Female | Brachypterous | Adult      | [`CD_F_B_DEATH`](@ref)
+Adult | -      | -             | Dead       | 9999
+"""
+function get_next_stage(rng, stage::Stage, gender::Gender, form::Form)
+    get_next_stage(rng, Val(stage), Val(gender), Val(form))
+end
 function get_next_stage(rng, ::Val{Egg}, ::Val{Male}, _)
     stage_cd = randt(rng, Int16, CD_M_ADULT)
     return Nymph, stage_cd
@@ -42,15 +62,6 @@ end
 function get_next_stage(_, ::Val{Adult}, _, _)
     return Dead, 9999
 end
-function get_next_stage(rng, stage::Stage, gender::Gender, form::Form)
-    get_next_stage(rng, Val(stage), Val(gender), Val(form))
-end
-@doc raw"""
-    get_next_stage(rng, stage::Stage, gender::Gender, form::Form)
-
-Return next stage and next stage countdown according to stage, gender and form.
-"""
-get_next_stage
 
 #
 # Agent actions: grow up, move, eat, reproduce and die
@@ -58,13 +69,19 @@ get_next_stage
 """
     agent_action_growup!(agent, model)
 
-Perform the grow up action on `agent`:
+Perform the grow up action on agent with id ``i``:
 
-1. The stage cooldown of the agent is decresed by one.
-2. The agent consumes energy.
-3. If stage cooldown is greater than zero, end the action.
-4. Otherwise, get the next stage and sample the next stage cooldown,
-    assign the stage and cooldown to the agent.
+The stage cooldown of the agent is decresed by one.
+```math
+t_i^{(s)}(t + 1) = t_i^{(s)}(t) - 1.
+```
+The agent then consumes energy.
+```math
+e_i(t+1) = e_i(t) - E_C
+```
+- If stage cooldown is greater than zero, end the action.
+- Otherwise, get the next stage and sample the next stage cooldown,
+    assign the stage ``s_i`` and countdown ``t_i^{(s)}`` to the agent, see [`get_next_stage`](@ref).
 """
 function agent_action_growup!(agent, model)
     agent.stage_cd -= 1
@@ -87,14 +104,21 @@ Perform the move action of the `agent`:
     - energy is greater or equal to energy consumption,
     - rice at current position is zero,
     - the cell type is flower,
+```math
+\begin{align}
+e_i &\ge E_T,
+e_{x_i, y_i} &= 0,
+t_{x_i, y_i} &= 0.
+\end{align}
+```
 If the condition is not satisfied, stop the action,
 - The agent consumes energy,
 - Get all the directions within 2 cells (approx 30cm),
 - Assign each direction ``\text{d}x, \text{d}y`` to a weight, the weight is calculated by
 ```math
 w_{\text{d}x,\text{d}y}=\begin{cases}
-e_{x+\text{d}x,y+\text{d}y}, & x+\text{d}x,y+\text{d}y\text{ is rice cell},\\
-0.5, & \text{otherwise}
+e_{x+\text{d}x,y+\text{d}y}, & t_{x+\text{d}x,y+\text{d}y}=1,\\
+0.5, & t_{x+\text{d}x,y+\text{d}y}=0.
 \end{cases}
 ```
 where ``x, y`` is the position of `agent` on the grid, ``e_{\cdot,\cdot}`` is the rice cell energy.
@@ -139,7 +163,7 @@ Otherwise, let:
 - ``x,y`` the position of `agent`,
 - ``e`` the `agent`'s energy,
 - ``e_{x,y}`` the [`RiceCell`](@ref)'s energy,
-- ``e_T`` is the `energy_transfer` parameter (see [`ModelParameters`](@ref)),
+- ``E_T`` is the `energy_transfer` parameter (see [`ModelParameters`](@ref)),
 the transfered energy ``\Delta e`` is calculated by:
 ```math
 \begin{equation}
@@ -181,9 +205,9 @@ Perform the reproductive action of `agent`.
 First, decrease the reproduction cooldown of the agent.
 After that, check for the reproduction conditions, if one of the following condition meets, *stop the action*:
 - the `agent` is a male,
-- the agent energy ``e`` is less than the energy consumption ``e_C`` (see [`ModelProperties`](@ref)),
+- the agent energy ``e`` is less than the energy consumption ``E_C`` (see [`ModelProperties`](@ref)),
 - the reproduction cooldown is greater than zero (see [`BPH`](@ref)),
-- the energy of rice cell at agent position ``e_{x,y}`` is less than the energy transfere parameter ``e_T`` (see [`ModelParameters`](@ref)).
+- the energy of rice cell at agent position ``e_{x,y}`` is less than the energy transfere parameter ``E_T`` (see [`ModelParameters`](@ref)).
 Otherwise, sample a random number of offsprings ``N`` from the distributions of offspring quantity (see [`DST_NUM_OFFSPRINGS`](@ref)).
 """
 function agent_action_reproduce!(agent, model)
@@ -275,7 +299,7 @@ The adult BPHs have the following actions (performed in order):
 - [`agent_action_growup!`](@ref)
 - [`agent_action_move!`](@ref)
 - [`agent_action_eat!`](@ref)
-- reproduce
+- [`agent_action_reproduce!`](@ref)
 - [`agent_action_die!`](@ref)
 """
 function agent_step_adult!(agent, model)

@@ -71,15 +71,23 @@ end
 # 5 cells ≈ 1m in length
 #
 @enum InitPosition::Bool Corner Border
+"""
+The maximum initial positions. 15 cells is approximately equivalent to 2.25 meters.
+"""
 const IP_MAX = 15
+
+@doc raw"""
+Initial position distribution.
+The initial distribution is a Poisson distribution with ``\lambda = 6``.
+"""
 const IP_DST = let dst = Poisson(6)
     [1 - cdf(dst, x) for x in 1:IP_MAX]
 end
+
+"""
+Possible initial positions index.
+"""
 const IP_PTS = collect(1:IP_MAX)
-"""
-Initial position related parameters, see [Constants](@ref constants) for more details.
-"""
-IP_DST, IP_PTS, IP_MAX
 
 #
 # DATA COLLECTION
