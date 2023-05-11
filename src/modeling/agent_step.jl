@@ -71,7 +71,7 @@ end
 
 Perform the grow up action on agent with id ``i``:
 
-The stage cooldown of the agent is decresed by one.
+The stage countdown of the agent is decresed by one.
 ```math
 t_i^{(s)}(t + 1) = t_i^{(s)}(t) - 1.
 ```
@@ -79,9 +79,8 @@ The agent then consumes energy.
 ```math
 e_i(t+1) = e_i(t) - E_C
 ```
-- If stage cooldown is greater than zero, end the action.
-- Otherwise, get the next stage and sample the next stage cooldown,
-    assign the stage ``s_i`` and countdown ``t_i^{(s)}`` to the agent, see [`get_next_stage`](@ref).
+If stage countdown is greater than zero, end the action. Otherwise, get the next stage and sample the next stage countdown, assign the next stage and the next countdown to the agent.
+The next stage  ``z^{(s)}_i(t+1)`` and the stage countdown ``t^{(s)}_i`` is returned by [`get_next_stage`](@ref).
 """
 function agent_action_growup!(agent, model)
     agent.stage_cd -= 1
@@ -100,30 +99,44 @@ end
 
 Perform the move action of the `agent`:
 
-- Check the conditions, either:
-    - energy is greater or equal to energy consumption,
-    - rice at current position is zero,
-    - the cell type is flower,
+Let the agent's ID ``i``, the agent's position on the grid ``x=x_i=x_i(t)``, ``y=y_i=y_i(t)``. The agent only moves under certain conditions, either: energy is greater or equal to energy consumption
 ```math
-\begin{align}
-e_i &\ge E_T,
-e_{x_i, y_i} &= 0,
-t_{x_i, y_i} &= 0.
-\end{align}
+\begin{equation}
+e_i \ge E_T;
+\end{equation}
 ```
-If the condition is not satisfied, stop the action,
-- The agent consumes energy,
-- Get all the directions within 2 cells (approx 30cm),
-- Assign each direction ``\text{d}x, \text{d}y`` to a weight, the weight is calculated by
+or the cell that the agent is currently on is a rice cell and has zero energy:
 ```math
+\begin{equation}
+e_{x, y} = 0;
+\end{equation}
+```
+or the cell type is flower:
+```math
+\begin{equation}
+t_{x, y} &= 0.
+\end{equation}
+```
+If the condition is not satisfied, stop the action.
+Otherwise, the agent then consume energy:
+```math
+e_{i}'= e_{i} - E_C.
+```
+After that, a direction ``\text{d}x, \text{d}y`` is sampled within the radius of 2 cells (approximately 30cm) with weights.
+The weight of the moving direction is calculated by
+```math
+\begin{equation}
 w_{\text{d}x,\text{d}y}=\begin{cases}
 e_{x+\text{d}x,y+\text{d}y}, & t_{x+\text{d}x,y+\text{d}y}=1,\\
 0.5, & t_{x+\text{d}x,y+\text{d}y}=0.
 \end{cases}
+\end{equation}
 ```
-where ``x, y`` is the position of `agent` on the grid, ``e_{\cdot,\cdot}`` is the rice cell energy.
-- Perform weighted sampling on the directions to select one direction.
-- The agent move along the sampled direction.
+After a direction is sampled, the agent then move along the sampled direction
+```math
+x'_i &= x_i + \text{d}x,\\
+y'_i &= y_i + \text{d}y.
+```
 """
 function agent_action_move!(agent, model)
     x, y = agent.pos
@@ -202,11 +215,11 @@ end
 
 Perform the reproductive action of `agent`.
 
-First, decrease the reproduction cooldown of the agent.
+First, decrease the reproduction countdown of the agent.
 After that, check for the reproduction conditions, if one of the following condition meets, *stop the action*:
 - the `agent` is a male,
 - the agent energy ``e`` is less than the energy consumption ``E_C`` (see [`ModelProperties`](@ref)),
-- the reproduction cooldown is greater than zero (see [`BPH`](@ref)),
+- the reproduction countdown is greater than zero (see [`BPH`](@ref)),
 - the energy of rice cell at agent position ``e_{x,y}`` is less than the energy transfere parameter ``E_T`` (see [`ModelParameters`](@ref)).
 Otherwise, sample a random number of offsprings ``N`` from the distributions of offspring quantity (see [`DST_NUM_OFFSPRINGS`](@ref)).
 """
@@ -236,7 +249,7 @@ function agent_action_reproduce!(agent, model)
     end
 
     #
-    # Reset reproduction cooldown
+    # Reset reproduction countdown
     #
     agent.reproduction_cd = trunc(Int, rand(rng, REPRODUCE_CDS[agent.form]))
 
@@ -253,7 +266,7 @@ Check if the `agent` should be eliminated from the simulation.
 
 The condition of elimination is either:
 - The agent energy is zero or less,
-- The agent is adult stage and their stage cooldown is zero or less (`agent.stage == Dead`, see also [`Stage`](@ref))
+- The agent is adult stage and their stage countdown is zero or less (`agent.stage == Dead`, see also [`Stage`](@ref))
 """
 function agent_action_die!(agent, model)
     if agent.energy <= 0 || agent.stage == Dead

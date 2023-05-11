@@ -200,9 +200,34 @@ RiceBPH.Models.init_model
 The model does not use any external data.
 
 ## Submodels
-The initialisation variables, parameters and states of the model are presented in the next table:
+
+##### Notation
+To make sure readers understand our model correctly, we will provide the notation system that we use in this material.
+
+We use index variables such as ``i,j,k,l,\ldots`` to refer to the identification number of an agent.
+The state variable of an agent is referred to by their respective notation in [Entities, state variables, and scales](@ref).
+For example, the energy of agent ``i`` is ``e_i``.
+
+For vegetation cells, we use spatial coordinate (such as ``x,y``) to index them.
+Their state variables follow the same rule.
+For example, the energy of the rice cell at position ``x, y`` is ``e_{x,y}``,
+the energy of the rice cell where the agent ``i`` at is ``e_{x_i, y_i}``.
+
+To abuse the notation, we hide the timestep variable and consider each submodel within its context (the "current" timestep).
+The updated state variable is distinguished from the original one by a ``\prime``.
+For example, when an agent consume energy:
+```math
+e'_i = e_i - E_C.
+```
+We do not explicitly refer to the timestep ``t`` for several reasons.
+The main reason is that sometime, state variable are updated many times within a timestep, so it is not possible to use timestep variable to describe the changes.
+Moreover, every submodel is described in their own context, therefore, the current time step is always ``t``; adding the time step variable ``t`` does not make it easier to perceive the model (if not harder).
+
+TODO
 
 ##### Model parameters
+The initialisation variables, parameters and states of the model are presented in the next table:
+
 
 Variable  | Description                                          | Value
 :---:     | :---                                                 | ---:
