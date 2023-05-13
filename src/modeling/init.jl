@@ -39,7 +39,7 @@ function init_cell_types(map_size::Integer, flower_width::Integer)
     return cell_types
 end
 
-raw"""
+@doc raw"""
     init_rice_map(S::Integer)
 
 Returns a matrix filled with ``1`` of size ``S \\times S``.

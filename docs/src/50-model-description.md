@@ -249,6 +249,7 @@ Each of the other states is represented by a matrix.
 RiceBPH.Models.init_cell_types
 RiceBPH.Models.init_rice_map
 RiceBPH.Models.init_pr_eliminate
+RiceBPH.Models.init_agents
 ```
 
 ##### Vegetation cell submodels
@@ -272,11 +273,29 @@ RiceBPH.Models.agent_action_die!
 RiceBPH.Models.get_next_stage
 ```
 
+##### Distributions
+
+```@example
+using RiceBPH.Models # hide
+using Distributions # hide
+using DataFrames # hide
+using Documenter # hide
+df = DataFrame(name = Symbol[], value=String[])
+for name in names(Models, all = true)
+	value = getproperty(Models, name)
+	if value isa Distribution
+		push!(df.name, name)
+		push!(df.value, Models.show_dist(value))
+	end
+end
+mdtable(df)
+```
+
 ##### Data collection
 
 
 !!! danger
-	This is not finised documentation.
+	This is unfinished documentation.
 
 ```@docs
 RiceBPH.Models.model_action_summarize!

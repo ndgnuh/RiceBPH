@@ -29,11 +29,11 @@ They carry out the rest of their actions for the rest of the current time step n
 
 Stage | Gender | Form          | Next stage | Next stage countdown
 :---  | :---   | :---          | :---       | :---
-Egg   | Male   | -             | Nymph      | [`CD_M_ADULT`](@ref)
-Egg   | Female | -             | Nymph      | [`CD_F_ADULT`](@ref)
-Nymph | Male   | -             | Adult      | [`CD_M_DEATH`](@ref)
-Nymph | Female | Macropterous  | Adult      | [`CD_F_M_DEATH`](@ref)
-Nymph | Female | Brachypterous | Adult      | [`CD_F_B_DEATH`](@ref)
+Egg   | Male   | -             | Nymph      |  $(show_dist(CD_M_ADULT)) ([`CD_M_ADULT`](@ref))
+Egg   | Female | -             | Nymph      |  $(show_dist(CD_F_ADULT)) ([`CD_F_ADULT`](@ref))
+Nymph | Male   | -             | Adult      |  $(show_dist(CD_M_DEATH)) ([`CD_M_DEATH`](@ref))
+Nymph | Female | Macropterous  | Adult      |  $(show_dist(CD_F_M_DEATH)) ([`CD_F_M_DEATH`](@ref))
+Nymph | Female | Brachypterous | Adult      |  $(show_dist(CD_F_B_DEATH)) ([`CD_F_B_DEATH`](@ref))
 Adult | -      | -             | Dead       | 9999
 """
 function get_next_stage(rng, stage::Stage, gender::Gender, form::Form)
@@ -66,21 +66,23 @@ end
 #
 # Agent actions: grow up, move, eat, reproduce and die
 #
-"""
+@doc raw"""
     agent_action_growup!(agent, model)
 
 Perform the grow up action on agent with id ``i``:
 
 The stage countdown of the agent is decresed by one.
 ```math
-t_i^{(s)}(t + 1) = t_i^{(s)}(t) - 1.
+\begin{equation}
+t_i^{\prime(s)} = t_i^{(s)} - 1.
+\end{equation}
 ```
 The agent then consumes energy.
 ```math
-e_i(t+1) = e_i(t) - E_C
+e_i' = e_i - E_C
 ```
 If stage countdown is greater than zero, end the action. Otherwise, get the next stage and sample the next stage countdown, assign the next stage and the next countdown to the agent.
-The next stage  ``z^{(s)}_i(t+1)`` and the stage countdown ``t^{(s)}_i`` is returned by [`get_next_stage`](@ref).
+The next stage  ``z^{\prime(s)}_i`` and next the stage countdown ``t^{\prime(s)}_i`` is returned by [`get_next_stage`](@ref).
 """
 function agent_action_growup!(agent, model)
     agent.stage_cd -= 1
@@ -99,7 +101,7 @@ end
 
 Perform the move action of the `agent`:
 
-Let the agent's ID ``i``, the agent's position on the grid ``x=x_i=x_i(t)``, ``y=y_i=y_i(t)``. The agent only moves under certain conditions, either: energy is greater or equal to energy consumption
+Let the agent's ID ``i``, the agent's position on the grid ``x=x_i``, ``y=y_i``. The agent only moves under certain conditions, either: energy is greater or equal to energy consumption
 ```math
 \begin{equation}
 e_i \ge E_T;
@@ -114,13 +116,15 @@ e_{x, y} = 0;
 or the cell type is flower:
 ```math
 \begin{equation}
-t_{x, y} &= 0.
+t_{x, y} = 0.
 \end{equation}
 ```
 If the condition is not satisfied, stop the action.
 Otherwise, the agent then consume energy:
 ```math
+\begin{equation}
 e_{i}'= e_{i} - E_C.
+\end{equation}
 ```
 After that, a direction ``\text{d}x, \text{d}y`` is sampled within the radius of 2 cells (approximately 30cm) with weights.
 The weight of the moving direction is calculated by
@@ -134,8 +138,10 @@ e_{x+\text{d}x,y+\text{d}y}, & t_{x+\text{d}x,y+\text{d}y}=1,\\
 ```
 After a direction is sampled, the agent then move along the sampled direction
 ```math
+\begin{align}
 x'_i &= x_i + \text{d}x,\\
 y'_i &= y_i + \text{d}y.
+\end{align}
 ```
 """
 function agent_action_move!(agent, model)
@@ -172,23 +178,19 @@ end
 Perform eat action of `agent`.
 
 First, check if the current cell is a [`FlowerCell`](@ref), if it is, stop the action.
-Otherwise, let:
-- ``x,y`` the position of `agent`,
-- ``e`` the `agent`'s energy,
-- ``e_{x,y}`` the [`RiceCell`](@ref)'s energy,
-- ``E_T`` is the `energy_transfer` parameter (see [`ModelParameters`](@ref)),
-the transfered energy ``\Delta e`` is calculated by:
-```math
-\begin{equation}
-\Delta e=\min\left(1-e,e_{x,y},e_{T}\right).
-\end{equation}
-```
-Then, the transfered value is subtracted from the [`RiceCell`](@ref) and added to the agent.
+
+An amount of energy is subtracted from the [`RiceCell`](@ref) ``x_i,y_i`` and added to the agent ``i``.
 ```math
 \begin{align}
-e_{x, y} & \coloneqq e_{x,y} - \Delta e.\\
-e & \coloneqq e - \Delta e.
+e'_{x_i, y_i} &= e_{x_i,y_i} - \text{d} e,\\
+e'_i &= e_i + \text{d} e,
 \end{align}
+```
+where the transfered energy ``\text{d}e`` is calculated by
+```math
+\begin{equation}
+\text{d} e=\min\left(1-e_i,e_{x_i,y_i},e_{T}\right).
+\end{equation}
 ```
 """
 function agent_action_eat!(agent, model)
@@ -210,18 +212,41 @@ function agent_action_eat!(agent, model)
     agent.energy += transfer
 end
 
-"""
+@doc raw"""
     agent_action_reproduce!(agent, model)
 
-Perform the reproductive action of `agent`.
+Perform the reproductive action of `agent` ``i``.
 
-First, decrease the reproduction countdown of the agent.
-After that, check for the reproduction conditions, if one of the following condition meets, *stop the action*:
-- the `agent` is a male,
-- the agent energy ``e`` is less than the energy consumption ``E_C`` (see [`ModelProperties`](@ref)),
-- the reproduction countdown is greater than zero (see [`BPH`](@ref)),
-- the energy of rice cell at agent position ``e_{x,y}`` is less than the energy transfere parameter ``E_T`` (see [`ModelParameters`](@ref)).
-Otherwise, sample a random number of offsprings ``N`` from the distributions of offspring quantity (see [`DST_NUM_OFFSPRINGS`](@ref)).
+First, decrease the reproduction countdown of the agent ``i``.
+```math
+\begin{equation}
+t^{(p)'}_i = t^{(p)}_i - 1
+\end{equation}
+```
+After that, check for the reproduction conditions: the `agent` is a female,
+```math
+\begin{equation}
+z^{(g)}_i = 1,
+\end{equation}
+```
+the agent energy is larger or equals than the energy consumption
+```math
+\begin{equation}
+e_i \ge E_C,
+\end{equation}
+```
+the reproduction countdown is zero:
+```math
+t^{(p)\prime} = 0,
+```
+the energy of rice cell at agent position is greater than the energy transfer parameter:
+```math
+e_{x_i, y_i} \ge E_T.
+```
+""" * """
+If the condition is met, the number of offsprings ``N`` from the distributions of offspring quantity $(show_dist(DST_NUM_OFFSPRINGS)).
+
+TODO:
 """
 function agent_action_reproduce!(agent, model)
     agent.reproduction_cd = agent.reproduction_cd - 1

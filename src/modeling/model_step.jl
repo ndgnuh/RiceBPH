@@ -29,10 +29,15 @@ Metric  | Description
 ``n_B`` | Number of adults with truncate-winged form
 ``n_B`` | Number of females
 
-The percentage of healthy rices is calculated by
+These metrics are calculated as follow:
 ```math
 \begin{align}
-r_{R}=\frac{\left|\left\{ \left(i,j\right)\colon t_{i,j}=1\land e_{i,j}\ge0.5\right\} \right|}{\left|\left\{ \left(i,j\right)\colon t_{i,j}=1\right\} \right|}
+r_{R} & =\frac{\left|\left\{ \left(x,y\right)\colon t_{x,y}=1\land e_{x,y}\ge0.5\right\} \right|}{\left|\left\{ \left(x,y\right)\colon t_{x,y}=1\right\} \right|}\\
+n_{E} & =\left|\left\{ i\colon z_{i}^{\left(s\right)}=0\right\} \right|,\\
+n_{N} & =\left|\left\{ i\colon z_{i}^{\left(s\right)}=1\right\} \right|,\\
+n_{M} & =\left|\left\{ i\colon z_{i}^{\left(s\right)}=2\land z_{i}^{\left(t\right)}=0\right\} \right|,\\
+n_{B} & =\left|\left\{ i\colon z_{i}^{\left(s\right)}=2\land z_{i}^{\left(t\right)}=1\right\} \right|,\\
+n_{F} & =\left|\left\{ i\colon z_{i}^{\left(s\right)}\ne0\land z_{i}^{\left(g\right)}=1\right\} \right|.
 \end{align}
 ```
 """

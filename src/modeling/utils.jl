@@ -1,3 +1,6 @@
+using Printf
+using Distributions
+
 function randt(rng, T, d)
     trunc(T, rand(rng, d))
 end
@@ -46,4 +49,24 @@ v' = \\frac{v}{\\sum_{i} v_i}.
 """
 function normalize(v)
     return v / sum(v)
+end
+
+"""
+    show_dist(d)
+
+Return LaTeX string for normal distribution.
+"""
+function show_dist(d::Normal)
+    μ = d.μ
+    σ = d.σ
+    return @sprintf "``\\mathcal{N}(%.2f, %.2f)``" μ σ
+end
+
+"""
+    show_dist(d)
+
+Return LaTeX string for poisson distribution.
+"""
+function show_dist(d::Poisson)
+    return @sprintf "``\\mathrm{Poi}(%.2f)``" d.λ
 end
