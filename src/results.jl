@@ -77,6 +77,46 @@ function get_factor_name(df)
 end
 
 """
+    get_data_names(df::DataFrame)
+
+Return a vector of the names of the data columns.
+"""
+function get_data_names(df)
+    factor = Symbol(get_factor_name(df))
+    @chain begin
+        (Symbol(name) for name in names(df))
+        Iterators.filter(!=(:seed), _)
+        Iterators.filter(!=(:step), _)
+        Iterators.filter(!=(factor), _)
+        collect
+    end
+end
+
+"""
+    get_stats(df)
+
+Get statistics over all replications of each parameter from the OFAAT result.
+"""
+function get_stats(df)
+    factor = get_factor_name(df)
+    data_names = get_data_names(df)
+    stats = combine(groupby(df, factor)) do group
+        group_stats = mapreduce(merge, data_names) do column
+            X = group[!, column]
+            μ = mean(X)
+            σ = std(X)
+            a = minimum(X)
+            b = maximum(X)
+            return Dict(column => (; μ, σ, a, b))
+        end
+        # Need to convert to named tuple so 
+        # that it spreads to multiple columns
+        return NamedTuple(group_stats)
+    end
+    return stats
+end
+
+"""
     load(path_to_jdf_folder)
 
 Load the result, apply some inference on the results (to get extra statistics).
