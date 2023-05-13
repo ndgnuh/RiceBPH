@@ -1,5 +1,6 @@
 using Base: @kwdef
 using Agents: AbstractAgent
+using Configurations
 
 """
 `ModelParameters` contains initialization variables.
@@ -13,7 +14,7 @@ Variable            | Type                   | Default          | Description   
 `init_position`     | [`InitPosition`](@ref) | [`Corner`](@ref) | The BPHs' initial positions                          | -
 `energy_transfer`   | `Float32`              | `0.032`          | The energy conversion from rice to BPHs.             | ``E_T``
 """
-@kwdef struct ModelParameters
+@option struct ModelParameters
     # Initialization parameters
     map_size::Int
     flower_width::Int

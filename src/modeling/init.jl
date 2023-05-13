@@ -178,10 +178,13 @@ After the BPHs are initialized and placed inside the model,
 we collect the initial data of interest and store them in the model state.
 """
 function init_model(; seed::Union{Int, Nothing} = nothing, kwargs...)
+    parameters = ModelParameters(; kwargs...)
+    init_model(parameters; seed)
+end
+function init_model(parameters; seed::Union{Int, Nothing} = nothing)
     #
     # Parameters and properties
     #
-    parameters = ModelParameters(; kwargs...)
     properties = init_properties(parameters)
 
     #
