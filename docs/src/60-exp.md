@@ -49,6 +49,10 @@ This is because BPHs invades the field from a small region, and that region have
 
 ## How to reproduce
 
+!!! info
+    Heads up! This is just the basic way to run. To speed up the simulation with multi-processing and other tricks. See the [speed up](@ref speedup) section.
+
+### Stable analysis 1
 To reproduce the ``E_T`` stable analysis experiment, run
 ```shell
 julia --project scripts/run_ofaat.jl configs/energy-transfer-01.toml outputs/energy-transfer-01
@@ -57,7 +61,21 @@ julia --project scripts/run_ofaat.jl configs/energy-transfer-03.toml outputs/ene
 ```
 to obtain the data. To reproduce the plot, run
 ```shell
-julia --project scripts/plot-ofaat.jl src/RiceBPH.jl
+julia --project scripts/plot-ofaat.jl ...
 ```
 
+
+### Stable analysis 2
+
+TODO
+
+### Flower analysis
+
+TODO
+
+### Speed up [](@id speed-up)
+
+TODO
 ## Run own experiments
+
+TODO
