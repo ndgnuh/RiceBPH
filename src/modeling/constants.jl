@@ -52,10 +52,6 @@ const STAGE_DST = Weights([50.0f0, 70.7f0, 15.4f0 + 13.9f0])
 const GENDERS = [Male, Female]
 const FORMS = [Brachy, Macro]
 const STAGES = [Egg, Nymph, Adult]
-const REPRODUCE_1ST_CDS = Dict(Brachy => CD_B_1ST_REPRODUCE,
-                               Macro => CD_M_1ST_REPRODUCE)
-const REPRODUCE_CDS = Dict(Brachy => CD_B_NEXT_REPRODUCE,
-                           Macro => CD_M_NEXT_REPRODUCE)
 
 const MOVING_DIRECTIONS = let speed = 2
     moving_range = (-speed):speed

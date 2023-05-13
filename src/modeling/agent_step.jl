@@ -17,53 +17,6 @@ macro return_if(expr)
 end
 
 #
-# Mapping current stage to next stage
-#
-"""
-    get_next_stage(rng, stage::Stage, gender::Gender, form::Form)
-
-Return next stage and next stage countdown according to stage, gender and form.
-
-**Note:** The adult BPH only transit to the [`Dead`](@ref) stage but does not get removed immediately from the simulation.
-They carry out the rest of their actions for the rest of the current time step normally.
-
-Stage | Gender | Form          | Next stage | Next stage countdown
-:---  | :---   | :---          | :---       | :---
-Egg   | Male   | -             | Nymph      |  $(show_dist(CD_M_ADULT)) ([`CD_M_ADULT`](@ref))
-Egg   | Female | -             | Nymph      |  $(show_dist(CD_F_ADULT)) ([`CD_F_ADULT`](@ref))
-Nymph | Male   | -             | Adult      |  $(show_dist(CD_M_DEATH)) ([`CD_M_DEATH`](@ref))
-Nymph | Female | Macropterous  | Adult      |  $(show_dist(CD_F_M_DEATH)) ([`CD_F_M_DEATH`](@ref))
-Nymph | Female | Brachypterous | Adult      |  $(show_dist(CD_F_B_DEATH)) ([`CD_F_B_DEATH`](@ref))
-Adult | -      | -             | Dead       | 9999
-"""
-function get_next_stage(rng, stage::Stage, gender::Gender, form::Form)
-    get_next_stage(rng, Val(stage), Val(gender), Val(form))
-end
-function get_next_stage(rng, ::Val{Egg}, ::Val{Male}, _)
-    stage_cd = randt(rng, Int16, CD_M_ADULT)
-    return Nymph, stage_cd
-end
-function get_next_stage(rng, ::Val{Egg}, ::Val{Female}, _)
-    stage_cd = randt(rng, Int16, CD_F_ADULT)
-    return Nymph, stage_cd
-end
-function get_next_stage(rng, ::Val{Nymph}, ::Val{Male}, _)
-    stage_cd = randt(rng, Int16, CD_M_DEATH)
-    return Adult, stage_cd
-end
-function get_next_stage(rng, ::Val{Nymph}, ::Val{Female}, ::Val{Macro})
-    stage_cd = randt(rng, Int16, CD_F_M_DEATH)
-    return Adult, stage_cd
-end
-function get_next_stage(rng, ::Val{Nymph}, ::Val{Female}, ::Val{Brachy})
-    stage_cd = randt(rng, Int16, CD_F_B_DEATH)
-    return Adult, stage_cd
-end
-function get_next_stage(_, ::Val{Adult}, _, _)
-    return Dead, 9999
-end
-
-#
 # Agent actions: grow up, move, eat, reproduce and die
 #
 @doc raw"""
@@ -88,12 +41,16 @@ function agent_action_growup!(agent, model)
     agent.stage_cd -= 1
     agent.energy = agent.energy - model.energy_consume
     @return_if agent.stage_cd > 0
-    stage, stage_cd = get_next_stage(model.rng,
-                                     agent.stage,
-                                     agent.gender,
-                                     agent.form)
-    agent.stage = stage
-    agent.stage_cd = stage_cd
+    #
+    # transit to next stage
+    #
+    agent.stage = get_next_stage(agent.stage)
+
+    #
+    # Assign new stage cooldown
+    #
+    stage_cd_dist = get_stage_countdown(agent.stage, agent.gender, agent.form)
+    agent.stage_cd = trunc(Int16, rand(model.rng, stage_cd_dist))
 end
 
 @doc raw"""
@@ -243,7 +200,7 @@ the energy of rice cell at agent position is greater than the energy transfer pa
 ```math
 e_{x_i, y_i} \ge E_T.
 ```
-""" * """
+"""*"""
 If the condition is met, the number of offsprings ``N`` from the distributions of offspring quantity $(show_dist(DST_NUM_OFFSPRINGS)).
 
 TODO:
@@ -268,7 +225,8 @@ function agent_action_reproduce!(agent, model)
         stage_cd = trunc(Int, rand(rng, CD_NYMPH))
         gender = wsample(rng, GENDERS, GENDER_DST)
         form = wsample(rng, FORMS, FORM_DST)
-        reproduction_cd = trunc(Int, rand(rng, REPRODUCE_1ST_CDS[form]))
+        dist = get_preoviposition_countdown(form)
+        reproduction_cd = trunc(Int, rand(rng, dist))
         offspring = BPH(; id, energy, pos, stage, stage_cd, form, gender, reproduction_cd)
         add_agent_pos!(offspring, model)
     end
@@ -276,7 +234,9 @@ function agent_action_reproduce!(agent, model)
     #
     # Reset reproduction countdown
     #
-    agent.reproduction_cd = trunc(Int, rand(rng, REPRODUCE_CDS[agent.form]))
+    let dist = get_reproduction_countdown(agent.form)
+        agent.reproduction_cd = trunc(Int, rand(rng, dist))
+    end
 
     #
     # Energy loss from reproduction

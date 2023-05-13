@@ -124,6 +124,32 @@ function init_positions(rng, position::InitPosition, num_bphs::Integer, map_size
     end
 end
 
+function init_bphs(model)
+    parameters = model.parameters
+    rng = model.rng
+
+    positions = init_positions(rng,
+                               parameters.init_position,
+                               parameters.num_init_bphs,
+                               parameters.map_size)
+    energy_dst = normal_range(0.0f0, 1.0f0)
+    for pos::Tuple{Int, Int} in positions
+        id = nextid(model)
+        energy = rand(rng, energy_dst)
+        gender = wsample(rng, GENDERS, GENDER_DST)
+        form = wsample(rng, FORMS, FORM_DST)
+        stage = wsample(rng, STAGES, STAGE_DST)
+        stage_cd = randt(rng, Int16, get_stage_countdown(stage, gender, form))
+        reproduction_cd = if stage == Adult && rand(rng, Bool)
+            randt(rng, Int16, get_reproduction_countdown(form))
+        else
+            randt(rng, Int16, REPRODUCE_1ST_CDS[form])
+        end
+        agent = BPH(; id, energy, pos, gender, form, stage, stage_cd, reproduction_cd)
+        add_agent_pos!(agent, model)
+    end
+end
+
 """
     init_model(; seed::Union{Int, Nothing} = Nothing, kwargs...)
 
@@ -156,26 +182,6 @@ function init_model(; seed::Union{Int, Nothing} = nothing, kwargs...)
     #
     # Initalize agents
     #
-    positions = init_positions(rng,
-                               parameters.init_position,
-                               parameters.num_init_bphs,
-                               parameters.map_size)
-    energy_dst = normal_range(0.0f0, 1.0f0)
-    for pos::Tuple{Int, Int} in positions
-        id = nextid(model)
-        energy = rand(rng, energy_dst)
-        gender = wsample(rng, GENDERS, GENDER_DST)
-        form = wsample(rng, FORMS, FORM_DST)
-        stage = wsample(rng, STAGES, STAGE_DST)
-        stage_cd = randt(rng, Int16, STAGE_CDS[(stage, gender, form)])
-        reproduction_cd = if stage == Adult && rand(rng, Bool)
-            randt(rng, Int16, REPRODUCE_CDS[form])
-        else
-            randt(rng, Int16, REPRODUCE_1ST_CDS[form])
-        end
-        agent = BPH(; id, energy, pos, gender, form, stage, stage_cd, reproduction_cd)
-        add_agent_pos!(agent, model)
-    end
 
     # 
     # First step statistics
