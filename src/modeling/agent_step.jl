@@ -58,7 +58,7 @@ end
 
 Perform the move action of the `agent`:
 
-Let the agent's ID ``i``, the agent's position on the grid ``x=x_i``, ``y=y_i``. The agent only moves under certain conditions, either: energy is greater or equal to energy consumption
+Let the agent's ID ``i``, the agent's position on the grid ``x=x_i``, ``y=y_i``. The agent only moves under certain conditions, which are: energy is greater or equal to energy consumption
 ```math
 \begin{equation}
 e_i \ge E_T;
@@ -76,7 +76,7 @@ or the cell type is flower:
 t_{x, y} = 0.
 \end{equation}
 ```
-If the condition is not satisfied, stop the action.
+If the conditions are not meet, stop the action.
 Otherwise, the agent then consume energy:
 ```math
 \begin{equation}
@@ -200,10 +200,30 @@ the energy of rice cell at agent position is greater than the energy transfer pa
 ```math
 e_{x_i, y_i} \ge E_T.
 ```
-"""*"""
-If the condition is met, the number of offsprings ``N`` from the distributions of offspring quantity $(show_dist(DST_NUM_OFFSPRINGS)).
+"""*
+     """
+ If the condition is met, the number of offsprings ``N`` from the distributions of offspring quantity $(show_dist(DST_NUM_OFFSPRINGS)).
 
-TODO:
+ For ``k=\\overline{1, N}``, the offspring agent ``k`` is initialized with:
+ - energy the same as their parent: ``e_k \\gets e_i``,
+ - the position of the parent ``x_k \\gets x_i``, ``y_k \\gets y_i``,
+ - stage is egg: ``z^{(s)}_k \\gets $(Int(Egg))``,
+ - stage countdown is of egg: ``t^{(s)}_k \\gets ``$(show_dist(CD_NYMPH)),
+ - gender ``z^{(g)}_k``: sample from $(show_enum(Gender)) with weight $(show_dist(GENDER_DST)),
+ - form ``z^{(f)}_k``: sample from $(show_enum(Form)) with weight $(show_dist(FORM_DST)),
+ - reproduction countdown follows the preoviposition distribution (which depends on the form).
+ The reproduction countdown is initialized with preoviposition so that when the agent's reproduction is enabled, it automatically enters the preoviposition.
+
+ After reproducing, the mother agent ``i`` consume energy and get a new reproduction count down:
+ """*raw"""
+```math
+\begin{align}
+t_{i}^{\left(r\right)} &\gets t^{\left(r\right)}\left(z_{i}^{\left(f\right)}\right),\\
+e_{i} &\gets e_{i}-E_{C}.
+\end{align}
+```
+
+See also: [`get_preoviposition_countdown`](@ref), [`get_reproduction_countdown`](@ref).
 """
 function agent_action_reproduce!(agent, model)
     agent.reproduction_cd = agent.reproduction_cd - 1
@@ -249,9 +269,9 @@ end
 
 Check if the `agent` should be eliminated from the simulation.
 
-The condition of elimination is either:
-- The agent energy is zero or less,
-- The agent is adult stage and their stage countdown is zero or less (`agent.stage == Dead`, see also [`Stage`](@ref))
+The agent ``i`` dies and gets removed from the simulated if either: its energy is zero or less (``e_i \\le 0``), or its stage is "Dead" (``z^{(s)}_i = $(Int(Dead))``).
+
+See also: [`Stage`](@ref).
 """
 function agent_action_die!(agent, model)
     if agent.energy <= 0 || agent.stage == Dead

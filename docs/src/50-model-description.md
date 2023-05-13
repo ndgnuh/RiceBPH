@@ -223,8 +223,6 @@ We do not explicitly refer to the timestep ``t`` for several reasons.
 The main reason is that sometime, state variable are updated many times within a timestep, so it is not possible to use timestep variable to describe the changes.
 Moreover, every submodel is described in their own context, therefore, the current time step is always ``t``; adding the time step variable ``t`` does not make it easier to perceive the model (if not harder).
 
-TODO
-
 ##### Model parameters
 The initialisation variables, parameters and states of the model are presented in the next table:
 
