@@ -45,13 +45,12 @@ const DST_NUM_OFFSPRINGS = normal_range(MIN_NUM_OFFSPRINGS, MAX_NUM_OFFSPRINGS)
 @enum Stage::Int8 Egg Nymph Adult Dead
 @enum Gender::Bool Male Female
 @enum Form::Bool Brachy Macro
-const NEXT_STAGE = Dict(Egg => Nymph, Nymph => Adult, Adult => Dead)
 const GENDER_DST = Weights([1.0f0, 1.69f0]) # male / female
 const FORM_DST = Weights([13.9f0, 15.4f0]) # brachys / macros
-const STAGE_DST = Weights([50.0f0, 70.7f0, 15.4f0 + 13.9f0])
-const GENDERS = [Male, Female]
-const FORMS = [Brachy, Macro]
-const STAGES = [Egg, Nymph, Adult]
+const STAGE_DST = Weights([50.0f0, 70.7f0, 15.4f0 + 13.9f0, 0])
+const GENDERS = collect(instances(Gender))
+const FORMS = collect(instances(Form))
+const STAGES = collect(instances(Stage))
 
 const MOVING_DIRECTIONS = let speed = 2
     moving_range = (-speed):speed
@@ -76,9 +75,8 @@ const IP_MAX = 15
 Initial position distribution.
 The initial distribution is a Poisson distribution with ``\lambda = 6``.
 """
-const IP_DST = let dst = Poisson(6)
-    [1 - cdf(dst, x) for x in 1:IP_MAX]
-end
+const IP_DST = Poisson(6)
+const IP_WEIGHTS = [1 - cdf(IP_DST, x) for x in 1:IP_MAX]
 
 """
 Possible initial positions index.

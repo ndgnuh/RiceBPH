@@ -1,4 +1,5 @@
 using Printf
+using StatsBase
 using Distributions
 
 function randt(rng, T, d)
@@ -69,4 +70,27 @@ Return LaTeX string for poisson distribution.
 """
 function show_dist(d::Poisson)
     return @sprintf "``\\mathrm{Poi}(%.2f)``" d.λ
+end
+
+"""
+    show_dist(w)
+
+Return LaTeX string for weight vectors.
+"""
+function show_dist(w::StatsBase.Weights)
+    wn = normalize(w)
+    formatted = Iterators.map(wn) do wni
+        @sprintf "%.2f" wni
+    end
+    return "{$(join(formatted, ", "))}"
+end
+
+"""
+    show_enum(enum)
+
+Return string format for enum
+"""
+function show_enum(enum)
+    s = join(Iterators.map(string, instances(enum)), ", ")
+    return "{$(s)}"
 end

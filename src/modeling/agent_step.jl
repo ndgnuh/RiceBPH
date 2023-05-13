@@ -83,21 +83,21 @@ Otherwise, the agent then consume energy:
 e_{i}'= e_{i} - E_C.
 \end{equation}
 ```
-After that, a direction ``\text{d}x, \text{d}y`` is sampled within the radius of 2 cells (approximately 30cm) with weights.
+After that, a direction ``\Delta x, \Delta y`` is sampled within the radius of 2 cells (approximately 30cm) with weights.
 The weight of the moving direction is calculated by
 ```math
 \begin{equation}
-w_{\text{d}x,\text{d}y}=\begin{cases}
-e_{x+\text{d}x,y+\text{d}y}, & t_{x+\text{d}x,y+\text{d}y}=1,\\
-0.5, & t_{x+\text{d}x,y+\text{d}y}=0.
+w_{\Delta x,\Delta y}=\begin{cases}
+e_{x+\Delta x,y+\Delta y}, & t_{x+\Delta x,y+\Delta y}=1,\\
+0.5, & t_{x+\Delta x,y+\Delta y}=0.
 \end{cases}
 \end{equation}
 ```
 After a direction is sampled, the agent then move along the sampled direction
 ```math
 \begin{align}
-x'_i &= x_i + \text{d}x,\\
-y'_i &= y_i + \text{d}y.
+x'_i &= x_i + \Delta x,\\
+y'_i &= y_i + \Delta y.
 \end{align}
 ```
 """
@@ -139,14 +139,14 @@ First, check if the current cell is a [`FlowerCell`](@ref), if it is, stop the a
 An amount of energy is subtracted from the [`RiceCell`](@ref) ``x_i,y_i`` and added to the agent ``i``.
 ```math
 \begin{align}
-e'_{x_i, y_i} &= e_{x_i,y_i} - \text{d} e,\\
-e'_i &= e_i + \text{d} e,
+e'_{x_i, y_i} &= e_{x_i,y_i} - \Delta  e,\\
+e'_i &= e_i + \Delta  e,
 \end{align}
 ```
-where the transfered energy ``\text{d}e`` is calculated by
+where the transfered energy ``\Delta e`` is calculated by
 ```math
 \begin{equation}
-\text{d} e=\min\left(1-e_i,e_{x_i,y_i},e_{T}\right).
+\Delta  e=\min\left(1-e_i,e_{x_i,y_i},e_{T}\right).
 \end{equation}
 ```
 """

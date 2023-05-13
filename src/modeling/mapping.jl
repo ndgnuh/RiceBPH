@@ -46,7 +46,7 @@ function get_stage_countdown(::Val{Adult}, ::Val{Female}, ::Val{Macro})
 end
 
 """
-Female brachypterous adults' stage countdown distribution: $(show_dist(CD_F_M_DEATH)).
+Female brachypterous adults' stage countdown distribution: $(show_dist(CD_F_B_DEATH)).
 """
 function get_stage_countdown(::Val{Adult}, ::Val{Female}, ::Val{Brachy})
     return CD_F_B_DEATH
@@ -95,11 +95,11 @@ Return the reproduction countdown distribution depends on the agents' form.
 get_reproduction_countdown(form::Form) = get_reproduction_countdown(Val(form))
 
 """
-Macropterous's reproduction countdown distribution is $(CD_M_NEXT_REPRODUCE).
+Macropterous's reproduction countdown distribution is $(show_dist(CD_M_NEXT_REPRODUCE)).
 """
 get_reproduction_countdown(::Val{Macro}) = CD_M_NEXT_REPRODUCE
 """
-Brachypterous's reproduction countdown distribution is $(CD_B_NEXT_REPRODUCE).
+Brachypterous's reproduction countdown distribution is $(show_dist(CD_B_NEXT_REPRODUCE)).
 """
 get_reproduction_countdown(::Val{Brachy}) = CD_B_NEXT_REPRODUCE
 
@@ -116,14 +116,14 @@ function get_preoviposition_countdown(form::Form)
 end
 
 """
-Macropterous's preoviposition distribution is $(CD_M_1ST_REPRODUCE).
+Macropterous's preoviposition distribution is $(show_dist(CD_M_1ST_REPRODUCE)).
 """
 function get_preoviposition_countdown(::Val{Macro})
     return CD_M_1ST_REPRODUCE
 end
 
 """
-Brachypterous's preoviposition distribution is $(CD_B_1ST_REPRODUCE).
+Brachypterous's preoviposition distribution is $(show_dist(CD_B_1ST_REPRODUCE)).
 """
 function get_preoviposition_countdown(::Val{Brachy})
     return CD_B_1ST_REPRODUCE

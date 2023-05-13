@@ -114,17 +114,30 @@ See also: `IP_PTS`, `IP_DST`, `InitPosition`.
 """
 function init_positions(rng, position::InitPosition, num_bphs::Integer, map_size::Integer)
     if position == Corner
-        xy = wsample(rng, IP_PTS, IP_DST, num_bphs * 2)
+        xy = wsample(rng, IP_PTS, IP_WEIGHTS, num_bphs * 2)
         points = reshape(xy, 2, num_bphs)
         Iterators.map(Tuple, eachcol(points))
     else
-        y = wsample(rng, IP_PTS, IP_DST, num_bphs)
+        y = wsample(rng, IP_PTS, IP_WEIGHTS, num_bphs)
         x = rand(rng, 1:map_size, num_bphs)
         zip(y, x)
     end
 end
 
-function init_bphs(model)
+"""
+    init_bphs!(model)
+
+Create ``N_I`` agents and put them in the model.
+The state variables of agent ``i`` are initialized as follows:
+- positions ``x_i, y_i``: sampled from *cumulative* distribution $(show_dist(IP_DST)) with constraint ``x_i \\le $(IP_MAX)`` and ``y_i \\le $(IP_MAX)`` (see [`IP_MAX`](@ref) and [`IP_DST`](@ref)),
+- energy ``e_i``: sampler from $(show_dist(normal_range(0, 1))),
+- gender ``z^{(g)}_i``: sample from $(show_enum(Gender)) with weight $(show_dist(GENDER_DST)),
+- form ``z^{(f)}_i``: sample from $(show_enum(Form)) with weight $(show_dist(FORM_DST)),
+- stage ``z^{(s)}_i``: sample from $(show_enum(Stage)) with weight $(show_dist(STAGE_DST)),
+- stage countdown ``t^{(s)}_i``: derives from their other state variables,
+- reproduction countdown ``t^{(p)}_i``: is the preoviposition countdown if agent is not an adult, else the countdown is either preoviposition countdown or reproduction countdown with equal chances.
+"""
+function init_bphs!(model)
     parameters = model.parameters
     rng = model.rng
 
@@ -143,7 +156,7 @@ function init_bphs(model)
         reproduction_cd = if stage == Adult && rand(rng, Bool)
             randt(rng, Int16, get_reproduction_countdown(form))
         else
-            randt(rng, Int16, REPRODUCE_1ST_CDS[form])
+            randt(rng, Int16, get_preoviposition_countdown(form))
         end
         agent = BPH(; id, energy, pos, gender, form, stage, stage_cd, reproduction_cd)
         add_agent_pos!(agent, model)
@@ -182,6 +195,7 @@ function init_model(; seed::Union{Int, Nothing} = nothing, kwargs...)
     #
     # Initalize agents
     #
+    init_bphs!(model)
 
     # 
     # First step statistics
