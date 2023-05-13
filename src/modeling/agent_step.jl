@@ -27,15 +27,15 @@ Perform the grow up action on agent with id ``i``:
 The stage countdown of the agent is decresed by one.
 ```math
 \begin{equation}
-t_i^{\prime(s)} = t_i^{(s)} - 1.
+t_i^{(s)} \gets t_i^{(s)} - 1.
 \end{equation}
 ```
 The agent then consumes energy.
 ```math
-e_i' = e_i - E_C
+e_i \gets e_i - E_C
 ```
 If stage countdown is greater than zero, end the action. Otherwise, get the next stage and sample the next stage countdown, assign the next stage and the next countdown to the agent.
-The next stage  ``z^{\prime(s)}_i`` and next the stage countdown ``t^{\prime(s)}_i`` is returned by [`get_next_stage`](@ref).
+The next stage  ``z^{(s)}_i`` and next the stage countdown ``t^{(s)}_i`` is returned by [`get_next_stage`](@ref).
 """
 function agent_action_growup!(agent, model)
     agent.stage_cd -= 1
@@ -80,7 +80,7 @@ If the condition is not satisfied, stop the action.
 Otherwise, the agent then consume energy:
 ```math
 \begin{equation}
-e_{i}'= e_{i} - E_C.
+e_{i} \gets e_{i} - E_C.
 \end{equation}
 ```
 After that, a direction ``\Delta x, \Delta y`` is sampled within the radius of 2 cells (approximately 30cm) with weights.
@@ -96,8 +96,8 @@ e_{x+\Delta x,y+\Delta y}, & t_{x+\Delta x,y+\Delta y}=1,\\
 After a direction is sampled, the agent then move along the sampled direction
 ```math
 \begin{align}
-x'_i &= x_i + \Delta x,\\
-y'_i &= y_i + \Delta y.
+x_i &\gets x_i + \Delta x,\\
+y_i &\gets y_i + \Delta y.
 \end{align}
 ```
 """
@@ -139,8 +139,8 @@ First, check if the current cell is a [`FlowerCell`](@ref), if it is, stop the a
 An amount of energy is subtracted from the [`RiceCell`](@ref) ``x_i,y_i`` and added to the agent ``i``.
 ```math
 \begin{align}
-e'_{x_i, y_i} &= e_{x_i,y_i} - \Delta  e,\\
-e'_i &= e_i + \Delta  e,
+e_{x_i, y_i} &\gets e_{x_i,y_i} - \Delta  e,\\
+e_i &\gets e_i + \Delta  e,
 \end{align}
 ```
 where the transfered energy ``\Delta e`` is calculated by
@@ -177,7 +177,7 @@ Perform the reproductive action of `agent` ``i``.
 First, decrease the reproduction countdown of the agent ``i``.
 ```math
 \begin{equation}
-t^{(p)'}_i = t^{(p)}_i - 1
+t^{(p)}_i \gets t^{(p)}_i - 1
 \end{equation}
 ```
 After that, check for the reproduction conditions: the `agent` is a female,
@@ -194,7 +194,7 @@ e_i \ge E_C,
 ```
 the reproduction countdown is zero:
 ```math
-t^{(p)\prime} = 0,
+t^{(p)} = 0,
 ```
 the energy of rice cell at agent position is greater than the energy transfer parameter:
 ```math

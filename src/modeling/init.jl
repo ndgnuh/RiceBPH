@@ -13,7 +13,7 @@ Flower cells' values are $(FlowerCell |> Int).
 The resulting matrix can be defined by:
 ```math
 \begin{equation}
-\left[t_{x,y}\right]_{S\times S}=\left\{ \begin{array}{cl}
+\left[t_{x,y}\right]_{S \times S}=\left\{ \begin{array}{cl}
 0, & y_{a}\le y\le y_{b},\\
 1, & \text{otherwise},
 \end{array}\right\}, 
@@ -42,7 +42,7 @@ end
 @doc raw"""
     init_rice_map(S::Integer)
 
-Returns a matrix filled with ``1`` of size ``S \\times S``.
+Returns a matrix filled with ``1`` of size ``S \times S``.
 ```math
 \left[e_{x,y}\right]_{S\times S}\equiv1.
 ```

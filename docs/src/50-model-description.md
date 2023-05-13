@@ -214,10 +214,10 @@ For example, the energy of the rice cell at position ``x, y`` is ``e_{x,y}``,
 the energy of the rice cell where the agent ``i`` at is ``e_{x_i, y_i}``.
 
 To abuse the notation, we hide the timestep variable and consider each submodel within its context (the "current" timestep).
-The updated state variable is distinguished from the original one by a ``\prime``.
+The state variable is updated inplace and the update is notated by ``\gets``.
 For example, when an agent consume energy:
 ```math
-e'_i = e_i - E_C.
+e_i \gets e_i - E_C.
 ```
 We do not explicitly refer to the timestep ``t`` for several reasons.
 The main reason is that sometime, state variable are updated many times within a timestep, so it is not possible to use timestep variable to describe the changes.
@@ -249,7 +249,7 @@ Each of the other states is represented by a matrix.
 RiceBPH.Models.init_cell_types
 RiceBPH.Models.init_rice_map
 RiceBPH.Models.init_pr_eliminate
-RiceBPH.Models.init_agents
+RiceBPH.Models.init_bphs!
 ```
 
 ##### Vegetation cell submodels
@@ -267,9 +267,18 @@ RiceBPH.Models.agent_action_reproduce!
 RiceBPH.Models.agent_action_die!
 ```
 
+##### Reproduction parameters
+
+```@docs
+RiceBPH.Models.Form
+RiceBPH.Models.get_reproduction_countdown
+RiceBPH.Models.get_preoviposition_countdown
+```
+
 ##### Age structure
 
 ```@docs
+RiceBPH.Models.Stage
 RiceBPH.Models.get_stage_countdown
 RiceBPH.Models.get_next_stage
 ```
