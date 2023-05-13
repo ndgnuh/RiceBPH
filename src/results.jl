@@ -40,28 +40,6 @@ function infer_stats!(df)
 end
 
 """
-    get_stat(df::DataFrame, column::Symbol)
-
-Return a dataframe contains the aggregated statistics of `df[!, column]` 
-along the `seed` columns (along replications).
-The returned dataframe has these colums:
-- step
-- mean
-- std
-- min
-- max
-- median
-"""
-function get_stat(df, column)
-    combine(groupby(df, :step),
-            column => mean => :mean,
-            column => std => :std,
-            column => minimum => :min,
-            column => maximum => :max,
-            column => median => :median)
-end
-
-"""
     get_factor_name(df::DataFrame)::Symbol
 
 Return the variable factor from the OFAAT result.
@@ -213,6 +191,19 @@ function show_analysis(df::DataFrame, preset::Preset;
     end
 
     return result
+end
+
+function get_timesteps(df, stable)
+    if stable
+        num_bphs = combine(groupby(df, :step),
+                           :num_bphs => mean => :μ)
+        _, t2 = findmax(num_bphs.μ)
+        t1 = t2 - 7 * 24
+        @assert t1 > 0
+        return t1:t2
+    else
+        return Colon()
+    end
 end
 
 end # module Results
