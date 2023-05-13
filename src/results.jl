@@ -97,12 +97,17 @@ end
 
 Get statistics over all replications of each parameter from the OFAAT result.
 """
-function get_stats(df)
+function get_stats(df; stable = false)
     factor = get_factor_name(df)
     data_names = get_data_names(df)
     stats = combine(groupby(df, factor)) do group
+        steps = if stable
+            get_stable_bph_timesteps(group.num_bphs)
+        else
+            Colon()
+        end
         group_stats = mapreduce(merge, data_names) do column
-            X = group[!, column]
+            X = group[steps, column]
             μ = mean(X)
             σ = std(X)
             a = minimum(X)
