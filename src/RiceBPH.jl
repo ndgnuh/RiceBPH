@@ -2,6 +2,9 @@ module RiceBPH
 
 using Reexport
 
+include("Utils.jl")
+using .Utils
+
 include("ModelRewrite.jl")
 @reexport using .Models
 

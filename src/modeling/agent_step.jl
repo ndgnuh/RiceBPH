@@ -1,20 +1,5 @@
 using Random
-
-#
-# Helper
-#
-"""
-    @return_if(expr)
-
-Expand to `if expr then return end`.
-"""
-macro return_if(expr)
-    quote
-        if $(esc(expr))
-            return
-        end
-    end
-end
+using ..Utils: @return_if
 
 #
 # Agent actions: grow up, move, eat, reproduce and die

@@ -1,5 +1,6 @@
 using Distributions
 using StatsBase
+using ..Utils: @easy_name_map
 
 #
 # Cooldowns to X (hours)
@@ -43,8 +44,11 @@ const DST_NUM_OFFSPRINGS = normal_range(MIN_NUM_OFFSPRINGS, MAX_NUM_OFFSPRINGS)
 # Population structure
 #
 @enum Stage::Int8 Egg Nymph Adult Dead
+@easy_name_map Stage
 @enum Gender::Bool Male Female
+@easy_name_map Gender
 @enum Form::Bool Brachy Macro
+@easy_name_map Form
 const GENDER_DST = Weights([1.0f0, 1.69f0]) # male / female
 const FORM_DST = Weights([13.9f0, 15.4f0]) # brachys / macros
 const STAGE_DST = Weights([50.0f0, 70.7f0, 15.4f0 + 13.9f0, 0])
