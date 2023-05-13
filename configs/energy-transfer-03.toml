@@ -3,8 +3,7 @@ values = "range(start=0.06, stop=0.01, length=9)"
 
 num_steps = 5660
 num_replicates = 100
-map_size = 125
+map_size = 250
 flower_width = 0
 init_pr_eliminate = 0.0
-num_init_bphs = 60
-
+num_init_bphs = 200
