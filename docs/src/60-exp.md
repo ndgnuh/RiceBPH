@@ -29,12 +29,19 @@ t_1 &= t_2 - 24 * 7.
 ```
 This is because at the begin of the simulation, the population is not stablized, and at the end of the simulation, the food (rice) runs out, the population is in a declining state.
 
-!!! danger
-    TODO: add results analysis (figures, plots)
-
 In the first experiment, the large values of ``E_T`` lead to unrealistic scenario, in which all the BPHs die early and there is no hopperburn.
 This phenomenon can be easily explained with the implicit interaction of BPH agents.
 Since they consume the rice too fast, it is impossible for many of them to survive, and the other few would die due to old age.
+
+![](/assets/fig-01.png)
+
+Therefore, we then run OFAT on a much smaller region of ``E_T``. In experiment 1b, we get reasonable population curves.
+
+![](/assets/fig-02.png)
+
+On investigating the population structure, we found that the parameter ``E_T`` is relatively stable.
+
+![](/assets/fig-1c.png)
 
 For smaller values, we found that ``E_T`` is generally not sensitive. The standard deviation is small (even when calculated over all timesteps in all replications). Moreover, the observed data ``r_N`` ranges from ``0.7`` to ``0.8``, which matches the data observed in [Syahrawati2019](@cite).
 We decided to use the value of ``E_T`` that gives the closest results to [Syahrawati2019](@cite), which is ``E_T=0.032``, for later experiments.
@@ -46,6 +53,11 @@ We found out that ``N_I`` does not affect observed outputs much.
 For example, the deviation of ``r_N`` is very low.
 Moreover, when ``N_I`` is high, the BPH populations drops to a fixed range after a few steps.
 This is because BPHs invades the field from a small region, and that region have limited resources. Since they compete for foods, only a few of them survives.
+
+![](/assets/fig-2a.png)
+
+We conclude that the number of initialized initial BPHs is not a sensitive parameters.
+For future experiments, we fix ``N_I = 200``.
 
 ## How to reproduce
 

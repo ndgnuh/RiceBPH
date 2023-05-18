@@ -10,7 +10,7 @@ function run(config::PlotMeanStdTimeStep)
     #
     fig = Figure()
     ax = Axis(fig[1, 1];
-              xlabel = "Time step",
+              xlabel = L"t\, (\mathrm{step})",
               ylabel = L"%$(latex_name(column))")
 
     #
@@ -43,10 +43,11 @@ function run(config::PlotMeanStdTimeStep)
     #
     # Axis formatting
     #
-    axislegend(ax)
     if config.normalize_y
         ylims!(ax, (0, 1))
+        ax.yticksize = 0.05
     end
+    axislegend(ax)
 
     GLMakie.save(output, fig)
     @info "Output saved to $(output)"
