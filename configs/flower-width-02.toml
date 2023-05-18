@@ -1,8 +1,12 @@
+[config]
 factor = "flower_width"
-values = "1:9"
+values = "1:2:17"
+num_steps = 2880
+num_replications = 100
+output = "outputs/flower_width-02"
 
-num_steps = 5660
-num_replicates = 100
+[config.params]
 map_size = 125
 init_pr_eliminate = 0.05
-num_init_bphs = 125
+num_init_bphs = 200
+energy_transfer = 0.032
