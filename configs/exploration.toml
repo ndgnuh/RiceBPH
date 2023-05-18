@@ -1,0 +1,9 @@
+[config]
+seed = 1
+
+[config.params]
+flower_width = 0
+map_size = 125
+init_pr_eliminate = 0.0
+num_init_bphs = 200
+
