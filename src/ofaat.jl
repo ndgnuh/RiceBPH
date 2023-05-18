@@ -1,20 +1,20 @@
 module OFAAT
 
+using Configurations
 using ProgressMeter
 using Distributed
 using DataFrames
 using Printf: Format, format
 using ..Models: init_model, agent_step!, model_step!, run!, MDATA
 
-"""
-    generate_name(seed, factor, value; suffix)
+@option struct FactorConfig
+    name::String
+    values::String
+end
 
-Generate result fraction name. This
-"""
-function generate_name(seed::Integer, factor::Symbol, value; suffix = ".jdf")
-    fmt = Format("%s-%.4f+seed-%04d.%s")
-    name = format(fmt, factor, value, seed, suffix)
-    return joinpath(tempdir(), name)
+@option struct OFATConfig
+    factor::FactorConfig
+    base_params::Dict
 end
 
 """

@@ -17,4 +17,6 @@ using .Visualisations
 #= include("postprocess.jl") =#
 include("ofaat.jl")
 
+include("Experiments.jl")
+
 end # module RiceBPH

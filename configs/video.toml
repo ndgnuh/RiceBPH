@@ -1,0 +1,12 @@
+[config]
+num_steps = 2880
+spu = 1
+framerate =  60
+seed = 1
+video_output = "outputs/video.mp4"
+
+[config.params]
+flower_width = 0
+map_size = 125
+init_pr_eliminate = 0.0
+num_init_bphs = 200
