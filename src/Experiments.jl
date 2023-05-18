@@ -1,10 +1,12 @@
 module Experiments
 
 # Env libs
+using Distributed
 using Configurations
 using Comonicon
 using InteractiveDynamics
 using ProgressMeter
+using JDF
 
 # Local libs
 using ..Models

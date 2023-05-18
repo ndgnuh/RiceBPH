@@ -1,4 +1,17 @@
 function run(config::ModelVideo)
+    #
+    # Guard to not overwrite the existing
+    #
+    output = config.video_output
+    if isfile(output) || isdir(output)
+        @warn "The output path $(output) exists, ignoring. Delete the output to rerun."
+        return
+    end
+    touch(output) # Create to prevent a parallel run
+
+    #
+    # Create video
+    #
     model = init_model(config.params; config.seed)
     frames = config.num_steps
     abmvideo(config.video_output, model, agent_step!, model_step!;
@@ -7,7 +20,7 @@ function run(config::ModelVideo)
              Visualisations.ac,
              Visualisations.heatkwargs,
              Visualisations.heatarray)
-    @info "Video written to $(config.video_output)"
+    @info "Video written to $(output)"
 end
 
 function run(config::ModelExploration)
@@ -22,12 +35,27 @@ function run(config::ModelExploration)
 end
 
 function run(config::ModelOFAT)
-    # Information from config
+    #
+    # Guard to not overwrite the existing
+    #
+    output = config.output
+    if isfile(output) || isdir(output)
+        @warn "The output path $(output) exists, ignoring. Delete the output directory to rerun."
+        return
+    end
+    mkpath(output) # Create to prevent a parallel run
+
+    #
+    # Digging information from the config
+    #
     factor = Symbol(config.factor)
     values = eval(Meta.parse(config.values))
     num_replications = config.num_replications
     num_steps = config.num_steps
 
+    #
+    # Run the OFAT
+    #
     result = mapreduce(vcat, values) do value
         @info "Running $(factor) = $(value)"
         # Prepare parameters
@@ -54,5 +82,8 @@ function run(config::ModelOFAT)
         return agg
     end
 
-    return result
+    #
+    # Store results
+    #
+    JDF.save(output, result)
 end
