@@ -1,0 +1,6 @@
+[config]
+data = "outputs/energy-transfer-02"
+column = "num_bphs"
+output = "docs/src/assets/fig-01.png"
+normalize_y = false
+stable_steps = false

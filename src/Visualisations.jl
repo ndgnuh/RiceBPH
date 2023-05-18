@@ -7,7 +7,7 @@ using DataFrames
 using ..Utils: latex_name
 
 const COLORS = let
-    lchoices = range(0, stop = 50, length = 15)
+    lchoices = range(50, stop = 80, length = 15)
     color_seeds = [RGB(0, 0, 0), RGB(1, 1, 1)]
     dropseed = true
     distinguishable_colors(9, color_seeds; dropseed, lchoices)

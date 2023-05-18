@@ -1,37 +1,31 @@
-using Configurations
-using Statistics
-using DataFrames
-using GLMakie
-using ..Results
-
-@option struct MeanStdData
-    path::String
-    column::String
-    stable_step::Bool
-    band_alpha::Float32 = 0.15
-end
-
-function visualize(plot_data::MeanStdData)
-    #
-    # Load results
-    #
-    data = Results.load(plot_data.path)
-    column = plot_data.column
+function run(config::PlotMeanStdTimeStep)
+    # Collect data from config
+    output = config.output
+    data = Results.load(config.data)
+    column = config.column
     factor = Results.get_factor_name(data)
 
+    #
     # Create figure
+    #
     fig = Figure()
     ax = Axis(fig[1, 1];
               xlabel = "Time step",
               ylabel = L"%$(latex_name(column))")
 
-    # Get stable time step
-    t = Results.get_timesteps(data, plot_data.stable_step)
+    #
+    # Stable time step or not
+    #
+    t = Results.get_timesteps(data, config.stable_steps)
+
+    #
+    # The actual plot
+    #
     for (i, group) in enumerate(groupby(data, factor))
         # Visual setup
-        value = group[begin, factor] # No unused variable
+        value = group[begin, factor]
         label = L"%$(latex_name(factor)) = %$value"
-        color = COLORS[i]
+        color = Visualisations.COLORS[i]
 
         # Data setup
         agg = combine(groupby(group, :step),
@@ -46,7 +40,14 @@ function visualize(plot_data::MeanStdData)
         lines!(ax, x, μ; color, label)
     end
 
-    # Legend
+    #
+    # Axis formatting
+    #
     axislegend(ax)
-    return fig, [ax]
+    if config.normalize_y
+        ylims!(ax, (0, 1))
+    end
+
+    GLMakie.save(output, fig)
+    @info "Output saved to $(output)"
 end

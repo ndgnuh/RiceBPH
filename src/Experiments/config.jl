@@ -22,5 +22,5 @@ end
 end
 
 @option struct RunConfig
-    config::Union{ModelExploration, ModelVideo, ModelOFAT}
+    config::Union{ModelExploration, ModelVideo, ModelOFAT, PlotMeanStdTimeStep}
 end

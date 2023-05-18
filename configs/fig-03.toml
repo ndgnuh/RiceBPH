@@ -1,0 +1,6 @@
+[config]
+data = "outputs/energy-transfer-03"
+column = "pct_nymphs"
+output = "docs/src/assets/fig-1c.png"
+normalize_y = true
+stable_steps = true
