@@ -33,15 +33,15 @@ In the first experiment, the large values of ``E_T`` lead to unrealistic scenari
 This phenomenon can be easily explained with the implicit interaction of BPH agents.
 Since they consume the rice too fast, it is impossible for many of them to survive, and the other few would die due to old age.
 
-![](/assets/fig-01.png)
+![](/RiceBPH/assets/fig-01.png)
 
 Therefore, we then run OFAT on a much smaller region of ``E_T``. In experiment 1b, we get reasonable population curves.
 
-![](/assets/fig-02.png)
+![](/RiceBPH/assets/fig-02.png)
 
 On investigating the population structure, we found that the parameter ``E_T`` is relatively stable.
 
-![](/assets/fig-1c.png)
+![](/RiceBPH/assets/fig-1c.png)
 
 For smaller values, we found that ``E_T`` is generally not sensitive. The standard deviation is small (even when calculated over all timesteps in all replications). Moreover, the observed data ``r_N`` ranges from ``0.7`` to ``0.8``, which matches the data observed in [Syahrawati2019](@cite).
 We decided to use the value of ``E_T`` that gives the closest results to [Syahrawati2019](@cite), which is ``E_T=0.032``, for later experiments.
@@ -54,7 +54,7 @@ For example, the deviation of ``r_N`` is very low.
 Moreover, when ``N_I`` is high, the BPH populations drops to a fixed range after a few steps.
 This is because BPHs invades the field from a small region, and that region have limited resources. Since they compete for foods, only a few of them survives.
 
-![](/assets/fig-2a.png)
+![](/RiceBPH/assets/fig-2a.png)
 
 We conclude that the number of initialized initial BPHs is not a sensitive parameters.
 For future experiments, we fix ``N_I = 200``.
@@ -67,7 +67,7 @@ For future experiments, we fix ``N_I = 200``.
 ### Stable analysis 1
 To reproduce the ``E_T`` stable analysis experiment, run
 ```shell
-julia --project scripts/run_ofaat.jl configs/energy-transfer-01.toml outputs/energy-transfer-01
+julia --project scripts/main.jl --config configs/energy-transfer-01.toml
 julia --project scripts/run_ofaat.jl configs/energy-transfer-02.toml outputs/energy-transfer-02
 julia --project scripts/run_ofaat.jl configs/energy-transfer-03.toml outputs/energy-transfer-03
 ```
