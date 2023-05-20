@@ -44,6 +44,7 @@ latex_name(::Val{:pct_nymphs}) = "r_N"
 latex_name(::Val{:pct_brachys}) = "r_B"
 latex_name(::Val{:pct_macros}) = "r_M"
 latex_name(::Val{:energy_transfer}) = "E_T"
+latex_name(::Val{:init_pr_eliminate}) = "p_0"
 
 export @easy_name_map, @return_if, latex_name
 

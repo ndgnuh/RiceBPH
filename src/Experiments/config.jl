@@ -21,6 +21,10 @@ end
     params::Dict
 end
 
+SupportedConfig = Union{ModelExploration,
+                        ModelVideo,
+                        ModelOFAT, Vector{ModelOFAT},
+                        PlotMeanStdTimeStep, Vector{PlotMeanStdTimeStep}}
 @option struct RunConfig
-    config::Union{ModelExploration, ModelVideo, ModelOFAT, PlotMeanStdTimeStep}
+    config::SupportedConfig
 end
