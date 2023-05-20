@@ -1,0 +1,83 @@
+[[config]]
+data = "outputs/flower-width-1/"
+column = "num_bphs"
+output = "docs/src/assets/fig-4a1.png"
+normalize_y = false
+stable_steps = false
+
+[[config]]
+data = "outputs/flower-width-1/"
+column = "pct_nymphs"
+output = "docs/src/assets/fig-4b1.png"
+normalize_y = true
+stable_steps = false
+
+[[config]]
+data = "outputs/flower-width-1"
+column = "pct_rices"
+output = "docs/src/assets/fig-4c1.png"
+normalize_y = true
+stable_steps = false
+
+[[config]]
+data = "outputs/flower-width-2/"
+column = "num_bphs"
+output = "docs/src/assets/fig-4a2.png"
+normalize_y = false
+stable_steps = false
+
+[[config]]
+data = "outputs/flower-width-2/"
+column = "pct_nymphs"
+output = "docs/src/assets/fig-4b2.png"
+normalize_y = true
+stable_steps = false
+
+[[config]]
+data = "outputs/flower-width-2"
+column = "pct_rices"
+output = "docs/src/assets/fig-4c2.png"
+normalize_y = true
+stable_steps = false
+
+[[config]]
+data = "outputs/flower-width-3/"
+column = "num_bphs"
+output = "docs/src/assets/fig-4a3.png"
+normalize_y = false
+stable_steps = false
+
+[[config]]
+data = "outputs/flower-width-3/"
+column = "pct_nymphs"
+output = "docs/src/assets/fig-4b3.png"
+normalize_y = true
+stable_steps = false
+
+[[config]]
+data = "outputs/flower-width-3"
+column = "pct_rices"
+output = "docs/src/assets/fig-4c3.png"
+normalize_y = true
+stable_steps = false
+
+[[config]]
+data = "outputs/flower-width-4/"
+column = "num_bphs"
+output = "docs/src/assets/fig-4a4.png"
+normalize_y = false
+stable_steps = false
+
+[[config]]
+data = "outputs/flower-width-4/"
+column = "pct_nymphs"
+output = "docs/src/assets/fig-4b4.png"
+normalize_y = true
+stable_steps = false
+
+[[config]]
+data = "outputs/flower-width-3"
+column = "pct_rices"
+output = "docs/src/assets/fig-4c4.png"
+normalize_y = true
+stable_steps = false
