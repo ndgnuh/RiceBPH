@@ -25,13 +25,17 @@ include("Experiments/config.jl")
 include("Experiments/plot_run.jl")
 include("Experiments/run.jl")
 
-function run(configs::Vector{T}) where {T <: SupportedConfig}
-    run.(configs)
-end
-
 function run(config::RunConfig)
-    @info "Detected configuration of type $(typeof(config.config))"
-    run(config.config)
+    if config.config isa Vector
+        @info "Detected configurations of type $(eltype(config.config))"
+        for (i, cfg) in enumerate(config.config)
+            @info "Running config #$(i)"
+            run(cfg)
+        end
+    else
+        @info "Detected configuration of type $(typeof(config.config))"
+        run(config.conig)
+    end
 end
 
 @main function main(config_file::String)

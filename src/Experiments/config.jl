@@ -22,7 +22,7 @@ end
 end
 
 SupportedConfig = Union{ModelExploration,
-                        ModelVideo,
+                        ModelVideo, Vector{ModelVideo},
                         ModelOFAT, Vector{ModelOFAT},
                         PlotMeanStdTimeStep, Vector{PlotMeanStdTimeStep}}
 @option struct RunConfig
