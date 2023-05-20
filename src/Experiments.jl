@@ -34,7 +34,7 @@ function run(config::RunConfig)
         end
     else
         @info "Detected configuration of type $(typeof(config.config))"
-        run(config.conig)
+        run(config.config)
     end
 end
 
