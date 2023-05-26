@@ -37,7 +37,6 @@ const CD_M_NEXT_REPRODUCE = normal_range(CD_F_M_DEATH.μ / AVG_EGGS_M *
                                          MIN_NUM_OFFSPRINGS,
                                          CD_F_M_DEATH.μ / AVG_EGGS_M *
                                          MAX_NUM_OFFSPRINGS)
-@info CD_B_NEXT_REPRODUCE
 const DST_NUM_OFFSPRINGS = normal_range(MIN_NUM_OFFSPRINGS, MAX_NUM_OFFSPRINGS)
 
 #
