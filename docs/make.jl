@@ -8,3 +8,7 @@ Documenter.HTML(; mathengine)
 
 const bib = CitationBibliography(joinpath(@__DIR__, "refs.bib"))
 makedocs(bib; sitename = "RiceBPH")
+
+using DocumenterLaTeX
+makedocs(format = LaTeX(platform = "none"),
+         build = "build-latex")
