@@ -15,6 +15,9 @@ macro easy_name_map(T)
         function Base.convert(::Type{$(esc(T))}, name::String)
             return $namemap[lowercase(name)]
         end
+        function Base.tryparse(::Type{$(esc(T))}, name::String)
+            return $namemap[lowercase(name)]
+        end
     end
 end
 
