@@ -2,6 +2,9 @@ module RiceBPH
 
 using Reexport
 
+include("Utils.jl")
+using .Utils
+
 include("ModelRewrite.jl")
 @reexport using .Models
 
@@ -13,5 +16,7 @@ using .Visualisations
 
 #= include("postprocess.jl") =#
 include("ofaat.jl")
+
+include("Experiments.jl")
 
 end # module RiceBPH

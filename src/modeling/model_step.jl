@@ -14,10 +14,32 @@ function model_step!(model)
     model_action_summarize!(model)
 end
 
-"""
+@doc raw"""
     model_action_summarize!(model)
 
 Collect agent and rice statistics and save them in model properties.
+The collected is the percentage of healthy rice ``r_R`` and the number of BPHs, matching stages, forms and genders.
+
+Metric  | Description
+:---    | :---
+``r_R`` | Percentage of healthy rice
+``n_E`` | Number of eggs
+``n_N`` | Number of nymphs
+``n_M`` | Number of adults with fully-winged form
+``n_B`` | Number of adults with truncate-winged form
+``n_B`` | Number of females
+
+These metrics are calculated as follow:
+```math
+\begin{align}
+r_{R} & =\frac{\left|\left\{ \left(x,y\right)\colon t_{x,y}=1\land e_{x,y}\ge0.5\right\} \right|}{\left|\left\{ \left(x,y\right)\colon t_{x,y}=1\right\} \right|}\\
+n_{E} & =\left|\left\{ i\colon z_{i}^{\left(s\right)}=0\right\} \right|,\\
+n_{N} & =\left|\left\{ i\colon z_{i}^{\left(s\right)}=1\right\} \right|,\\
+n_{M} & =\left|\left\{ i\colon z_{i}^{\left(s\right)}=2\land z_{i}^{\left(t\right)}=0\right\} \right|,\\
+n_{B} & =\left|\left\{ i\colon z_{i}^{\left(s\right)}=2\land z_{i}^{\left(t\right)}=1\right\} \right|,\\
+n_{F} & =\left|\left\{ i\colon z_{i}^{\left(s\right)}\ne0\land z_{i}^{\left(g\right)}=1\right\} \right|.
+\end{align}
+```
 """
 function model_action_summarize!(model)
     #
@@ -70,12 +92,9 @@ const LOG_OF_2 = log(2.0f0)
     model_action_eliminate!(model)
 
 Eliminate BPHs base on their energy and the pr eliminate map.
-The elimination probability is given by 
+The elimination probability is given by  ``p_{x,y}``.
 
-``(\log(2) - \log(E + 1)) \cdot p_e``
-
-where ``E`` is the agent energy and ``p_e`` is the elimination probability
-at the agent's position.
+For each position ``x, y``, for each agent ``i`` whose position ``x_i = x, y_i = y``, the agent is removed from the simulation with the probability ``p_{x, y}``.
 """
 function model_action_eliminate!(model)
     for pos in model.eliminate_positions

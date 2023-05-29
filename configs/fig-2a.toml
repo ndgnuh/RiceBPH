@@ -1,0 +1,7 @@
+[config]
+data = "outputs/num-init-bphs"
+column = "num_bphs"
+output = "docs/src/assets/fig-2a.png"
+normalize_y = false
+stable_steps = false
+

@@ -1,6 +1,14 @@
-cp(joinpath(@__DIR__, "..", "README.md"),
-   joinpath(@__DIR__, "src", "index.md"), force = true)
+push!(LOAD_PATH, "../src/")
 using RiceBPH
 using Documenter
+using DocumenterCitations
 
-makedocs(sitename = "RiceBPH")
+const mathengine = Documenter.KaTeX()
+Documenter.HTML(; mathengine)
+
+const bib = CitationBibliography(joinpath(@__DIR__, "refs.bib"))
+makedocs(bib; sitename = "RiceBPH")
+
+using DocumenterLaTeX
+makedocs(format = LaTeX(platform = "none"),
+         build = "build-latex")

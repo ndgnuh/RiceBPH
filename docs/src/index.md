@@ -3,6 +3,14 @@
 This is a model to simulate the rice-brown plant hopper dynamic.
 The goal of this model is to research the effect of cultivated flower on the spread inside rice fields of brown plant hopper (a dangerous rice pest).
 
+```@raw html
+<video controls autoplay>
+  <source src="https://github.com/ndgnuh/RiceBPH/releases/download/assets/video.mp4" type="video/mp4">
+  Your browser does not support video tags
+</video>
+```
+
+
 ## Setup
 
 This model is implemented using the Julia language, please install it from [this link](https://julialang.org/downloads/). We recommend using version Julia 1.9.

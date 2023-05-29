@@ -1,9 +1,0 @@
-factor = "energy_transfer"
-values = "range(start=0.3, stop=0.03, length=9)"
-
-num_steps = 5660
-num_replicates = 100
-map_size = 250
-flower_width = 0
-init_pr_eliminate = 0.0
-num_init_bphs = 200

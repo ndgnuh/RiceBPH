@@ -40,28 +40,6 @@ function infer_stats!(df)
 end
 
 """
-    get_stat(df::DataFrame, column::Symbol)
-
-Return a dataframe contains the aggregated statistics of `df[!, column]` 
-along the `seed` columns (along replications).
-The returned dataframe has these colums:
-- step
-- mean
-- std
-- min
-- max
-- median
-"""
-function get_stat(df, column)
-    combine(groupby(df, :step),
-            column => mean => :mean,
-            column => std => :std,
-            column => minimum => :min,
-            column => maximum => :max,
-            column => median => :median)
-end
-
-"""
     get_factor_name(df::DataFrame)::Symbol
 
 Return the variable factor from the OFAAT result.
@@ -77,17 +55,48 @@ function get_factor_name(df)
 end
 
 """
-    get_data_columns(df)
+    get_data_names(df::DataFrame)
 
-Returns a vector of `df`'s columns, excluding `:step`, `:seed` and the ofaat factor.
+Return a vector of the names of the data columns.
 """
-function get_data_columns(df)
+function get_data_names(df)
     factor = Symbol(get_factor_name(df))
     @chain begin
-        names(df)
-        Iterators.map(Symbol, _)
-        filter(!in([:step, :seed, factor]), _)
+        (Symbol(name) for name in names(df))
+        Iterators.filter(!=(:seed), _)
+        Iterators.filter(!=(:step), _)
+        Iterators.filter(!=(factor), _)
+        collect
     end
+end
+
+"""
+    get_stats(df)
+
+Get statistics over all replications of each parameter from the OFAAT result.
+"""
+function get_stats(df; stable = false)
+    factor = get_factor_name(df)
+    data_names = get_data_names(df)
+    stats = combine(groupby(df, factor)) do group
+        steps = if stable
+            get_stable_bph_timesteps(group.num_bphs)
+        else
+            Colon()
+        end
+        group_stats = mapreduce(merge, data_names) do column
+            X = group[steps, column]
+            μ = mean(X)
+            σ = std(X)
+            a = minimum(X)
+            b = maximum(X)
+            return Dict(column => (; μ, σ, a, b))
+        end
+        # Need to convert to named tuple so 
+        # that it spreads to multiple columns
+        return NamedTuple(group_stats)
+    end
+    return stats
 end
 
 """
@@ -184,26 +193,16 @@ function show_analysis(df::DataFrame, preset::Preset;
     return result
 end
 
-
-"""
-    analyse(result::DataFrame)
-
-Return a dataframe containing statistics of data columns
-from result dataframe. Statistics includes mean, standard deviation
-minimum and maximum.
-"""
-function analyse(result::DataFrame)
-    factor = get_factor_name(result)
-    columns = get_data_columns(column)
-    functions = [(:μ, mean),
-                 (:σ, std),
-                 (:min, minimum),
-                 (:max, maximum)]
-    combine(groupby(result, factor)) do group
-        mapreduce(vcat, columns) do column
-            data = group[!, column]
-            [key => value(data) for (k, v) in functions]
-        end
+function get_timesteps(df, stable)
+    if stable
+        num_bphs = combine(groupby(df, :step),
+                           :num_bphs => mean => :μ)
+        _, t2 = findmax(num_bphs.μ)
+        t1 = t2 - 7 * 24
+        @assert t1 > 0
+        return t1:t2
+    else
+        return Colon()
     end
 end
 
