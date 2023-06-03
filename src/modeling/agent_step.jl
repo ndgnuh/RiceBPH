@@ -61,8 +61,8 @@ or the cell type is flower:
 t_{x, y} = 0.
 \end{equation}
 ```
-If the conditions are not meet, stop the action.
-Otherwise, the agent then consume energy:
+If the conditions are not met, stop the action.
+Otherwise, the agent then consumes energy:
 ```math
 \begin{equation}
 e_{i} \gets e_{i} - E_C.
@@ -78,7 +78,7 @@ e_{x+\Delta x,y+\Delta y}, & t_{x+\Delta x,y+\Delta y}=1,\\
 \end{cases}
 \end{equation}
 ```
-After a direction is sampled, the agent then move along the sampled direction
+After a direction is sampled, the agent then moves along the sampled direction
 ```math
 \begin{align}
 x_i &\gets x_i + \Delta x,\\
