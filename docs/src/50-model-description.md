@@ -12,7 +12,7 @@ in preventing the dispersion of BPH and providing a rough guideline
 on how flowers should be planted to effectively prevent the BPH from spreading 
 and still, ensure economic benefit for the farmers.
 
-To verify the stability and trustiness of the model, we use population structure and patterns from [Syahrawati2019](@cite) as a pattern for verifying our model.
+To verify the stability and trustiness of the model, we use population structure and patterns from [Syahrawati2019]() as a pattern for verifying our model.
 
 ## Entities, state variables, and scales
 
@@ -243,7 +243,7 @@ Variable  | Description                                          | Value
 
 ##### Initialisation actions
 
-Since the vegetation cells are orgranized in a grid,
+Since the vegetation cells are organized in a grid,
 we use matrices to represent the cells for efficiency.
 The coordinates of the vegetation cells translate directly to the matrix indices.
 Each of the other states is represented by a matrix.
