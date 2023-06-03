@@ -171,11 +171,7 @@ function show_analysis(df::DataFrame, preset::Preset;
     #
     # Which time step to view data?
     #
-    steps = if stable_steps
-        [get_stable_bph_timesteps(group) for group in groups]
-    else
-        [Colon() for _ in groups]
-    end
+    steps = [get_timesteps(group, stable_steps) for group in groups]
 
     #
     # Collect the result format base on preset

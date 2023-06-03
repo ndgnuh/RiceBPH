@@ -8,7 +8,7 @@ using .Utils
 include("ModelRewrite.jl")
 @reexport using .Models
 
-include("results.jl")
+include("Results.jl")
 using .Results
 
 include("Visualisations.jl")
