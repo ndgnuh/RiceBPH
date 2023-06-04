@@ -2,6 +2,7 @@ using Statistics
 using LinearAlgebra
 using LsqFit
 using DataFrames
+using ProgressMeter
 
 function _legitify(x, fallback)
     if isnan(x) || isinf(x)
@@ -27,25 +28,36 @@ function compute_factor_stats(params_df, factor, names)
     end
 end
 
-function group_fit(model, results, column; stablesteps = false)
-    factor = get_factor_name(results)
-    names = get_param_names(model)
+function group_fit(model, results, column;
+                   stablesteps = false,
+                   factor = get_factor_name(results),
+                   names = get_param_names(model))
     groups = groupby(results, Cols(factor, :seed))
 
+    pbar = Progress(length(groups))
+
     combine(groups) do g
-        steps = if stablesteps
-            1:argmax(g[!, :num_bphs])
-        else
-            Colon()
-        end
+        steps = Colon()
         x = g[steps, :step]
         y = g[steps, column]
 
+        # Try to fit the model
         base_params = init_params(model, x, y)
-        fit = curve_fit(model, x, y, base_params)
+        fit = try
+            curve_fit(model, x, y, base_params)
+        catch e
+            if e isa LinearAlgebra.SingularException
+                (; param = base_params, converged = false)
+            else
+                rethrow(e)
+            end
+        end
 
+        # Collect result 
         ret_p = NamedTuple(k => v for (k, v) in zip(names, fit.param))
         ret_c = (; converged = fit.converged)
+
+        next!(pbar)
         return merge(ret_p, ret_c)
     end
 end
