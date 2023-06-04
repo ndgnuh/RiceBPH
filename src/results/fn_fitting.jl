@@ -14,7 +14,7 @@ end
 
 function try_fit(model, x, y, base_params, names)
     fit = try
-        curve_fit(model, x, y, base_params)
+        curve_fit(model, x / 1000.0f0, y, base_params)
     catch e
         if e isa LinearAlgebra.SingularException
             (; param = base_params, converged = false)
@@ -30,7 +30,7 @@ function try_fit(model, x, y, base_params, names)
 end
 
 function is_stable(x)
-    3 * std(x) <= mean(x) * 0.05f0
+    std(x) <= mean(abs.(x)) * 0.10f0
 end
 
 function compute_global_stats(params_df, names)
@@ -64,8 +64,8 @@ function group_fit(model, results, column;
         else
             Colon()
         end
-        x = g[steps, :step] * 1.0f0
-        y = g[steps, column] * 1.0f0
+        x = g[steps, :step]
+        y = g[steps, column]
 
         # Try to fit the model
         base_params = init_params(model, x, y)
@@ -89,7 +89,11 @@ function factor_group_fit(model, results, column; stablesteps = false)
 
     pbar = Progress(length(groups))
     combine(groups) do g
-        steps = Colon()
+        steps = if stablesteps
+            1:g.step[argmax(g.num_bphs)]
+        else
+            Colon()
+        end
 
         x = g[steps, :step]
         y = g[steps, column]

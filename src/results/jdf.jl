@@ -16,14 +16,10 @@ Eggs are not counted in the calculations.
 """
 function infer_stats!(df)
     df.num_bphs = @. Float32(df.num_nymphs + df.num_brachys + df.num_macros)
-    df.pct_nymphs = @. Float32((df.num_nymphs + eps(Float32)) /
-                               (df.num_bphs + 3 * eps(Float32)))
-    df.pct_macros = @. Float32((df.num_macros + eps(Float32)) /
-                               (df.num_bphs + 3 * eps(Float32)))
-    df.pct_brachys = @. Float32((df.num_brachys + eps(Float32)) /
-                                (df.num_bphs + 3 * eps(Float32)))
-    df.pct_females = @. Float32((df.num_females + eps(Float32)) /
-                                (df.num_bphs + 2 * eps(Float32)))
+    df.pct_nymphs = @. Float32((df.num_nymphs) / (df.num_bphs))
+    df.pct_macros = @. Float32((df.num_macros) / (df.num_bphs))
+    df.pct_brachys = @. Float32((df.num_brachys) / (df.num_bphs))
+    df.pct_females = @. Float32((df.num_females) / (df.num_bphs))
     df.pct_males = @. Float32(1 - df.pct_females)
     df.pct_bphs = Float32.(df.num_bphs ./ maximum(df.num_bphs))
     return df
@@ -82,7 +78,7 @@ function get_stats(df; stable = false)
             b = maximum(X)
             return Dict(column => (; μ, σ, a, b))
         end
-        # Need to convert to named tuple so 
+        # Need to convert to named tuple so
         # that it spreads to multiple columns
         return NamedTuple(group_stats)
     end
