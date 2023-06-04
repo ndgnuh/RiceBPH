@@ -14,7 +14,7 @@ end
 
 function try_fit(model, x, y, base_params, names)
     fit = try
-        curve_fit(model, x / 1000.0f0, y, base_params)
+        curve_fit(model, x, y, base_params)
     catch e
         if e isa LinearAlgebra.SingularException
             (; param = base_params, converged = false)
@@ -29,12 +29,20 @@ function try_fit(model, x, y, base_params, names)
     return merge(ret_p, ret_c)
 end
 
-function is_stable(x)
-    std(x) <= mean(abs.(x)) * 0.10f0
+"""
+    qcd(x::Vector{<:Real})
+
+Return quartile coefficient of dispersion for `x`.
+Quantile is computed with `beta = alpha = 0`.
+"""
+function qcd(x)
+    q1 = quantile(x, 0.25;beta=0, alpha=0) 
+    q3 = quantile(x, 0.75;beta=0, alpha=0)
+    (q3 - q1) / (q3 + q1)
 end
 
 function compute_global_stats(params_df, names)
-    gstats = map([mean, std, minimum, maximum, is_stable]) do func
+    gstats = map([mean, std, minimum, maximum, qcd]) do func
         mapreduce(merge, names) do name
             Dict(:stat => Symbol(func), name => func(params_df[!, name]))
         end
@@ -64,8 +72,8 @@ function group_fit(model, results, column;
         else
             Colon()
         end
-        x = g[steps, :step]
-        y = g[steps, column]
+        x = g[steps, :step] * 1f0
+        y = g[steps, column] * 1f0
 
         # Try to fit the model
         base_params = init_params(model, x, y)
@@ -82,9 +90,11 @@ Fit parameters of `f` and return the results dataframe for each value of factor.
 Group the input data by factors, function `f` is fit on all the data for each
 value of the input factor.
 """
-function factor_group_fit(model, results, column; stablesteps = false)
-    factor = get_factor_name(results)
-    names = get_param_names(model)
+function factor_group_fit(model, results, column;
+        stablesteps = false, 
+    factor = get_factor_name(results),
+    names = get_param_names(model),
+    )
     groups = groupby(results, factor)
 
     pbar = Progress(length(groups))
@@ -95,8 +105,8 @@ function factor_group_fit(model, results, column; stablesteps = false)
             Colon()
         end
 
-        x = g[steps, :step]
-        y = g[steps, column]
+        x = g[steps, :step] * 1f0
+        y = g[steps, column] * 1f0
 
         # Fit parameters
         base_params = init_params(model, x, y)

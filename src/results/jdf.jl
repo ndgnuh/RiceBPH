@@ -15,13 +15,15 @@ The inferable statistics are:
 Eggs are not counted in the calculations.
 """
 function infer_stats!(df)
+    EPS = eps(Float32)
+    _3EPS = EPS * 3
+    _2EPS = EPS * 2
     df.num_bphs = @. Float32(df.num_nymphs + df.num_brachys + df.num_macros)
-    df.pct_nymphs = @. Float32((df.num_nymphs) / (df.num_bphs))
-    df.pct_macros = @. Float32((df.num_macros) / (df.num_bphs))
-    df.pct_brachys = @. Float32((df.num_brachys) / (df.num_bphs))
-    df.pct_females = @. Float32((df.num_females) / (df.num_bphs))
+    df.pct_nymphs = @. Float32((df.num_nymphs + EPS) / (df.num_bphs + _3EPS))
+    df.pct_macros = @. Float32((df.num_macros + EPS) / (df.num_bphs + _3EPS))
+    df.pct_brachys = @. Float32((df.num_brachys + EPS) / (df.num_bphs + _3EPS))
+    df.pct_females = @. Float32((df.num_females + EPS) / (df.num_bphs + _2EPS))
     df.pct_males = @. Float32(1 - df.pct_females)
-    df.pct_bphs = Float32.(df.num_bphs ./ maximum(df.num_bphs))
     return df
 end
 

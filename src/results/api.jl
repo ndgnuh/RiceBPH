@@ -27,3 +27,7 @@ end
 function group_fit(model::Base.Callable, result::Result, column; kw...)
     group_fit(model, result.df, column; kw...)
 end
+
+function factor_group_fit(model::Base.Callable, result::Result, column; kw...)
+    group_fit(model, result.df, column; kw...)
+end

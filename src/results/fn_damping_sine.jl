@@ -1,7 +1,7 @@
 function damping_sine(t, μ, λ, ω, φ)
     # Divide by 1000 for numerical stability
-    tn = @. t / 1000.0f0
-    @. μ + exp(-λ * tn) * sin(ω * tn + φ)
+    t = @. t / 1000
+    @. μ + exp(-λ * t) * sin(ω * t + φ)
 end
 damping_sine(t, params) = damping_sine(t, params...)
 
