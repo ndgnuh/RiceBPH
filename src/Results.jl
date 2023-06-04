@@ -13,6 +13,7 @@ include("results/fn_fitting.jl")
 include("results/fn_logistic.jl")
 include("results/fn_damping_sine.jl")
 include("results/fn_step_logistic.jl")
+include("results/fn_bell.jl")
 
 """
     get_stable_bph_timesteps(num_bphs)
