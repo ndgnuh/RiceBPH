@@ -36,12 +36,12 @@ Return quartile coefficient of dispersion for `x`.
 Quantile is computed with `beta = alpha = 0`.
 """
 function qcd(x)
-    q1 = quantile(x, 0.25;beta=0, alpha=0) 
-    q3 = quantile(x, 0.75;beta=0, alpha=0)
-    (q3 - q1) / (q3 + q1)
+    q1 = quantile(x, 0.25; beta = 0, alpha = 0)
+    q3 = quantile(x, 0.75; beta = 0, alpha = 0)
+    abs((q3 - q1) / (q3 + q1))
 end
 
-function compute_global_stats(params_df, names)
+function compute_global_stats(params_df, names::Vector)
     gstats = map([mean, std, minimum, maximum, qcd]) do func
         mapreduce(merge, names) do name
             Dict(:stat => Symbol(func), name => func(params_df[!, name]))
@@ -49,6 +49,20 @@ function compute_global_stats(params_df, names)
     end
     df = DataFrame(gstats)
     select!(df, vcat(:stat, names)) # Reordering
+end
+
+function compute_global_stats(df, factor)
+    stat_names = names(df)
+    filter!(!isequal("seed"), stat_names)
+    mapreduce(merge, stat_names) do name
+        values = filter(!ismissing, df[!, name])
+        values = filter!(!isnan, values)
+        values = Symbol(name) == factor ? unique(values) : values
+        stat = map([mean, std, minimum, maximum, qcd]) do fn
+            Float64(fn(values))
+        end
+        Dict(Symbol(name) => stat)
+    end
 end
 
 function compute_factor_stats(params_df, factor, names)
@@ -72,8 +86,8 @@ function group_fit(model, results, column;
         else
             Colon()
         end
-        x = g[steps, :step] * 1f0
-        y = g[steps, column] * 1f0
+        x = g[steps, :step] * 1.0f0
+        y = g[steps, column] * 1.0f0
 
         # Try to fit the model
         base_params = init_params(model, x, y)
@@ -91,10 +105,9 @@ Group the input data by factors, function `f` is fit on all the data for each
 value of the input factor.
 """
 function factor_group_fit(model, results, column;
-        stablesteps = false, 
-    factor = get_factor_name(results),
-    names = get_param_names(model),
-    )
+                          stablesteps = false,
+                          factor = get_factor_name(results),
+                          names = get_param_names(model))
     groups = groupby(results, factor)
 
     pbar = Progress(length(groups))
@@ -105,8 +118,8 @@ function factor_group_fit(model, results, column;
             Colon()
         end
 
-        x = g[steps, :step] * 1f0
-        y = g[steps, column] * 1f0
+        x = g[steps, :step] * 1.0f0
+        y = g[steps, column] * 1.0f0
 
         # Fit parameters
         base_params = init_params(model, x, y)
