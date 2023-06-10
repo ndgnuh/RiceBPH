@@ -8,6 +8,15 @@ using JDF
 using Chain
 using Printf
 using Latexify
+using PlotlyLight
+using PlotlyKaleido
+
+const STAT_NAME = Symbol("--")
+const STAT_QCV = :QCV
+const STAT_MEAN = :Mean
+const STAT_STD = :Std
+const STAT_MINIMUM = :Min
+const STAT_MAXIMUM = :Max
 
 include("results/jdf.jl")
 include("results/fn_fitting.jl")
@@ -17,6 +26,8 @@ include("results/fn_step_logistic.jl")
 include("results/fn_bell.jl")
 include("results/api.jl")
 include("results/latexify.jl")
+include("results/viz_colorscheme.jl")
+include("results/viz.jl")
 
 """
     get_stable_bph_timesteps(num_bphs)
