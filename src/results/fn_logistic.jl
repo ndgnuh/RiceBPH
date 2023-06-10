@@ -1,5 +1,6 @@
-function logistic(t, A, T, B, K = 1)
-    @. A + (K - A) / (1 + exp((t - T) * B))
+function logistic(t, A, B, T, K = 1)
+    t = t / 1000
+    @. A + (K - A) / (1 + exp(B * (t - T)))
 end
 logistic(t, params) = logistic(t, params...)
 
@@ -10,5 +11,5 @@ function init_params(::typeof(logistic), x, y)
 end
 
 function get_param_names(::typeof(logistic))
-    return [:A, :T, :B]
+    return [:A, :B, :T]
 end

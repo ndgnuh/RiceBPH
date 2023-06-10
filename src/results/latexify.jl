@@ -5,7 +5,7 @@ function format_item(s::AbstractFloat)
     if isnothing(digits)
         return s
     else
-        return @sprintf "%.4f" s
+        return @sprintf "%.04f" s
     end
 end
 
