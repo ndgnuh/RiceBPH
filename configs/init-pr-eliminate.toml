@@ -1,35 +1,12 @@
-[[config]]
+[config]
 factor = "init_pr_eliminate"
-values = "range(start=0.2, stop=0.01, length=9)"
+values = "exp10.(range(start=log10(0.01), stop=log10(0.2), length=24))"
 num_steps = 2880
 num_replications = 100
-output = "outputs/init-pr-eliminate-1"
-    [config.params]
-    map_size = 125
-    flower_width = 7
-    num_init_bphs = 200
-    energy_transfer = 0.032
+output = "outputs/init-pr-eliminate"
 
-[[config]]
-factor = "init_pr_eliminate"
-values = "range(start=0.2, stop=0.01, length=9)"
-num_steps = 2880
-num_replications = 100
-output = "outputs/init-pr-eliminate-2"
-    [config.params]
-    map_size = 125
-    flower_width = 13
-    num_init_bphs = 200
-    energy_transfer = 0.032
-
-[[config]]
-factor = "init_pr_eliminate"
-values = "range(start=0.2, stop=0.01, length=9)"
-num_steps = 2880
-num_replications = 100
-output = "outputs/init-pr-eliminate-3"
-    [config.params]
-    map_size = 125
-    flower_width = 20
-    num_init_bphs = 200
-    energy_transfer = 0.032
+[config.params]
+map_size = 125
+flower_width = 7
+num_init_bphs = 200
+energy_transfer = 0.025

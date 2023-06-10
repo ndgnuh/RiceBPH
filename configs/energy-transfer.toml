@@ -1,35 +1,12 @@
-[[config]]
+[config]
 factor = "energy_transfer"
-values = "range(start=0.3, stop=0.03, length=9)"
-num_steps = 5660
+values = "exp10.(range(start=log10(0.01), stop=log10(0.3), length=24))"
+num_steps = 2880
 num_replications = 100
-output = "outputs/energy-transfer-1"
-    [config.params]
-    map_size = 250
-    flower_width = 0
-    init_pr_eliminate = 0.0
-    num_init_bphs = 200
+output = "outputs/energy-transfer"
 
-[[config]]
-factor = "energy_transfer"
-values = "range(start=0.1, stop=0.01, length=9)"
-num_steps = 5660
-num_replications = 100
-output = "outputs/energy-transfer-2"
-    [config.params]
-    map_size = 250
-    flower_width = 0
-    init_pr_eliminate = 0.0
-    num_init_bphs = 200
-
-[[config]]
-factor = "energy_transfer"
-values = "range(start=0.06, stop=0.01, length=9)"
-num_steps = 5660
-num_replications = 100
-output = "outputs/energy-transfer-3"
-    [config.params]
-    map_size = 250
-    flower_width = 0
-    init_pr_eliminate = 0.0
-    num_init_bphs = 200
+[config.params]
+map_size = 125
+flower_width = 0
+init_pr_eliminate = 0.0
+num_init_bphs = 200
