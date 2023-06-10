@@ -55,8 +55,7 @@ function init_rice_map(map_size::Integer)
 end
 
 @doc raw"""
-    init_pr_eliminate(init_pr::Float32, cell_types::Matrix{CellType}; gauss::Float32 = 2.5f0)
-    init_pr_eliminate(P::Float32, M::Matrix{Bool}; σ::Float32 = 2.5f0)
+    init_pr_eliminate(init_pr::Float32, cell_types::Matrix{CellType}, flower_width)
 
 Returns `Float32` matrix of elimination probability.
 The result matrix is defined by:
@@ -68,10 +67,12 @@ where:
 - ``P_0`` is the base elimination probability,
 - ``M`` is the cell type matrix (see [`init_cell_types`](@ref)).
 """
-function init_pr_eliminate(init_pr::Float32, cell_types::Matrix{CellType};
-                           gauss::Float32 = 2.5f0)
-    kernel = Kernel.gaussian(gauss)
-    pr_eliminate = imfilter((@. init_pr * (cell_types == FlowerCell)), kernel)
+function init_pr_eliminate(init_pr::Float32,
+                           cell_types::Matrix{CellType},
+                           flower_width::Integer)
+    σ = (flower_width - 1) / 6.0f0
+    kernel = Kernel.gaussian(σ)
+    pr_eliminate = imfilter((@. log1p(init_pr) * (cell_types == FlowerCell)), kernel)
     return pr_eliminate
 end
 
@@ -89,7 +90,9 @@ function init_properties(parameters::ModelParameters)
     energy_consume = parameters.energy_transfer / 4.0f0
     rice_map = init_rice_map(map_size)
     cell_types = init_cell_types(map_size, flower_width)
-    pr_eliminate_map = init_pr_eliminate(parameters.init_pr_eliminate, cell_types)
+
+    pr_eliminate_map = init_pr_eliminate(parameters.init_pr_eliminate, cell_types,
+                                         flower_width)
     moving_directions = copy(MOVING_DIRECTIONS)
 
     # Rice cell marking
@@ -135,7 +138,7 @@ The state variables of agent ``i`` are initialized as follows:
 - form ``z^{(f)}_i``: sample from $(show_enum(Form)) with weight $(show_dist(FORM_DST)),
 - stage ``z^{(s)}_i``: sample from $(show_enum(Stage)) with weight $(show_dist(STAGE_DST)),
 - stage countdown ``t^{(s)}_i``: derives from their other state variables,
-- reproduction countdown ``t^{(p)}_i``: is the preoviposition countdown if agent is not an adult, else the countdown is either preoviposition countdown or reproduction countdown with equal chances.
+- reproduction countdown ``t^{(r)}_i``: is the preoviposition countdown if agent is not an adult, else the countdown is either preoviposition countdown or reproduction countdown with equal chances.
 """
 function init_bphs!(model)
     parameters = model.parameters
@@ -191,7 +194,7 @@ function init_model(parameters; seed::Union{Int, Nothing} = nothing)
     # Modele object
     #
     space = GridSpace(properties.rice_map |> size; periodic = false)
-    rng = MersenneTwister(seed)
+    rng = Xoshiro(seed)
     scheduler = Schedulers.ByProperty(:energy)
     model = AgentBasedModel(BPH, space; rng, properties, scheduler)
 
