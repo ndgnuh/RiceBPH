@@ -7,6 +7,7 @@ using GLMakie
 using JDF
 using Chain
 using Printf
+using Latexify
 
 include("results/jdf.jl")
 include("results/fn_fitting.jl")
@@ -15,6 +16,7 @@ include("results/fn_damping_sine.jl")
 include("results/fn_step_logistic.jl")
 include("results/fn_bell.jl")
 include("results/api.jl")
+include("results/latexify.jl")
 
 """
     get_stable_bph_timesteps(num_bphs)
@@ -164,13 +166,13 @@ function compute_observations(result::Result; by_factor::Bool = false)
                                 for name in names(all_params)
                                 if name != "seed" && name != string(result.factor_name)]
         names = Symbol.(names)
+        stat_names = [:Mean, :Std, :Min, :Max, :QCV]
         if by_factor
-            stat_names = [:Mean, :Std, :Min, :Max, :QCV]
             stats = compute_factor_stats(all_params, result.factor_name, names)
+        else
+            stats = compute_global_stats(all_params, result.factor_name)
             df = merge(Dict(Symbol("--") => stat_names), stats) |> DataFrame
             permutedims(df, Symbol("--"))
-        else
-            compute_global_stats(all_params, result.factor_name)
         end
     end
     return global_stats
