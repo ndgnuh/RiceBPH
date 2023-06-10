@@ -108,4 +108,72 @@ function get_timesteps(df, stable)
     end
 end
 
+function detect_pulse(x, k = 24 * 7)
+    # Running average for a day
+    x_ma = [mean(x[t:(t + k)]) for t in 1:(lastindex(x) - k)]
+
+    # Find baseline
+    # Using 0.75 quartile will cause local pulse
+    # which is not what we want
+    baseline = quantile(x_ma, 0.5)
+
+    # Region of interest
+    roi = @. Int(x_ma > baseline)
+    domain = findall(@. roi[(begin + 1):end] != roi[begin:(end - 1)])
+    if isodd(length(domain))
+        push!(domain, lastindex(x_ma))
+    end
+
+    # Detect pulse in each ROI
+    map(Iterators.partition(domain, 2)) do (t1, t2)
+        t = t1 + argmax(x_ma[t1:t2]) - 1
+        t = t + k ÷ 2
+        (t, x[t])
+    end
+end
+
+function detect_pulse(result::Result)
+    groups = groupby(result.df, Cols(result.factor_name, :seed))
+    combine(groups) do group
+        # Detect BPH pulse from each group
+        peaks = detect_pulse(group.num_bphs)
+        num_peaks = length(peaks)
+        first_peak, _ = pop!(peaks)
+
+        second_peak, _ = num_peaks > 1 ? pop!(peaks) : (-1, missing)
+
+        (; num_peaks, first_peak, second_peak)
+    end
+end
+
+function compute_observations(result::Result; by_factor::Bool = false)
+    # Compute all observasions
+    params1 = group_fit(logistic, result, :pct_rices)
+    select!(params1, Not(:converged))
+    params2 = group_fit(damping_sine, result, :pct_nymphs;
+                        stablesteps = true)
+    select!(params2, Not(:converged))
+    params3::DataFrame = detect_pulse(result)
+
+    # Join them in a data frame
+    all_params = innerjoin(params1, params2, params3;
+                           on = [result.factor_name, :seed])
+
+    # Statistics
+    global_stats = let names = [name
+                                for name in names(all_params)
+                                if name != "seed" && name != string(result.factor_name)]
+        names = Symbol.(names)
+        if by_factor
+            stat_names = [:Mean, :Std, :Min, :Max, :QCV]
+            stats = compute_factor_stats(all_params, result.factor_name, names)
+            df = merge(Dict(Symbol("--") => stat_names), stats) |> DataFrame
+            permutedims(df, Symbol("--"))
+        else
+            compute_global_stats(all_params, result.factor_name)
+        end
+    end
+    return global_stats
+end
+
 end # module Results
