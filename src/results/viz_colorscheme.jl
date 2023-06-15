@@ -35,3 +35,10 @@ const COLORSCHEME = (;
                      # white
                      color7 = "#707880",
                      color15 = "#c5c8c6")
+
+const COLORSCHEME2 = let diff = 45
+    palette = mapreduce(hcat, 0:diff:(360 - diff)) do hue
+        sequential_palette(hue, 5, b = 0.5)[(begin + 1):(end - 1)]
+    end
+    transpose(palette)[:]
+end
