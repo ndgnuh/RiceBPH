@@ -34,7 +34,13 @@ macro return_if(expr)
     end
 end
 
-latex_name(name::Symbol) = latex_name(Val(name))
+function latex_name(name::Symbol)
+    try
+        latex_name(Val(name))
+    catch _
+        return String(name) # Just return 
+    end
+end
 latex_name(name::String) = latex_name(Symbol(name))
 latex_name(::Val{:num_init_bphs}) = "N_I"
 latex_name(::Val{:num_bphs}) = "n_A"
@@ -49,6 +55,8 @@ latex_name(::Val{:pct_macros}) = "r_M"
 latex_name(::Val{:energy_transfer}) = "E_T"
 latex_name(::Val{:init_pr_eliminate}) = "p_0"
 latex_name(::Val{:flower_width}) = "S_F"
+latex_name(::Val{:first_peak}) = "T_peak"
+latex_name(::Val{:num_peaks}) = "N_peak"
 
 export @easy_name_map, @return_if, latex_name
 

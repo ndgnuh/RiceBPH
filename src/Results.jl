@@ -1,6 +1,7 @@
 module Results
 
 using ..Models: MDATA
+using ..Utils: latex_name
 using DataFrames
 using StatsBase
 using GLMakie
@@ -8,8 +9,8 @@ using JDF
 using Chain
 using Printf
 using Latexify
-using PlotlyLight
-using PlotlyKaleido
+using Colors
+using Printf: @format_str, format
 
 const STAT_NAME = Symbol("--")
 const STAT_QCV = :QCV
@@ -155,17 +156,17 @@ function detect_pulse(result::Result)
 
         second_peak, _ = num_peaks > 1 ? pop!(peaks) : (-1, missing)
 
-        (; num_peaks, first_peak, second_peak)
+        (; num_peaks, first_peak)
     end
 end
 
 function compute_observations(result::Result; by_factor::Bool = false)
     # Compute all observasions
-    params1 = group_fit(logistic, result, :pct_rices)
+    params1 = factor_group_fit(logistic, result, :pct_rices)
     select!(params1, Not(:converged))
-    params2 = group_fit(damping_sine, result, :pct_nymphs;
-                        stablesteps = true)
-    select!(params2, Not(:converged))
+    params2 = factor_group_fit(damping_sine, result, :pct_nymphs;
+                               stablesteps = true)
+    select!(params2, Not(Cols(:converged, :ω, :φ)))
     params3::DataFrame = detect_pulse(result)
 
     # Join them in a data frame
