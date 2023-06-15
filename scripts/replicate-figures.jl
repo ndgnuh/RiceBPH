@@ -10,7 +10,7 @@ function main()
     result = Result("outputs/num-init-bphs/")
     fig = visualize_num_bphs(result)
     output_file = joinpath(figdir, "param-fix-num-init-bphs.png")
-    save(fig, output_file)
+    save(output_file, fig)
     @info "Figure written to $output_file"
 
     #  result
