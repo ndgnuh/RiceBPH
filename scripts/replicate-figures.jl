@@ -5,6 +5,8 @@ function main()
     # Prepare
     figdir = "figures"
     mkpath(figdir)
+    update_theme!(; fonts = (; regular = "serif",
+                             bold = "serif bold"))
 
     # Fix num init bphs plots
     result = Result("outputs/num-init-bphs/")
@@ -12,6 +14,7 @@ function main()
     output_file = joinpath(figdir, "param-fix-num-init-bphs.png")
     save(output_file, fig)
     @info "Figure written to $output_file"
+    GC.gc()
 
     #  result
     results = ("outputs/energy-transfer/",
@@ -22,6 +25,7 @@ function main()
         @info "Processing $result_folder"
         result = Result(result_folder)
         df = compute_observations(result)
+        GC.gc()
 
         # Stability analysis plots
         fig, _, _ = visualize_qcv(result, df)
