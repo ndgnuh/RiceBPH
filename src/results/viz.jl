@@ -42,11 +42,8 @@ function visualize_num_bphs(result)
     count = 1
     min_y = 0
     max_y = maximum(result.df.num_bphs)
-    markers = [:diamond, :star4, :hexagon, :circle, :rect, :utriangle, :dtriangle]
-    num_markers = length(markers)
 
     # Collect the result first
-    plot_data = []
     for group in groupby(result.df, result.factor_name)
         stats = combine(groupby(group, :step)) do row
             (;
@@ -68,8 +65,6 @@ function visualize_num_bphs(result)
         color = COLORSCHEME2[count]
         factor_value = group[!, result.factor_name] |> first
         label = LaTeXString("\$N_I = $(factor_value)\$")
-        skip = map(x -> x % (4 * day_step) == 0, t)
-        marker = markers[(count - 1) % num_markers + 1]
 
         # Plot mean + std plot with a band and a middle line
         band!(ax, t, μ - σ, μ + σ, color = (color, 0.3))
