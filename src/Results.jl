@@ -11,6 +11,7 @@ using Printf
 using Latexify
 using Colors
 using Printf: @format_str, format
+using LaTeXStrings
 
 const STAT_NAME = Symbol("--")
 const STAT_QCV = :QCV
