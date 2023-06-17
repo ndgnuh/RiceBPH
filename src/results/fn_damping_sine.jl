@@ -14,4 +14,4 @@ function init_params(::typeof(damping_sine), x, y)
     return [μ, λ, ω, φ]
 end
 
-get_param_names(::typeof(damping_sine)) = [:A_0, :λ, :ω, :φ]
+get_param_basenames(::typeof(damping_sine)) = [:A_0, :λ, :ω, :φ]

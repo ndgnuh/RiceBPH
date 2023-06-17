@@ -10,6 +10,6 @@ function init_params(::typeof(logistic), x, y)
     return [0, t0, 0]
 end
 
-function get_param_names(::typeof(logistic))
+function get_param_basenames(::typeof(logistic))
     return [:A, :B, :T]
 end
