@@ -15,7 +15,8 @@ The inferable statistics are:
 Eggs are not counted in the calculations.
 """
 function infer_stats!(df)
-    EPS = eps(Float32)
+    #= EPS = eps(Float32) =#
+    EPS = 0.0f0
     _3EPS = EPS * 3
     _2EPS = EPS * 2
     df.num_bphs = @. Float32(df.num_nymphs + df.num_brachys + df.num_macros)
