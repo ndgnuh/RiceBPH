@@ -1,5 +1,5 @@
 [config]
-factor = "num_init_bphs"
+factor = "init_num_bphs"
 values = "trunc.(Int, exp10.(range(start=log10(10), stop=log10(1000), length=24)))"
 num_steps = 2880
 num_replications = 100
@@ -9,4 +9,4 @@ output = "outputs/num-init-bphs"
 map_size = 125
 flower_width = 0
 init_pr_eliminate = 0.0
-energy_transfer = 0.025
+energy_transfer = 0.035

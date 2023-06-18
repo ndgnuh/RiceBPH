@@ -9,4 +9,4 @@ output = "outputs/energy-transfer"
 map_size = 125
 flower_width = 0
 init_pr_eliminate = 0.0
-num_init_bphs = 200
+init_num_bphs = 200

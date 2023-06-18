@@ -9,5 +9,5 @@ video_output = "outputs/video.mp4"
 flower_width = 0
 map_size = 125
 init_pr_eliminate = 0.0
-num_init_bphs = 200
+init_num_bphs = 200
 energy_transfer = 0.032

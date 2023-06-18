@@ -8,5 +8,5 @@ output = "outputs/init-pr-eliminate"
 [config.params]
 map_size = 125
 flower_width = 7
-num_init_bphs = 200
-energy_transfer = 0.025
+init_num_bphs = 200
+energy_transfer = 0.035

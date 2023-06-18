@@ -7,11 +7,11 @@ const NUM_STEPS = 2880
 function test_replication(seed, flower_width, init_pr_eliminate)
     energy_transfer = 0.032f0
     map_size = 125
-    num_init_bphs = 200
-    model1 = init_model(; seed, num_init_bphs, energy_transfer, map_size, flower_width, init_pr_eliminate)
+    init_num_bphs = 200
+    model1 = init_model(; seed, init_num_bphs, energy_transfer, map_size, flower_width, init_pr_eliminate)
     _, mdf1 = run!(model1, agent_step!, model_step!, NUM_STEPS, mdata=Models.MDATA)
 
-    model2 = init_model(; seed, num_init_bphs, energy_transfer, map_size, flower_width, init_pr_eliminate)
+    model2 = init_model(; seed, init_num_bphs, energy_transfer, map_size, flower_width, init_pr_eliminate)
     _, mdf2 = run!(model2, agent_step!, model_step!, NUM_STEPS, mdata=Models.MDATA)
 
 
