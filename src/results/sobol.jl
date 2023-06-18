@@ -117,7 +117,7 @@ function sobol(df, xnames, yname)
    partitions = Dict{Int, Vector{Tuple}}()
    for i in 1:num_levels
       if i < num_levels
-         partitions[i] = collect(subpartitons(i))
+         partitions[i] = collect(subpartitions(i))
       else
          partitions[i] = [Tuple(1:num_levels-1)]
       end
