@@ -12,6 +12,7 @@ using GLMakie
 using DataFrames
 using StatsBase
 using TOML
+using Chain
 
 # Local libs
 using ..Models

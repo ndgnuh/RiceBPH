@@ -135,6 +135,11 @@ function run(config::ModelParamScan)
       Iterators.product(_...)
    end
 
+   # Ignore parameters with only one value
+   ignores = filter(keys(config.params)) do key
+      length(unique(config.params[key])) < 2
+   end
+
    # Replicate
    results = mapreduce(vcat, configurations) do params
       @info "Running configuration: $(params)"
@@ -156,7 +161,9 @@ function run(config::ModelParamScan)
          # Populate with factor name and seed
          num_rows = size(mdf, 1)
          for (key, value) in params
-            mdf[!, key] = fill(value, num_rows)
+            if !(key in ignores)
+               mdf[!, key] = fill(value, num_rows)
+            end
          end
          mdf[!, :seed] = fill(seed, num_rows)
 
