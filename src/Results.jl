@@ -1,6 +1,6 @@
 module Results
 
-using ..Models: MDATA
+using ..Models: MDATA, ModelParameters
 using ..Utils: latex_name
 using DataFrames
 using StatsBase

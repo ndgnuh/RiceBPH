@@ -1,4 +1,39 @@
 """
+    subpartitions(n)
+
+Generate subpartitions with one index missing from `1:n` for a given integer n. This is a helper function for `sobol`.
+
+# Arguments
+
+  - `n::Int`: The integer for which subpartitions are generated.
+
+# Returns
+
+An iterator over subpartitions of n.
+
+# Examples
+
+```julia
+subparts = subpartitions(4)
+for part in subparts
+   println(part)
+end
+```
+
+Output:
+
+```
+(2, 3, 4)
+(1, 3, 4)
+(1, 2, 4)
+(1, 2, 3)
+```
+"""
+function subpartitions(n)
+   (Tuple(i for i in 1:n if i != j) for j in 1:n)
+end
+
+"""
     cmean(df, yname, conds; name = yname)
 
 Calculates the conditional mean of a variable in a DataFrame.
