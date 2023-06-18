@@ -146,7 +146,7 @@ function init_bphs!(model)
 
     positions = init_positions(rng,
                                parameters.init_position,
-                               parameters.num_init_bphs,
+                               parameters.init_num_bphs,
                                parameters.map_size)
     energy_dst = normal_range(0.0f0, 1.0f0)
     for pos::Tuple{Int, Int} in positions

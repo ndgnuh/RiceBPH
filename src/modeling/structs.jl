@@ -9,7 +9,7 @@ Variable            | Type                   | Default          | Description   
 :---                | :---                   | :---             | :---                                                 | :---
 `map_size`          | `Int`                  | -                | The environment grid size                            | ``S``
 `flower_width`      | `Int`                  | -                | The number of flower cells at the center of the grid | ``S_F``
-`num_init_bphs`     | `Int`                  | -                | The number of initialized BPH                        | ``N_{I}``
+`init_num_bphs`     | `Int`                  | -                | The number of initialized BPH                        | ``N_{I}``
 `init_pr_eliminate` | `Float32`              | -                | The base elimination probability                     | ``P_0``
 `init_position`     | [`InitPosition`](@ref) | [`Corner`](@ref) | The BPHs' initial positions                          | -
 `energy_transfer`   | `Float32`              | `0.032`          | The energy conversion from rice to BPHs.             | ``E_T``
@@ -18,7 +18,7 @@ Variable            | Type                   | Default          | Description   
     # Initialization parameters
     map_size::Int
     flower_width::Int
-    num_init_bphs::Int
+    init_num_bphs::Int
     init_pr_eliminate::Float32
     init_position::InitPosition = Corner
     energy_transfer::Float32 = 0.032f0

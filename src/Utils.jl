@@ -47,7 +47,7 @@ function latex_name(name::Symbol)
    end
 end
 latex_name(name::String) = latex_name(Symbol(name))
-latex_name(::Val{:num_init_bphs}) = raw"N_{\text{init}}"
+latex_name(::Val{:init_num_bphs}) = raw"N_{\text{init}}"
 latex_name(::Val{:num_bphs}) = raw"n_{\text{BPH}}"
 latex_name(::Val{:num_nymphs}) = "n_N"
 latex_name(::Val{:num_eggs}) = "n_E"
