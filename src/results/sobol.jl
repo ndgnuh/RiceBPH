@@ -1,7 +1,81 @@
+"""
+    cmean(df, yname, conds; name = yname)
+
+Calculates the conditional mean of a variable in a DataFrame.
+
+# Arguments
+
+  - `df::DataFrame`: The input DataFrame.
+  - `yname::Symbol`: The name of the variable whose mean is to be calculated.
+  - `conds::Symbol`: The column(s) to group the DataFrame by, this is the condition.
+  - `name::Symbol = yname`: (Optional) The name to assign to the resulting column.
+
+# Returns
+
+A new DataFrame with the conditional means.
+
+# Examples
+
+```julia
+df = DataFrame(;
+   x = [1, 2, 3, 1, 2, 3],
+   y = [4, 5, 6, 7, 8, 9],
+   z = [10, 11, 12, 13, 14, 15],
+)
+result = cmean(df, :y, :x; name = :mean_y)
+```
+
+The resulting DataFrame `result` will have the following structure:
+
+```
+6×3 DataFrame
+ Row │ x      mean_y  z     
+     │ Int64  Float64  Int64 
+─────┼───────────────────────
+   1 │     1      5.5     10
+   2 │     2      6.5     11
+   3 │     3      7.5     12
+```
+"""
 function cmean(df, yname, conds; name = yname)
    combine(groupby(df, conds), yname => mean => name)
 end
 
+"""
+    sobol(df, xnames, yname)
+
+Calculate Sobol indices for results obtained from black box functions using the Sobol method.
+
+# Arguments
+
+  - `df::DataFrame`: The results DataFrame.
+  - `xnames::Vector{Symbol}`: Names of the input variables (factors).
+  - `yname::Symbol`: Name of the output variable.
+
+# Returns
+
+A dictionary mapping input variable names to their respective Sobol indices.
+
+# Examples
+
+```julia
+df = DataFrame(;
+   x1 = [1, 1, 1, 2, 2, 2, 3, 3, 3],
+   x2 = [4, 5, 6, 4, 5, 6, 4, 5, 6],
+)
+df[!, :y] = df.x1 + df.x2 * 0.1 + rand(9) * 0.02
+sobol_indices = sobol(df, [:x1, :x2], :y)
+```
+
+The resulting dictionary `sobol_indices` will have the following structure:
+
+```
+Dict{Tuple{Symbol, Vararg{Symbol}}, Float64} with 3 entries:
+  (:x1, :x2) => 2.903e-6
+  (:x2,)     => 0.0106756
+  (:x1,)     => 0.989322
+```
+"""
 function sobol(df, xnames, yname)
    # Generate index sets
    num_levels = length(xnames) + 1
