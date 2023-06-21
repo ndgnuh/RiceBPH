@@ -142,3 +142,37 @@ function visualize_pct_nymphs(
    xlims!(ax, 0, 1)
    return fig
 end
+
+function heatmap_df(df, x, y, z; options...)
+   xs = unique(df[!, x])
+   ys = unique(df[!, y])
+   zmap = groupby(df, Cols(x, y))
+   z = map(
+      i -> first(zmap[i][!, z]), Iterators.product(xs, ys)
+   )
+
+   fig = Figure()
+   ax = Axis(
+      fig[1, 1];
+      xticks = (eachindex(xs), format_float.(xs)),
+      yticks = (eachindex(ys), format_float.(ys)),
+      xlabel = String(x),
+      ylabel = String(y),
+   )
+
+   # The heatmap
+   hmap = heatmap!(ax, z; options...)
+
+   # Text overlay
+   threhsold = mean(z)
+   for i in eachindex(xs), j in eachindex(ys)
+      position = (i, j)
+      value = z[i, j]
+      align = (:center, :center)
+      text!(ax, format_float(value); align, position)
+   end
+
+   # Color bar
+   Colorbar(fig[1, 2], hmap)
+   fig
+end
