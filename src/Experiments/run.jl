@@ -136,9 +136,10 @@ function run(config::ModelParamScan)
    end
 
    # Ignore parameters with only one value
-   ignores = filter(keys(config.params)) do key
+   ignores_str = filter(keys(config.params)) do key
       length(unique(config.params[key])) < 2
    end
+   ignores = Symbol.(ignores_str)
 
    # Replicate
    results = mapreduce(vcat, configurations) do params
