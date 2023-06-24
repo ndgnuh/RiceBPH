@@ -130,17 +130,36 @@ function Base.show(io::IO, r::SimulationResult)
    println(io, "\tNum configurations: $(num_cfgs)")
 end
 
-function SimulationResult(path::AbstractString)
-   df = DataFrame(JDF.load(path))
+function SimulationResult(paths::AbstractString...)
+   df = mapreduce(vcat, paths) do path
+      DataFrame(JDF.load(path))
+   end
+   SimulationResult(df)
+end
+function SimulationResult(df::DataFrame; infer = true)
    type_compress!(df; compress_float = true)
-   df = infer_stats!(df)
-   type_compress!(df; compress_float = true)
+   df = if infer
+      df = infer_stats!(df)
+      type_compress!(df; compress_float = true)
+   else
+      df
+   end
 
    # Factor names
    factors = @chain begin
       fieldnames(ModelParameters)
       intersect(propertynames(df), _)
    end
+
+   # Remove factor with single value
+   removal = Symbol[]
+   for factor in factors
+      if length(unique(df[!, factor])) == 1
+         push!(removal, factor)
+      end
+   end
+   setdiff!(factors, removal)
+   select!(df, Not(removal))
 
    # Output names
    outputs = @chain begin
