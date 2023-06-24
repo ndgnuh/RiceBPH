@@ -187,16 +187,10 @@ function q3(x)
    quantile(x, 0.75)
 end
 
-function compute_stats(fit_df, group_key; only_converged=true)
-   # Should non-converged data be allowed
-   fit_df = if only_converged
-      filter(:converged => identity, fit_df)
-   else
-      fit_df
-   end
-
+function compute_stats(fit_df, group_keys::Vector)
+    fit_df = copy(fit_df)
    # Filter out meta-data column, rename the group key column
-   fit_df = select(fit_df, Not(:converged))
+   # fit_df = select(fit_df, Not(:converged))
 
 
    # Functions and column to compute statistics
@@ -204,18 +198,14 @@ function compute_stats(fit_df, group_key; only_converged=true)
    param_names = [name for name in names(fit_df) if name != "seed"]
 
    # If no groupkey, use the whole data frame
-   groups = if isnothing(group_key)
-      fit_df
-   else
-      # Else, replicate the group key column first-
-      # One column is used as key and the other is used for statistics
-      new_group_key = "$(group_key)_value"
-      fit_df[!, new_group_key] = fit_df[!, group_key]
-      groupby(fit_df, new_group_key)
-   end
+    new_group_keys = ["$(key)_value" for key in group_keys]
+    for (key, new_group_key) in zip(group_keys, new_group_keys)
+        fit_df[!, new_group_key] = fit_df[!, key]
+    end
+    groups = groupby(fit_df, new_group_keys)
 
    # Split apply combine, each statistics
-   mapreduce(merge, stat_fns) do fn
+   stats = mapreduce(merge, stat_fns) do fn
       # Each group
       result = combine(groups) do group
          # Each column in the group
@@ -228,6 +218,13 @@ function compute_stats(fit_df, group_key; only_converged=true)
       # Map dataframe with their corresponding function
       NamedTuple([Symbol(string(fn)) => result])
    end
+
+   # Extra informations
+   return merge(
+      stats,
+      (; group_keys = new_group_keys,
+         data_keys = param_names),
+   )
 end
 
 function get_param_names(f; subscript=nothing, superscript=nothing)
