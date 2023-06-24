@@ -5,13 +5,12 @@ using Statistics
 
 Model behaviour in one step, which includes:
 
-- `model_action_eliminate!`
-- `model_action_summarize!`
-
+  - `model_action_eliminate!`
+  - `model_action_summarize!`
 """
 function model_step!(model)
-    model_action_eliminate!(model)
-    model_action_summarize!(model)
+   model_action_eliminate!(model)
+   model_action_summarize!(model)
 end
 
 @doc raw"""
@@ -42,48 +41,49 @@ n_{F} & =\left|\left\{ i\colon z_{i}^{\left(s\right)}\ne0\land z_{i}^{\left(g\ri
 ```
 """
 function model_action_summarize!(model)
-    #
-    # Percentage of total rice energy
-    #
-    rice_map = model.rice_map
-    num_heathy_rice_cells = count(model.rice_positions) do idx
-        rice_map[idx] >= 0.5f0
-    end
-    pct_rices = num_heathy_rice_cells / model.num_rice_cells
+   #
+   # Percentage of total rice energy
+   #
+   rice_map = model.rice_map
+   num_heathy_rice_cells =
+      count(model.rice_positions) do idx
+         rice_map[idx] >= 0.5f0
+      end
+   pct_rices = num_heathy_rice_cells / model.num_rice_cells
 
-    #
-    # Collect BPH population statistics
-    #
-    num_eggs = 0
-    num_nymphs = 0
-    num_macros = 0
-    num_brachys = 0
-    num_females = 0
-    for (_, agent) in (model.agents)
-        stage = agent.stage
-        if agent.gender == Female && stage != Egg
-            num_females = num_females + 1
-        end
-        if stage == Egg
-            num_eggs += 1
-        elseif stage == Nymph
-            num_nymphs += 1
-        elseif agent.form == Brachy
-            num_brachys += 1
-        else
-            num_macros += 1
-        end
-    end
+   #
+   # Collect BPH population statistics
+   #
+   num_eggs = 0
+   num_nymphs = 0
+   num_macros = 0
+   num_brachys = 0
+   num_females = 0
+   for (_, agent) in (model.agents)
+      stage = agent.stage
+      if agent.gender == Female && stage != Egg
+         num_females = num_females + 1
+      end
+      if stage == Egg
+         num_eggs += 1
+      elseif stage == Nymph
+         num_nymphs += 1
+      elseif agent.form == Brachy
+         num_brachys += 1
+      else
+         num_macros += 1
+      end
+   end
 
-    #
-    # Save statistics
-    #
-    model.num_eggs = num_eggs
-    model.num_nymphs = num_nymphs
-    model.num_macros = num_macros
-    model.num_brachys = num_brachys
-    model.num_females = num_females
-    model.pct_rices = pct_rices
+   #
+   # Save statistics
+   #
+   model.num_eggs = num_eggs
+   model.num_nymphs = num_nymphs
+   model.num_macros = num_macros
+   model.num_brachys = num_brachys
+   model.num_females = num_females
+   model.pct_rices = pct_rices
 end
 
 const LOG_OF_2 = log(2.0f0)
@@ -97,16 +97,17 @@ The elimination probability is given by  ``p_{x,y}``.
 For each position ``x, y``, for each agent ``i`` whose position ``x_i = x, y_i = y``, the agent is removed from the simulation with the probability ``p_{x, y}``.
 """
 function model_action_eliminate!(model)
-    for pos in model.eliminate_positions
-        pos = Tuple(pos)
-        aip = agents_in_position(pos, model)
+   for pos::Tuple in model.eliminate_positions
+      aip = agents_in_position(pos, model)
 
-        R = length(aip)
-        pr = model.pr_eliminate_map[pos...] / R
-        for agent in aip
-            if rand(model.rng, Float32) <= pr
-                remove_agent!(agent, model)
-            end
-        end
-    end
+      dist = Geometric(model.pr_eliminate_map[pos...])
+      count = 0
+      for agent in aip
+         pr = pdf(dist, count)
+         if rand(model.rng, Float32) < pr
+            remove_agent!(agent, model)
+            count = count + 1
+         end
+      end
+   end
 end
