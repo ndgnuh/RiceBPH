@@ -31,6 +31,7 @@ include("results/api.jl")
 include("results/latexify.jl")
 include("results/viz_colorscheme.jl")
 include("results/viz.jl")
+#= include("results/fit_rices.jl") =#
 
 """
     get_stable_bph_timesteps(num_bphs)
@@ -76,33 +77,33 @@ end
 
 function show_analysis(df::DataFrame, preset::Nothing; k...)
    result = reduce(
-      vcat,
-      [
-         show_analysis(df, MeanStd; k...),
-         show_analysis(df, MinMax; k...),
-      ],
-   )
+                   vcat,
+                   [
+                    show_analysis(df, MeanStd; k...),
+                    show_analysis(df, MinMax; k...),
+                   ],
+                  )
    sort(result, get_factor_name(df))
 end
 
 function show_analysis(
-   df::DataFrame, preset::Preset; stable_steps::Bool = false
-)
+      df::DataFrame, preset::Preset; stable_steps::Bool = false
+   )
    #
    # Analyse per value of the factor
    #
    factor = get_factor_name(df)
    groups = groupby(df, factor)
    values = [
-      getproperty(key, factor) for key in keys(groups)
-   ]
+             getproperty(key, factor) for key in keys(groups)
+            ]
 
    #
    # Which time step to view data?
    #
    steps = [
-      get_timesteps(group, stable_steps) for group in groups
-   ]
+            get_timesteps(group, stable_steps) for group in groups
+           ]
 
    #
    # Collect the result format base on preset
@@ -114,9 +115,9 @@ function show_analysis(
          continue
       end
       result[!, column] =
-         map(zip(steps, Tuple(groups))) do (step, group)
-            get_analysis(group, column, step, preset)
-         end
+      map(zip(steps, Tuple(groups))) do (step, group)
+         get_analysis(group, column, step, preset)
+      end
    end
 
    return result
@@ -125,8 +126,8 @@ end
 function get_timesteps(df, stable)
    if stable
       num_bphs = combine(
-         groupby(df, :step), :num_bphs => mean => :μ
-      )
+                         groupby(df, :step), :num_bphs => mean => :μ
+                        )
       _, t2 = findmax(num_bphs.μ)
       t1 = t2 - 7 * 24
       @assert t1 > 0
@@ -148,8 +149,8 @@ function detect_pulse(x, k = 24 * 7)
    # Region of interest
    roi = @. Int(x_ma > baseline)
    domain = findall(
-      @. roi[(begin+1):end] != roi[begin:(end-1)]
-   )
+                    @. roi[(begin+1):end] != roi[begin:(end-1)]
+                   )
    if isodd(length(domain))
       push!(domain, lastindex(x_ma))
    end
@@ -164,8 +165,8 @@ end
 
 function detect_pulse(result::Result)
    groups = groupby(
-      result.df, Cols(result.factor_name, :seed)
-   )
+                    result.df, Cols(result.factor_name, :seed)
+                   )
 
    # Detect pulse for each group
    results = combine(groups) do group
@@ -180,35 +181,35 @@ function detect_pulse(result::Result)
    # Combine
    combine(groupby(results, result.factor_name)) do group
       (;
-         num_peaks = mean(group.num_peaks),
-         first_peak = mean(group.first_peak),
-         # Compat with the compute_stats signature
-         converged = true,
+       num_peaks = mean(group.num_peaks),
+       first_peak = mean(group.first_peak),
+       # Compat with the compute_stats signature
+       converged = true,
       )
    end
 end
 
 function compute_observations(
-   result::Result; by_factor::Bool = false
-)
+      result::Result; by_factor::Bool = false
+   )
 
    # Compute observation for percentage of rices
    params1 = fit_fn(
-      logistic,
-      result.df,
-      Cols(result.factor_name),
-      :pct_rices,
-   )
+                    logistic,
+                    result.df,
+                    Cols(result.factor_name),
+                    :pct_rices,
+                   )
 
    # Compute observation for percentage of nymphs
    params2 = fit_fn(
-      damping_sine,
-      result.df,
-      Cols(result.factor_name),
-      :pct_nymphs;
-      stable_steps = true,
-      param_name_options = (; subscript = "nymphs"),
-   )
+                    damping_sine,
+                    result.df,
+                    Cols(result.factor_name),
+                    :pct_nymphs;
+                    stable_steps = true,
+                    param_name_options = (; subscript = "nymphs"),
+                   )
 
    # Detect BPH population pulse
    params3::DataFrame = detect_pulse(result)
@@ -218,17 +219,27 @@ function compute_observations(
    params2 = mask_nonconverge(params2)
    params3 = mask_nonconverge(params3)
    all_params = innerjoin(
-      params1, params2, params3; on = [result.factor_name]
-   )
+                          params1, params2, params3; on = [result.factor_name]
+                         )
    all_params.converged = fill(true, size(all_params, 1))
 
    # Compute statistics
    group_key = if by_factor
-      result.factor_name
+      [result.factor_name]
    else
-      nothing
+      Symbol[]
    end
    compute_stats(all_params, group_key)
+end
+
+"""
+   get_last_pct_rices(result::SimulationResult)
+"""
+function get_last_pct_rices(result)
+   groups = groupby(result.df, vcat(result.factors, [:seed]))
+   combine(groups) do group
+      (; pct_rices = sort(group, :step, rev=true).pct_rices[begin])
+   end
 end
 
 end # module Results
