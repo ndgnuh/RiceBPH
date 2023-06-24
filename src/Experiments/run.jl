@@ -31,6 +31,7 @@ function run(config::ModelVideo)
 end
 
 function run(config::ModelExploration)
+   GLMakie.activate!()
    model = init_model(config.params; config.seed)
    fig, _ = abmexploration(
       model;
@@ -142,8 +143,11 @@ function run(config::ModelParamScan)
    ignores = Symbol.(ignores_str)
 
    # Replicate
-   results = mapreduce(vcat, configurations) do params
-      @info "Running configuration: $(params)"
+   total = length(configurations)
+   results = mapreduce(
+      vcat, enumerate(configurations)
+   ) do (i, params)
+      @info "Configuration #$(i)/$(total): $(params)"
 
       # Run with each seed
       results = @showprogress pmap(
