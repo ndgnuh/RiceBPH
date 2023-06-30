@@ -217,14 +217,25 @@ After the BPHs are initialized and placed inside the model,
 we collect the initial data of interest and store them in the model state.
 """
 function init_model(;
-   seed::Union{Int, Nothing} = nothing, kwargs...
+   seed::Union{Int, Nothing} = nothing,
+   rng = nothing,
+   kwargs...
 )
    parameters = ModelParameters(; kwargs...)
-   init_model(parameters; seed)
+   init_model(parameters; seed, rng)
 end
 function init_model(
-   parameters; seed::Union{Int, Nothing} = nothing
+   parameters; seed::Union{Int, Nothing} = nothing, rng,
 )
+    # Init RNG
+    rng = if !isnothing(rng)
+        rng
+    elseif !isnothing(seed)
+        Xoshiro(seed)
+    else
+        Random.GLOBAL_RNG
+    end
+
    #
    # Parameters and properties
    #
@@ -236,7 +247,6 @@ function init_model(
    space = GridSpace(
       properties.rice_map |> size; periodic = false
    )
-   rng = Xoshiro(seed)
    scheduler = Schedulers.ByProperty(:energy)
    model = AgentBasedModel(
       BPH, space; rng, properties, scheduler
