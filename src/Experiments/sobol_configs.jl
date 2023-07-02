@@ -1,6 +1,6 @@
 const SOBOL_ET = SobolInput(;
    num_samples = 100,
-   output = "outputs/energy-transfer-02",
+   output = "outputs/energy-transfer",
    energy_transfer = (0.01f0, 0.1f0),
    init_pr_eliminate = (0.0f0, 0.0f0),
    flower_width = (0, 0),
@@ -27,12 +27,23 @@ const SOBOL_N0 = SobolInput(;
    init_num_bphs = (10, 1000),
 )
 
-const SOBOL_FLOWER_PR = SobolInput(;
+const SOBOL_FLOWER_P0 = SobolInput(;
    num_samples=100,
-   output="outputs/flower",
+   output="outputs/flower-p0",
+   energy_transfer=(0.035f0, 0.035f0),
+   init_pr_eliminate=(0f0, 0.2f0),
+   flower_width=(0, 21),
+   init_num_bphs=(200,  200),
+   order=[2],
+   nboot=2
+)
+
+const SOBOL_FLOWER_P0_WIDE = SobolInput(;
+   num_samples=100,
+   output="outputs/flower-p0-wide",
    energy_transfer=(0.035f0, 0.035f0),
    init_pr_eliminate=(0f0, 1f0),
-   flower_width=(0, 21),
+   flower_width=(0, 50),
    init_num_bphs=(200,  200),
    order=[2],
    nboot=2
