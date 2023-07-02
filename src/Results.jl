@@ -31,7 +31,8 @@ include("results/api.jl")
 include("results/latexify.jl")
 include("results/viz_colorscheme.jl")
 include("results/viz.jl")
-#= include("results/fit_rices.jl") =#
+include("results/fit_rices.jl")
+include("results/fit_bphs.jl")
 
 """
     get_stable_bph_timesteps(num_bphs)
@@ -187,6 +188,14 @@ function detect_pulse(result::Result)
        converged = true,
       )
    end
+end
+
+function compute_observations(result::SimulationResult; by_factor=false)
+   rice_params = fit_rices(result)
+   bph_params = fit_bphs(result)
+   params = innerjoin(rice_params, bph_params; on=result.seed_factors)
+   group_key = by_factor ? result.factors :  Symbol[]
+   compute_stats(params, group_key)
 end
 
 function compute_observations(
