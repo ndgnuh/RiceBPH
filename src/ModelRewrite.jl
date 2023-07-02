@@ -11,6 +11,11 @@ include("modeling/init.jl")
 include("modeling/agent_step.jl")
 include("modeling/model_step.jl")
 
-export init_model, agent_step!, model_step!, run!
+function run_ricebph!(model; num_steps=2880, mdata=MDATA)
+    _, mdf = run!(model, agent_step!, model_step!, num_steps; mdata)
+    return mdf
+end
+
+export init_model, agent_step!, model_step!, run!, MDATA, run_ricebph!
 
 end
