@@ -151,7 +151,6 @@ function SimulationResult(df::DataFrame; infer = true)
       fieldnames(ModelParameters)
       intersect(propertynames(df), _)
    end
-   seed_factors = vcat(factors, [:seed])
 
    # Remove factor with single value
    removal = Symbol[]
@@ -162,6 +161,10 @@ function SimulationResult(df::DataFrame; infer = true)
    end
    setdiff!(factors, removal)
    select!(df, Not(removal))
+
+   # Revise factors and seed factor names
+   factors = intersect(propertynames(df), factors)
+   seed_factors = vcat(factors, [:seed])
 
    # Output names
    outputs = @chain begin
