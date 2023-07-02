@@ -70,21 +70,38 @@ end
 using QuasiMonteCarlo
 using GlobalSensitivity
 
-function generate_sobol_inputs(samples, p_range)
-    A, B = QuasiMonteCarlo.generate_design_matrices(
-        samples, 
-        [i[1] for i in p_range],
-        [i[2] for i in p_range],
-        QuasiMonteCarlo.SobolSample(),
-        2
-    )
-    n, d = size(A)
-    allx = GlobalSensitivity.fuse_designs(A, B, second_order=true)
-    return (allx, n, d)
+function generate_sobol_inputs(method::Sobol, p_range::AbstractVector; samples, kwargs...)
+    AB = QuasiMonteCarlo.generate_design_matrices(samples, [i[1] for i in p_range],
+                                                  [i[2] for i in p_range],
+                                                  QuasiMonteCarlo.SobolSample(),
+                                                  2 * method.nboot)
+    A = reduce(hcat, @view(AB[1:(method.nboot)]))
+    B = reduce(hcat, @view(AB[(method.nboot + 1):end]))
+    TA = eltype(A)
+    
+    # Copied from the first part of gsa function
+    d, n = size(A)
+    nboot = method.nboot # load to help alias analysis
+    n = n ÷ nboot
+    multioutput = false
+    Anb = Vector{Matrix{TA}}(undef, nboot)
+    for i in 1:nboot
+        Anb[i] = A[:, (n * (i - 1) + 1):(n * (i))]
+    end
+    Bnb = Vector{Matrix{TA}}(undef, nboot)
+    for i in 1:nboot
+        Bnb[i] = B[:, (n * (i - 1) + 1):(n * (i))]
+    end
+    _all_points = mapreduce(hcat, Anb, Bnb) do (args...)
+        GlobalSensitivity.fuse_designs(args...; second_order = 2 in method.order)
+    end
+
+    return _all_points
 end
 
-function compute_sobol(ally, n, d, second_order=true)
-    method = second_order ? Sobol(order=[0, 1, 2]) : Sobol(order=[0,1])
+function compute_sobol(method, ally, d, n)
     GlobalSensitivity.gsa_sobol_all_y_analysis(
-                                               method, ally, n, d, :Jansen1999, nothing, Val(false))
+        method,
+        ally, d, n, :Jansen1999, nothing, Val(false),
+    )
 end

@@ -27,20 +27,23 @@ function ishi(X)
 end
 
 @testset "GSA Sobol decomposed implementation" begin 
-    method = Sobol(order=[0, 1, 2])
+    method = Sobol(order=[0, 1, 2], nboot=2)
     a = -π
     b = π
     p_range = [(a, b), (a, b), (a, b), (a, b)]
+    d = 4
     for _ in 1:10
-        num_samples = rand(100:1000)
+        n= rand(100:1000)
         # First impl
-        (allx, n, d) = generate_sobol_inputs(num_samples, p_range)
+        allx = generate_sobol_inputs(method,  p_range; samples=n)
         ally = ishi.(eachcol(allx))
-        res1 = compute_sobol(ally, n, d)
+        res1 = compute_sobol(method, ally, d, n)
         
-        res2 = gsa(ishi, method, p_range; samples=num_samples)
+        res2 = gsa(ishi, method, p_range; samples=n)
         @test res1.S1 == res2.S1
+        @test res1.S1_Conf_Int == res2.S1_Conf_Int
         @test res1.S2 == res2.S2
+        @test res1.S2_Conf_Int == res2.S2_Conf_Int
     end
 end
 
