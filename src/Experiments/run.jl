@@ -90,11 +90,6 @@ function run(config::ModelOFAT)
             mdata = Models.MDATA,
          )
 
-         # Populate with factor name and seed
-         num_rows = size(mdf, 1)
-         mdf[!, factor] = fill(value, num_rows)
-         mdf[!, :seed] = fill(seed, num_rows)
-
          # Without this, oom
          type_compress!(mdf; compress_float = true)
          GC.gc()

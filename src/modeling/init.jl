@@ -88,7 +88,7 @@ end
 
 Construct a [`ModelProperties`](@ref) from [`ModelParameters`](@ref).
 """
-function init_properties(parameters::ModelParameters)
+function init_properties(parameters::ModelParameters, seed::Int)
    # unpack
    map_size = parameters.map_size
    flower_width = parameters.flower_width
@@ -112,6 +112,13 @@ function init_properties(parameters::ModelParameters)
    ]
 
    return ModelProperties(;
+      # Output parameters
+      seed,
+      parameters.map_size,
+      parameters.flower_width,
+      parameters.init_num_bphs,
+      parameters.init_pr_eliminate,
+      parameters.energy_transfer,
       energy_consume,
       moving_directions,
       pr_eliminate_map,
@@ -239,7 +246,7 @@ function init_model(
    #
    # Parameters and properties
    #
-   properties = init_properties(parameters)
+   properties = init_properties(parameters, seed)
 
    #
    # Modele object

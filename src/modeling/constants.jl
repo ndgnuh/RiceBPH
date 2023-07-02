@@ -94,7 +94,7 @@ Indicates which data to be appeared in the final results.
 This constant is for replications.
 The data to be collected is all the statistics in the [`ModelProperties`](@ref).
 """
-const MDATA = [:pct_rices, :num_eggs, :num_nymphs, :num_brachys, :num_macros, :num_females]
+const MDATA = [:pct_rices, :num_eggs, :num_nymphs, :num_brachys, :num_macros, :num_females, :seed, :map_size, :flower_width, :init_num_bphs, :init_pr_eliminate, :energy_transfer]
 
 """
 Alias for [`MDATA`](@ref).

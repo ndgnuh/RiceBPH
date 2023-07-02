@@ -16,12 +16,12 @@ Variable            | Type                   | Default          | Description   
 """
 @option struct ModelParameters
     # Initialization parameters
-    map_size::Int
     flower_width::Int
     init_num_bphs::Int
     init_pr_eliminate::Float32
-    init_position::InitPosition = Corner
     energy_transfer::Float32 = 0.032f0
+    map_size::Int = 125
+    init_position::InitPosition = Corner
 end
 
 @doc raw"""
@@ -66,6 +66,14 @@ Name          | Type      | Description                                        |
 `num_females` | `Int`     | Number of female BPHs, counting nymphs and adults  | ``n_{F}``
 """
 @kwdef mutable struct ModelProperties
+    # Input parameters
+    seed::Union{Int, Nothing}
+    map_size::Int
+    flower_width::Int
+    init_num_bphs::Int
+    init_pr_eliminate::Float32
+    energy_transfer::Float32
+
     parameters::ModelParameters
     rice_map::Matrix{Float32}
     pr_eliminate_map::Matrix{Float32}
