@@ -1,5 +1,5 @@
 const SOBOL_ET = SobolInput(;
-   num_samples = 30,
+   num_samples = 50,
    output = "outputs/energy-transfer",
    energy_transfer = (0.025f0, 0.075f0),
    init_pr_eliminate = (0.0f0, 0.0f0),

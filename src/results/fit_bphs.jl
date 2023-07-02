@@ -1,5 +1,5 @@
-function fit_bphs(result::SimulationResult)
-   groups = groupby(result.df, result.seed_factors)
+function fit_bphs(result::SimulationResult, groupkey=result.seed_factors)
+   groups = groupby(result.df, groupkey)
    combine(groups) do group
       # Stable steps
       q1 = quantile(group.pct_rices, 0.25)

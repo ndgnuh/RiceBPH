@@ -17,9 +17,9 @@ function get_param_basenames(_::RiceLogistic)
     return [:spd_rices, :T]
 end
 
-function fit_rices(result::SimulationResult)
+function fit_rices(result::SimulationResult, groupkey=result.seed_factors)
     df::DataFrame = result.df
-    combine(groupby(df, result.seed_factors)) do g
+    combine(groupby(df, groupkey)) do g
         g = sort(g, :step)
 
         # Last rice
