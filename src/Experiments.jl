@@ -25,6 +25,7 @@ include("Experiments/config.jl")
 
 include("Experiments/plot_run.jl")
 include("Experiments/run.jl")
+include("Experiments/sobol.jl")
 
 function run(config::RunConfig)
     if config.config isa Vector
