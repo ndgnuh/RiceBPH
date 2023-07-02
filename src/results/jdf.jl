@@ -112,6 +112,7 @@ end
 
 @kwdef struct SimulationResult
    factors::Vector{Symbol}
+   seed_factors::Vector{Symbol}
    outputs::Vector{Symbol}
    num_replications::Int
    num_steps::Int
@@ -150,6 +151,7 @@ function SimulationResult(df::DataFrame; infer = true)
       fieldnames(ModelParameters)
       intersect(propertynames(df), _)
    end
+   seed_factors = vcat(factors, [:seed])
 
    # Remove factor with single value
    removal = Symbol[]
@@ -181,6 +183,7 @@ function SimulationResult(df::DataFrame; infer = true)
 
    SimulationResult(;
       factors,
+      seed_factors,
       outputs,
       df,
       configurations,
