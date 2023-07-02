@@ -182,7 +182,8 @@ function Base.run(config::SobolInput)
    # Worst case scenario: the computer does not 
    # have enough memory to load everything
    all_result = mapreduce(vcat, result_files) do file
-      JDF.loadjdf(file)
+      @info file
+      DataFrame(JDF.loadjdf(file))
    end
    JDF.savejdf(output_file, all_result)
    @info "Output written to $(output_file)"

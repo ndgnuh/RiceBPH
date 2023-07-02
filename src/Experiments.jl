@@ -26,8 +26,9 @@ include("Experiments/config.jl")
 include("Experiments/plot_run.jl")
 include("Experiments/run.jl")
 include("Experiments/sobol.jl")
+include("Experiments/sobol_configs.jl")
 
-function run(config::RunConfig)
+function Base.run(config::RunConfig)
     if config.config isa Vector
         @info "Detected configurations of type $(eltype(config.config))"
         for (i, cfg) in enumerate(config.config)
@@ -49,7 +50,7 @@ end
     #=     end =#
     #= else =#
     config = from_dict(RunConfig, config_toml)
-    run(config)
+    Base.run(config)
     #= end =#
 end
 

@@ -28,7 +28,7 @@ const SOBOL_N0 = SobolInput(;
 )
 
 const SOBOL_FLOWER_PR = SobolInput(;
-   num_samples=10,
+   num_samples=100,
    output="outputs/flower",
    energy_transfer=(0.035f0, 0.035f0),
    init_pr_eliminate=(0f0, 1f0),
