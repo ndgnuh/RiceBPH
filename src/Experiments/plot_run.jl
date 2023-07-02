@@ -1,4 +1,4 @@
-function run(config::PlotMeanStdTimeStep)
+function Base.run(config::PlotMeanStdTimeStep)
     # Collect data from config
     output = config.output
     data = Results.load(config.data)

@@ -118,7 +118,6 @@ function generate_sobol_inputs(
    return _all_points
 end
 
-
 function compute_sobol(si::SobolInput, all_y)
    method = Sobol(; si.nboot, si.order)
    n = si.num_samples
@@ -133,23 +132,58 @@ function compute_sobol(method, ally, d, n)
    )
 end
 
-function run!(config::SobolInput)
+macro guard_output(output)
+   sym = gensym()
+   quote
+      $sym = $(esc(output))
+      if isfile($sym) || isdir($sym)
+         warning =
+            "The output path " *
+            $sym *
+            " exists, ignoring. Delete the output directory to rerun."
+         @warn warning
+         return nothing
+      end
+   end
+end
+
+function Base.run(config::SobolInput)
    output_file = config.output
+   @guard_output output_file
+   mkpath(output_file)
 
    configurations = gen_configurations(config)
    @info "Number of configuration: $(length(configurations))"
 
-   results = @showprogress pmap(configurations) do params
-      # Init and run
-      model = M.init_model(; params...)
-      mdf = M.run_ricebph!(model)
+   result_files = let outputdir = mktempdir()
+      @info "intermediate result will be saved to $outputdir"
+      @showprogress pmap(configurations) do params
+         # Auxiliary output
+         # When running large number of simulations
+         # Storing all the intermediate results
+         # will cause OOM
+         outputfile = joinpath(outputdir, string(params[:seed]))
 
-      # Without this, oom
-      type_compress!(mdf; compress_float = true)
-      GC.gc()
-      return mdf
+         # Init and run
+         model = M.init_model(; params...)
+         mdf = M.run_ricebph!(model)
+
+         # Without this, oom
+         type_compress!(mdf; compress_float = true)
+
+         # Store intermediate result and only return the file name
+         savejdf(outputfile, mdf)
+         GC.gc()
+         return outputfile
+      end
    end
-   all_result = reduce(vcat, results)
+
+   # TODO:
+   # Worst case scenario: the computer does not 
+   # have enough memory to load everything
+   all_result = mapreduce(vcat, result_files) do file
+      JDF.loadjdf(file)
+   end
    JDF.savejdf(output_file, all_result)
    @info "Output written to $(output_file)"
 end

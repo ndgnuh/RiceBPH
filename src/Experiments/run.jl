@@ -1,4 +1,4 @@
-function run(config::ModelVideo)
+function Base.run(config::ModelVideo)
    #
    # Guard to not overwrite the existing
    #
@@ -30,7 +30,7 @@ function run(config::ModelVideo)
    @info "Video written to $(output)"
 end
 
-function run(config::ModelExploration)
+function Base.run(config::ModelExploration)
    GLMakie.activate!()
    model = init_model(config.params; config.seed)
    fig, _ = abmexploration(
@@ -46,7 +46,7 @@ function run(config::ModelExploration)
    wait(scene)
 end
 
-function run(config::ModelOFAT)
+function Base.run(config::ModelOFAT)
    #
    # Guard to not overwrite the existing
    #
@@ -105,7 +105,7 @@ function run(config::ModelOFAT)
    JDF.save(output, result)
 end
 
-function run(config::ModelParamScan)
+function Base.run(config::ModelParamScan)
    # Other meta data
    output = config.output
    num_steps = config.num_steps
