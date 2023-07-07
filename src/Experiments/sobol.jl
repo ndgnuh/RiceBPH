@@ -18,6 +18,18 @@ TupleOrNum{T} = Union{Tuple{T, T}, T}
    order::Vector{Int} = [0, 1]
 end
 
+# Overload property
+Base.getproperty(o::SobolInput, k::Symbol) =
+   getproperty(o, Val(k))
+Base.getproperty(o::SobolInput, ::Val{K}) where {K} =
+   getfield(o, K)
+Base.getproperty(o::SobolInput, ::Val{:pnames}) =
+   get_pnames(o)
+Base.getproperty(o::SobolInput, ::Val{:snames}) =
+   get_snames(o)
+Base.getproperty(o::SobolInput, ::Val{:sobol}) =
+   Sobol(; o.nboot, o.order)
+
 function get_pnames(si::SobolInput)
    names = [
       :energy_transfer,
@@ -162,7 +174,9 @@ function Base.run(config::SobolInput)
          # When running large number of simulations
          # Storing all the intermediate results
          # will cause OOM
-         outputfile = joinpath(outputdir, string(params[:seed]))
+         outputfile = joinpath(
+            outputdir, string(params[:seed])
+         )
 
          # Init and run
          model = M.init_model(; params...)
