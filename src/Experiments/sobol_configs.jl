@@ -46,5 +46,20 @@ const SOBOL_FLOWER_P0_WIDE = SobolInput(;
    flower_width=(0, 50),
    init_num_bphs=(200,  200),
    order=[2],
-   nboot=2
+   nboot=2,
 )
+
+const SCAN_N0 = ModelOFAT(;
+   factor = "init_num_bphs",
+   values = "trunc.(Int, exp10.(range(start=log10(10), stop=log10(1000), length=24)))",
+   num_steps = 2881,
+   num_replications = 100,
+   output = "outputs/scan-num-init-bphs",
+   params = Dict([
+      :map_size => 125,
+      :flower_width => 0,
+      :init_pr_eliminate => 0.0,
+      :energy_transfer => 0.035,
+   ])
+)
+

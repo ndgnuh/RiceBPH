@@ -8,5 +8,6 @@ function main()
    E.run(E.SOBOL_N0)
    E.run(E.SOBOL_FLOWER_P0)
    E.run(E.SOBOL_FLOWER_P0_WIDE)
+   E.run(E.SCAN_N0)
 end
 main()
