@@ -26,7 +26,7 @@ include("Experiments/config.jl")
 include("Experiments/plot_run.jl")
 include("Experiments/run.jl")
 include("Experiments/sobol.jl")
-include("Experiments/sobol_configs.jl")
+include("Experiments/presets.jl")
 
 function Base.run(config::RunConfig)
     if config.config isa Vector
