@@ -169,7 +169,6 @@ function visualize_num_bphs(result)
    end
 
    # Reticks y axis
-   ax.yticks = min_y:150:max_y
    fig[1, 2] = Legend(
       fig,
       ax,
@@ -421,6 +420,7 @@ function draw_phase_2f(df, xname, yname, zname)
    y = [minimum(df[!, yname]), maximum(df[!, yname])]
    z = fill(minimum(filter(!isnan, df[!, zname])), 2, 2)
    surface!(
+      ax,
       x,
       y,
       z;
@@ -430,6 +430,7 @@ function draw_phase_2f(df, xname, yname, zname)
 
    z = fill(maximum(filter(!isnan, df[!, zname])), 2, 2)
    surface!(
+      ax,
       x,
       y,
       z;
@@ -451,6 +452,6 @@ function draw_phase_2f(df, xname, yname, zname)
    # Resize figure to axes
    rowgap!(fig.layout, 0)
    resize_to_layout!(fig)
-   trim!(fig.layout)
+   Makie.trim!(fig.layout)
    fig
 end
