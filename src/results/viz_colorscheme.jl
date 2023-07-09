@@ -1,44 +1,45 @@
 # Hybrid from terminal.sexy
 const COLORSCHEME = (;
-                     foreground = "#c5c8c6",
-                     background = "#1d1f21",
-                     cursorColor = "#c5c8c6",
+   foreground = colorant"#c5c8c6",
+   background = colorant"#1d1f21",
+   cursorColor = colorant"#c5c8c6",
 
-                     # black
-                     color0 = "#282a2e",
-                     color8 = "#373b41",
+   # black
+   color0 = colorant"#282a2e",
+   color8 = colorant"#373b41",
 
-                     # red
-                     color1 = "#a54242",
-                     color9 = "#cc6666",
+   # red
+   color1 = colorant"#a54242",
+   color9 = colorant"#cc6666",
 
-                     # green
-                     color2 = "#8c9440",
-                     color10 = "#b5bd68",
+   # green
+   color2 = colorant"#8c9440",
+   color10 = colorant"#b5bd68",
 
-                     # yellow
-                     color3 = "#de935f",
-                     color11 = "#f0c674",
+   # yellow
+   color3 = colorant"#de935f",
+   color11 = colorant"#f0c674",
 
-                     # blue
-                     color4 = "#5f819d",
-                     color12 = "#81a2be",
+   # blue
+   color4 = colorant"#5f819d",
+   color12 = colorant"#81a2be",
 
-                     # magenta
-                     color5 = "#85678f",
-                     color13 = "#b294bb",
+   # magenta
+   color5 = colorant"#85678f",
+   color13 = colorant"#b294bb",
 
-                     # cyan
-                     color6 = "#5e8d87",
-                     color14 = "#8abeb7",
+   # cyan
+   color6 = colorant"#5e8d87",
+   color14 = colorant"#8abeb7",
 
-                     # white
-                     color7 = "#707880",
-                     color15 = "#c5c8c6")
+   # white
+   color7 = colorant"#707880",
+   color15 = colorant"#c5c8c6",
+)
 
 const COLORSCHEME2 = let diff = 45
-    palette = mapreduce(hcat, 0:diff:(360 - diff)) do hue
-        sequential_palette(hue, 5, b = 0.5)[(begin + 1):(end - 1)]
-    end
-    transpose(palette)[:]
+   palette = mapreduce(hcat, 0:diff:(360-diff)) do hue
+      sequential_palette(hue, 5; b = 0.5)[(begin+1):(end-1)]
+   end
+   transpose(palette)[:]
 end
