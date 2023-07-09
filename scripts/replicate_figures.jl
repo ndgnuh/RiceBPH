@@ -13,8 +13,56 @@ import RiceBPH.Experiments as E
 
 const px_per_unit = 3
 
-function plot_sobol_sa()
-   R.draw_scatter_phase(E.SOBOL_ET)
+function plot_sobol_sa(figdir)
+   configs = (
+      E.SOBOL_ET,
+      E.SOBOL_ET_WIDE,
+      E.SOBOL_N0,
+      E.SOBOL_FLOWER_P0,
+      E.SOBOL_FLOWER_P0_WIDE,
+   )
+
+   # Sobol figure1
+   for config in configs
+      # Load result and input names
+      result = SimulationResult(config.output)
+      input_names = result.factors
+      num_inputs = length(input_names)
+
+      # Compute obseration
+      df = R.compute_observations(result)
+
+      # Plot for each parameters
+      for name in input_names
+         # Output path
+         outputpath = basename(config.output)
+         outputpath = if num_inputs > 1
+            "phase-$(outputpath)-$(name).png"
+         else
+            "phase-$(outputpath).png"
+         end
+         outputpath = joinpath(figdir, outputpath)
+
+         # Draw figure
+         fig = R.draw_phase(df, name)
+
+         # Save
+         save(outputpath, fig; px_per_unit)
+         @info "Output written to $outputpath"
+      end
+
+      # If multiple inputs
+      if num_inputs == 2
+         outputpath = basename(config.output)
+         outputpath = "phase-$(outputpath).png"
+         outputpath = joinpath(figdir, outputpath)
+         fig = R.draw_phase_2f(
+            df, result.factors..., :pct_rices
+         )
+         save(outputpath, fig; px_per_unit)
+         @info "Output written to $outputpath"
+      end
+   end
 end
 
 function plot_geom(p)
@@ -63,40 +111,19 @@ function main()
    GC.gc()
 
    # Fix energy transfer plot
-   result = SimulationResult("outputs/energy-transfer/")
-   fig = visualize_pct_nymphs(result)
+   result = SimulationResult(
+      "outputs/scan-energy-transfer/"
+   )
+   fig = R.draw_pct_bphs(result)
    output_file = joinpath(
       figdir, "param-fix-energy-transfer.png"
    )
    save(output_file, fig; px_per_unit)
    @info "Figure written to $output_file"
    result = nothing
-   GC.gc()
-
-   plot_sobol_sa()
 
    #  result
-   #= results = ( =#
-   #=    "outputs/energy-transfer/", =#
-   #=    "outputs/init-num-bphs/", =#
-   #=    "outputs/init-pr-eliminate/", =#
-   #=    "outputs/flower-width/", =#
-   #= ) =#
-   #= for result_folder in results =#
-   #=    @info "Processing $result_folder" =#
-   #=    result = SimulationResult(result_folder) =#
-   #=    df = compute_observations(result) =#
-   #=    GC.gc() =#
-
-   #=    # Stability analysis plots =#
-   #=    fig = visualize_qcv(result, df) =#
-   #=    output_file = joinpath( =#
-   #=       figdir, "stability-$(first(result.factors)).png" =#
-   #=    ) =#
-   #=    save(output_file, fig; px_per_unit) =#
-   #=    @info "Figure written to $output_file" =#
-   #=    GC.gc() =#
-   #= end =#
+   plot_sobol_sa(figdir)
 end
 
-plot_sobol_sa()
+main()
