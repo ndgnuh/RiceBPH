@@ -387,63 +387,76 @@ function draw_phase(df, xcol)
 end
 
 function draw_phase_2f(df, xname, yname, zname)
-   fig = Figure(; figure_padding = 1)
-   legend_height = 48
+   fig = Figure(; figure_padding = (10, 1, 1, 1))
+   legend_height = 32
    ax = Axis3(
       fig[1, 1];
       xlabel = latex_name(xname),
       ylabel = latex_name(yname),
-      zlabel = latex_name(zname),
-      width = 300 + legend_height,
-      height = 300,
+      zlabel = "",
+      width = 600 + legend_height,
+      height = 600,
       xticks = WilkinsonTicks(7; k_min = 5, k_max = 10),
       yticks = WilkinsonTicks(7; k_min = 5, k_max = 10),
       zticks = WilkinsonTicks(7; k_min = 5, k_max = 10),
       viewmode = :stretch,
    )
+   ax.xlabelsize = latex_font_size
+   ax.ylabelsize = latex_font_size
 
    # Scatter points
+   colorw = normalize(df[!, zname], Inf32)
    color = [
-      (COLORSCHEME.color2, min(1.0f0, z + 0.5f0)) for
-      z in df[!, zname]
+      let r = COLORSCHEME.color1
+         g = COLORSCHEME.color2
+         color = g * z + r * (1 - z)
+         (color, 0.7)
+      end for z in colorw
    ]
-   scatter!(
+
+   # Main plot
+   s1 = scatter!(
       ax,
       df[!, xname],
       df[!, yname],
       df[!, zname];
-      label = latex_name(yname),
+      label = latex_name(zname),
       color,
    )
 
+   # Draw lower and higher bound
    x = [minimum(df[!, xname]), maximum(df[!, xname])]
    y = [minimum(df[!, yname]), maximum(df[!, yname])]
+
+   # Lower bound
    z = fill(minimum(filter(!isnan, df[!, zname])), 2, 2)
-   surface!(
-      ax,
-      x,
-      y,
-      z;
-      color = (COLORSCHEME.color1, 0.2),
-      label = LaTeXString("lower bound"),
-   )
-
+   surface!(ax, x, y, z; color = (COLORSCHEME.color1, 0.2))
+   # Higher bound
    z = fill(maximum(filter(!isnan, df[!, zname])), 2, 2)
-   surface!(
-      ax,
-      x,
-      y,
-      z;
-      color = (COLORSCHEME.color2, 0.2),
-      label = LaTeXString("higher bound"),
-   )
+   surface!(ax, x, y, z; color = (COLORSCHEME.color2, 0.2))
 
+   # Fix z axis scale
    zlims!(ax, 0, 1)
 
    # Legend
+   _, _, sl = scatter(
+      [1],
+      [1];
+      marker = :rect,
+      color = COLORSCHEME.color1,
+      label = LaTeXString("Lower bound"),
+   )
+   _, _, sh = scatter(
+      [1],
+      [1];
+      marker = :rect,
+      color = COLORSCHEME.color2,
+      label = LaTeXString("Higher bound"),
+   )
    Legend(
       fig[2, 1],
-      ax;
+      [s1, sl, sh],
+      [s1.label, sl.label, sh.label];
       orientation = :horizontal,
       labelsize = latex_font_size,
       height = legend_height,
