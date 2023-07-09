@@ -21,7 +21,7 @@ const SOBOL_ET_WIDE = SobolInput(;
 const SOBOL_N0 = SobolInput(;
    num_samples = 100,
    output = "outputs/init-num-bphs",
-   energy_transfer = (0.035f0, 0.035f0),
+   energy_transfer = (0.03f0, 0.03f0),
    init_pr_eliminate = (0, 0),
    flower_width = (0, 0),
    init_num_bphs = (10, 1000),
@@ -30,7 +30,7 @@ const SOBOL_N0 = SobolInput(;
 const SOBOL_FLOWER_P0 = SobolInput(;
    num_samples = 100,
    output = "outputs/flower-p0",
-   energy_transfer = (0.035f0, 0.035f0),
+   energy_transfer = (0.03f0, 0.03f0),
    init_pr_eliminate = (0.0f0, 0.2f0),
    flower_width = (0, 21),
    init_num_bphs = (200, 200),
@@ -41,7 +41,7 @@ const SOBOL_FLOWER_P0 = SobolInput(;
 const SOBOL_FLOWER_P0_WIDE = SobolInput(;
    num_samples = 100,
    output = "outputs/flower-p0-wide",
-   energy_transfer = (0.035f0, 0.035f0),
+   energy_transfer = (0.03f0, 0.03f0),
    init_pr_eliminate = (0.0f0, 1.0f0),
    flower_width = (0, 50),
    init_num_bphs = (200, 200),
@@ -59,7 +59,7 @@ const SCAN_N0 = ModelOFAT(;
       :map_size => 125,
       :flower_width => 0,
       :init_pr_eliminate => 0.0,
-      :energy_transfer => 0.035,
+      :energy_transfer => 0.03,
    ]),
 )
 
