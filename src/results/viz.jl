@@ -108,7 +108,7 @@ function visualize_qcv(
 end
 
 function visualize_num_bphs(result)
-   fig = Figure()
+   fig = Figure(; figure_padding = 1)
    df = (result.df)
    factor_name = only(result.factors)
 
@@ -127,19 +127,17 @@ function visualize_num_bphs(result)
    min_y = 0
    max_y = maximum(df.num_bphs)
 
-   # Collect the result first
-   for group in groupby(df, factor_name)
-      allstats = combine(groupby(group, :step)) do row
+   @info result.factors
+   # Group by input factors
+   for group in groupby(df, result.factors)
+      # Compute step-wise mean and standard deviation
+      stats = combine(groupby(group, :step)) do row
          x = row.num_bphs
          μ = mean(x)
-         σ = if length(x) == 1
-            only(x)
-         else
-            std(x)
-         end
-         (; t = first(unique(row.step)), μ, σ)
+         σ = std(x)
+         (; t = only(unique(row.step)), μ, σ)
       end
-      stats = dropnan(allstats)
+      sort!(stats, :t)
 
       # Collect
       t = stats.t
@@ -153,6 +151,8 @@ function visualize_num_bphs(result)
       min_y = min(
          min_y, trunc(Int, minimum(μ - σ) / 100) * 100
       )
+      @info length(t), length(unique(t))
+      @info length(μ)
 
       # Formatting
       color = COLORSCHEME2[count]
@@ -160,11 +160,12 @@ function visualize_num_bphs(result)
       label = LaTeXString("\$N_I = $(factor_value)\$")
 
       # Plot mean + std plot with a band and a middle line
-      band!(ax, t, μ - σ, μ + σ; color = (color, 0.3))
+      #= band!(ax, t, μ - σ, μ + σ; color = (color, 0.3)) =#
       lines!(ax, t, μ; linewidth = 2.5, label, color)
 
       # Increase count
       count = count + 1
+      break
    end
 
    # Reticks y axis
@@ -215,7 +216,7 @@ function heatmap_df(df, x, y, z; options...)
       i -> first(zmap[i][!, z]), Iterators.product(xs, ys)
    )
 
-   fig = Figure()
+   fig = Figure(; figure_padding = 1)
    ax = Axis(
       fig[1, 1];
       xticks = (eachindex(xs), format_float.(xs)),
@@ -259,15 +260,15 @@ function draw_pct_bphs(result::SimulationResult)
    end
 
    # Data for plotting
-   xcol = only(result.factors)
-   x = stats[!, xcol]
-   ycols = (:pct_macros, :pct_brachys, :pct_nymphs)
+   xname = only(result.factors)
+   x = stats[!, xname]
+   ynames = (:pct_macros, :pct_brachys, :pct_nymphs)
    axes = []
 
    # Start plotting
-   fig = Figure()
+   fig = Figure(; figure_padding = 1)
    pos = [(1, 1), (2, 1), (3, 1)]
-   for (i, ycol) in enumerate(ycols)
+   for (i, yname) in enumerate(ynames)
       ax = Axis(
          fig[pos[i]...];
          xticks = (eachindex(x), format_float.(x)),
@@ -275,14 +276,14 @@ function draw_pct_bphs(result::SimulationResult)
          xticklabelrotation = π / 2,
          height = 300,
          width = 900,
-         xlabel = latex_name(xcol),
-         ylabel = latex_name(ycol),
+         xlabel = latex_name(xname),
+         ylabel = latex_name(yname),
          xticklabelsize = latex_font_size,
          yticklabelsize = latex_font_size,
       )
       ax.xlabelsize = latex_font_size
       ax.ylabelsize = latex_font_size
-      barplot!(ax, eachindex(x), stats[!, ycol])
+      barplot!(ax, eachindex(x), stats[!, yname])
       push!(axes, ax)
    end
 
@@ -294,4 +295,162 @@ function draw_pct_bphs(result::SimulationResult)
 
    # Return figure
    return fig
+end
+
+function draw_phase(df, xcol)
+   x = df[!, xcol]
+
+   # Prepare 
+   fig = Figure(; figure_padding = 1)
+   ax_common = (;
+      width = 300,
+      height = 300,
+      xticks = WilkinsonTicks(7; k_min = 5, k_max = 10),
+      yticks = WilkinsonTicks(7; k_min = 5, k_max = 10),
+   )
+
+   # Rice percentage
+   ax = ax1 = Axis(fig[1, 2]; ax_common...)
+   s1 = scatter!(
+      ax,
+      x,
+      df[!, :pct_rices];
+      color = COLORSCHEME.color2,
+      label = latex_name(:pct_rices),
+   )
+
+   # Rice destruction speed
+   ax = ax2 = Axis(fig[1, 3]; ax_common...)
+   s2 = scatter!(
+      ax,
+      x,
+      df[!, :spd_rices];
+      color = COLORSCHEME.color1,
+      label = latex_name(:spd_rices),
+   )
+
+   # BPH population
+   ax = ax3 = Axis(fig[1, 1]; ax_common...)
+   s3a = scatter!(
+      ax,
+      x,
+      df[!, :pct_nymphs];
+      color = COLORSCHEME.color5,
+      label = latex_name(:pct_nymphs),
+   )
+   s3b = scatter!(
+      ax,
+      x,
+      df[!, :pct_brachys];
+      color = COLORSCHEME.color3,
+      label = latex_name(:pct_brachys),
+   )
+   s3c = scatter!(
+      ax,
+      x,
+      df[!, :pct_macros];
+      color = COLORSCHEME.color4,
+      label = latex_name(:pct_macros),
+   )
+
+   # Legend
+   let scatters = [s1, s2, s3a, s3b, s3c]
+      labels = [s.label for s in scatters]
+
+      # Dummy legend for x-axis
+      _, _, s = scatter(
+         [1], [1]; color = :black, marker = :rect
+      )
+      push!(scatters, s)
+      push!(
+         labels,
+         LaTeXString("\$x\$-axis: $(latex_name(xcol))"),
+      )
+
+      Legend(
+         fig[2, 1:3],
+         scatters,
+         labels;
+         labelsize = latex_font_size,
+         orientation = :horizontal,
+         tellwidth = true,
+         tellheight = true,
+      )
+   end
+
+   # Resize figure and font stuffs
+   ax1.xlabelsize = latex_font_size
+   ax2.xlabelsize = latex_font_size
+   ax3.xlabelsize = latex_font_size
+   linkxaxes!(ax1, ax2, ax3)
+   resize_to_layout!(fig)
+   return fig
+end
+
+function draw_phase_2f(df, xname, yname, zname)
+   fig = Figure(; figure_padding = 1)
+   legend_height = 48
+   ax = Axis3(
+      fig[1, 1];
+      xlabel = latex_name(xname),
+      ylabel = latex_name(yname),
+      zlabel = latex_name(zname),
+      width = 300 + legend_height,
+      height = 300,
+      xticks = WilkinsonTicks(7; k_min = 5, k_max = 10),
+      yticks = WilkinsonTicks(7; k_min = 5, k_max = 10),
+      zticks = WilkinsonTicks(7; k_min = 5, k_max = 10),
+      viewmode = :stretch,
+   )
+
+   # Scatter points
+   color = [
+      (COLORSCHEME.color2, min(1.0f0, z + 0.5f0)) for
+      z in df[!, zname]
+   ]
+   scatter!(
+      ax,
+      df[!, xname],
+      df[!, yname],
+      df[!, zname];
+      label = latex_name(yname),
+      color,
+   )
+
+   x = [minimum(df[!, xname]), maximum(df[!, xname])]
+   y = [minimum(df[!, yname]), maximum(df[!, yname])]
+   z = fill(minimum(filter(!isnan, df[!, zname])), 2, 2)
+   surface!(
+      x,
+      y,
+      z;
+      color = (COLORSCHEME.color1, 0.2),
+      label = LaTeXString("lower bound"),
+   )
+
+   z = fill(maximum(filter(!isnan, df[!, zname])), 2, 2)
+   surface!(
+      x,
+      y,
+      z;
+      color = (COLORSCHEME.color2, 0.2),
+      label = LaTeXString("higher bound"),
+   )
+
+   zlims!(ax, 0, 1)
+
+   # Legend
+   Legend(
+      fig[2, 1],
+      ax;
+      orientation = :horizontal,
+      labelsize = latex_font_size,
+      height = legend_height,
+   )
+
+   # Resize figure to axes
+   rowgap!(fig.layout, 0)
+   resize_to_layout!(fig)
+   trim!(fig.layout)
+   fig
 end
