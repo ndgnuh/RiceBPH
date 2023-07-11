@@ -159,7 +159,7 @@ function visualize_num_bphs(result)
       label = LaTeXString("\$N_I = $(factor_value)\$")
 
       # Plot mean + std plot with a band and a middle line
-      #= band!(ax, t, μ - σ, μ + σ; color = (color, 0.3)) =#
+      band!(ax, t, μ - σ, μ + σ; color = (color, 0.3))
       lines!(ax, t, μ; linewidth = 2.5, label, color)
 
       # Increase count
