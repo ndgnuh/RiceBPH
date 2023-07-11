@@ -113,11 +113,12 @@ function visualize_num_bphs(result)
    factor_name = only(result.factors)
 
    # Axis setup
-   day_step = 10
+   day_step = 14
    xticks = 0:(day_step*24):maximum(df.step)
    ax = Axis(
       fig[1, 1];
       xticks = (xticks, (string ∘ Int).(xticks / 24)),
+      yticks = WilkinsonTicks(7; k_min = 5, k_max = 10),
       xlabel = "Day",
       ylabel = "Number of BPHs",
    )
@@ -131,18 +132,18 @@ function visualize_num_bphs(result)
    # Group by input factors
    for group in groupby(df, result.factors)
       # Compute step-wise mean and standard deviation
-      stats = combine(groupby(group, :step)) do row
-         x = row.num_bphs
-         μ = mean(x)
-         σ = std(x)
-         (; t = only(unique(row.step)), μ, σ)
-      end
-      sort!(stats, :t)
+      # statistics over multiple seeds
+      subgroups = groupby(group, :step)
+      stats = combine(
+         subgroups,
+         :num_bphs => mean => :num_bphs,
+         :num_bphs => std => :err,
+      )
 
       # Collect
-      t = stats.t
-      μ = stats.μ
-      σ = stats.σ
+      t = stats.step
+      μ = stats.num_bphs
+      σ = stats.err
 
       # Adjust axis scale
       max_y = max(
@@ -151,8 +152,6 @@ function visualize_num_bphs(result)
       min_y = min(
          min_y, trunc(Int, minimum(μ - σ) / 100) * 100
       )
-      @info length(t), length(unique(t))
-      @info length(μ)
 
       # Formatting
       color = COLORSCHEME2[count]
@@ -165,10 +164,8 @@ function visualize_num_bphs(result)
 
       # Increase count
       count = count + 1
-      break
    end
 
-   # Reticks y axis
    fig[1, 2] = Legend(
       fig,
       ax,
