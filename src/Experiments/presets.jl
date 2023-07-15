@@ -51,7 +51,7 @@ const SOBOL_FLOWER_P0_WIDE = SobolInput(;
 
 const SCAN_N0 = ModelOFAT(;
    factor = "init_num_bphs",
-   values = "trunc.(Int, exp10.(range(start=log10(10), stop=log10(1000), length=10)))",
+   values = "trunc.(Int, exp10.(range(start=log10(50), stop=log10(500), length=10)))",
    num_steps = 2881,
    num_replications = 100,
    output = "outputs/scan-num-init-bphs",
