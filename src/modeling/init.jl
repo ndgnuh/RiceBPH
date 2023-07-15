@@ -88,7 +88,9 @@ end
 
 Construct a [`ModelProperties`](@ref) from [`ModelParameters`](@ref).
 """
-function init_properties(parameters::ModelParameters, seed::Int)
+function init_properties(
+   parameters::ModelParameters, seed::Int
+)
    # unpack
    map_size = parameters.map_size
    flower_width = parameters.flower_width
@@ -226,22 +228,24 @@ we collect the initial data of interest and store them in the model state.
 function init_model(;
    seed::Union{Int, Nothing} = nothing,
    rng = nothing,
-   kwargs...
+   kwargs...,
 )
    parameters = ModelParameters(; kwargs...)
    init_model(parameters; seed, rng)
 end
 function init_model(
-   parameters; seed::Union{Int, Nothing} = nothing, rng,
+   parameters;
+   seed::Union{Int, Nothing} = nothing,
+   rng = nothing,
 )
-    # Init RNG
-    rng = if !isnothing(rng)
-        rng
-    elseif !isnothing(seed)
-        Xoshiro(seed)
-    else
-        Random.GLOBAL_RNG
-    end
+   # Init RNG
+   rng = if !isnothing(rng)
+      rng
+   elseif !isnothing(seed)
+      Xoshiro(seed)
+   else
+      Random.GLOBAL_RNG
+   end
 
    #
    # Parameters and properties
