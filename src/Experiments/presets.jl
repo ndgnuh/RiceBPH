@@ -76,3 +76,16 @@ const SCAN_ET = ModelOFAT(;
       :init_num_bphs => 200,
    ]),
 )
+
+const SCAN_SF_P0 = ModelParamScan(;
+   output = "output/scan-sf-p0",
+   num_replications = 100,
+   num_steps = 2881,
+   params = Dict(
+      "energy_transfer" => [0.03],
+      "map_size" => [125],
+      "flower_width" => collect(0:3:21),
+      "init_pr_eliminate" => collect(0.01f0:0.01f0:0.15f0),
+      "init_num_bphs" => [200],
+   ),
+)
