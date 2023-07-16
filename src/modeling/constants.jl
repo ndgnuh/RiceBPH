@@ -5,6 +5,7 @@ using ..Utils: @easy_name_map
 #
 # Cooldowns to X (hours)
 #
+# Suenaga (1963). b Mochida (1970). c Fukuda (1934). d Esaki and Sameshima (1937). eSoejitno et al(1974). f Kisimoto (1957). g Bae and Pathak (1970). h Kuwahara et al (1956). i Mochida (1964a).j Mochida (1964b)
 const CD_NYMPH = normal_hour_range(6, 13)
 const CD_F_ADULT = normal_hour_range(11, 16)
 const CD_M_ADULT = normal_hour_range(13, 15)
@@ -29,15 +30,17 @@ const MAX_NUM_OFFSPRINGS = 12
 
 const CD_B_1ST_REPRODUCE = normal_hour_range(0.8f0, 6.8f0)
 const CD_M_1ST_REPRODUCE = normal_hour_range(4.4f0, 10.4f0)
-const CD_B_NEXT_REPRODUCE = normal_range(CD_F_B_DEATH.μ / AVG_EGGS_B *
-                                         MIN_NUM_OFFSPRINGS,
-                                         CD_F_B_DEATH.μ / AVG_EGGS_B *
-                                         MAX_NUM_OFFSPRINGS)
-const CD_M_NEXT_REPRODUCE = normal_range(CD_F_M_DEATH.μ / AVG_EGGS_M *
-                                         MIN_NUM_OFFSPRINGS,
-                                         CD_F_M_DEATH.μ / AVG_EGGS_M *
-                                         MAX_NUM_OFFSPRINGS)
-const DST_NUM_OFFSPRINGS = normal_range(MIN_NUM_OFFSPRINGS, MAX_NUM_OFFSPRINGS)
+const CD_B_NEXT_REPRODUCE = normal_range(
+   CD_F_B_DEATH.μ / AVG_EGGS_B * MIN_NUM_OFFSPRINGS,
+   CD_F_B_DEATH.μ / AVG_EGGS_B * MAX_NUM_OFFSPRINGS,
+)
+const CD_M_NEXT_REPRODUCE = normal_range(
+   CD_F_M_DEATH.μ / AVG_EGGS_M * MIN_NUM_OFFSPRINGS,
+   CD_F_M_DEATH.μ / AVG_EGGS_M * MAX_NUM_OFFSPRINGS,
+)
+const DST_NUM_OFFSPRINGS = normal_range(
+   MIN_NUM_OFFSPRINGS, MAX_NUM_OFFSPRINGS
+)
 
 #
 # Population structure
@@ -50,17 +53,21 @@ const DST_NUM_OFFSPRINGS = normal_range(MIN_NUM_OFFSPRINGS, MAX_NUM_OFFSPRINGS)
 @easy_name_map Form
 const GENDER_DST = Weights([1.0f0, 1.69f0]) # male / female
 const FORM_DST = Weights([13.9f0, 15.4f0]) # brachys / macros
-const STAGE_DST = Weights([50.0f0, 70.7f0, 15.4f0 + 13.9f0, 0])
+const STAGE_DST = Weights([
+   50.0f0, 70.7f0, 15.4f0 + 13.9f0, 0
+])
 const GENDERS = collect(instances(Gender))
 const FORMS = collect(instances(Form))
 const STAGES = collect(instances(Stage))
 
 const MOVING_DIRECTIONS = let speed = 2
-    moving_range = (-speed):speed
-    square_radius = speed^2 + speed^2
-    [(dx, dy)
-     for (dx, dy) in Iterators.product(moving_range, moving_range)
-     if (dx^2 + dy^2) <= square_radius][:]
+   moving_range = (-speed):speed
+   square_radius = speed^2 + speed^2
+   [
+      (dx, dy) for (dx, dy) in
+      Iterators.product(moving_range, moving_range) if
+      (dx^2 + dy^2) <= square_radius
+   ][:]
 end
 
 #
@@ -94,7 +101,20 @@ Indicates which data to be appeared in the final results.
 This constant is for replications.
 The data to be collected is all the statistics in the [`ModelProperties`](@ref).
 """
-const MDATA = [:pct_rices, :num_eggs, :num_nymphs, :num_brachys, :num_macros, :num_females, :seed, :map_size, :flower_width, :init_num_bphs, :init_pr_eliminate, :energy_transfer]
+const MDATA = [
+   :pct_rices,
+   :num_eggs,
+   :num_nymphs,
+   :num_brachys,
+   :num_macros,
+   :num_females,
+   :seed,
+   :map_size,
+   :flower_width,
+   :init_num_bphs,
+   :init_pr_eliminate,
+   :energy_transfer,
+]
 
 """
 Alias for [`MDATA`](@ref).
@@ -124,14 +144,20 @@ r_{M} & =\left(n_{M}+1\varepsilon\right)/\left(n_{\text{BPH}}+3\varepsilon\right
 \end{align}
 ```
 """
-const MDATA_EXPL = [:pct_rices, num_bphs, pct_females, pct_nymphs, pct_brachys]
+const MDATA_EXPL = [
+   :pct_rices,
+   num_bphs,
+   pct_females,
+   pct_nymphs,
+   pct_brachys,
+]
 
 #
 # Misc
 #
 @enum CellType::Bool FlowerCell RiceCell
 function Base.convert(::Type{Bool}, celltype::CellType)
-    return Bool(celltype)
+   return Bool(celltype)
 end
 
 #
@@ -151,7 +177,9 @@ CellType, FlowerCell, RiceCell
 @doc """
 Distribution of cooldown time from one stage to another. See [](@ref constants).
 """
-CD_NYMPH, CD_F_ADULT, CD_M_ADULT, CD_M_DEATH, CD_F_M_DEATH, CD_F_B_DEATH
+CD_NYMPH,
+CD_F_ADULT, CD_M_ADULT, CD_M_DEATH, CD_F_M_DEATH,
+CD_F_B_DEATH
 
 @doc """
 Stages of BPHs agent, represented by a Int8 value. The stages are:
