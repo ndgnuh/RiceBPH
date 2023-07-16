@@ -21,7 +21,11 @@ function fit_rices(
    result::SimulationResult, groupkey = result.seed_factors
 )
    df::DataFrame = result.df
-   combine(groupby(df, groupkey)) do g
+   groups = groupby(df, groupkey)
+   total = length(groups)
+   pbar = Progress(total, "Fitting rice")
+
+   combine(groups) do g
       g = sort(g, :step)
 
       # Last rice
@@ -42,6 +46,11 @@ function fit_rices(
       end
 
       spd_rices = fit.converged ? first(fit.param) : NaN32
+
+      # GC just to be sure
+      # Julia has this habit of GC lazily and only after reduction
+      next!(pbar)
+      GC.gc()
       return (; pct_rices, spd_rices)
    end
 end
