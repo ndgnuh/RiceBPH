@@ -18,13 +18,16 @@ function get_param_basenames(_::RiceLogistic)
 end
 
 function fit_rices(
-   result::SimulationResult, groupkey = result.seed_factors
+   result::SimulationResult,
+   groupkey = result.seed_factors;
+   gc = false,
 )
    df::DataFrame = result.df
    groups = groupby(df, groupkey)
    total = length(groups)
    pbar = Progress(total, "Fitting rice")
 
+   count = 0
    combine(groups) do g
       g = sort(g, :step)
 
@@ -50,7 +53,11 @@ function fit_rices(
       # GC just to be sure
       # Julia has this habit of GC lazily and only after reduction
       next!(pbar)
-      GC.gc()
+      GC.safepoint()
+      count = count + 1
+      if gc && count == 100
+         GC.gc()
+      end
       return (; pct_rices, spd_rices)
    end
 end
