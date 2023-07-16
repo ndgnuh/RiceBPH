@@ -167,38 +167,9 @@ function Base.run(config::SobolInput)
    configurations = gen_configurations(config)
    @info "Number of configuration: $(length(configurations))"
 
-   result_files = let outputdir = mktempdir()
-      @info "intermediate result will be saved to $outputdir"
-      @showprogress pmap(configurations) do params
-         # Auxiliary output
-         # When running large number of simulations
-         # Storing all the intermediate results
-         # will cause OOM
-         outputfile = joinpath(
-            outputdir, string(params[:seed])
-         )
+   # Replicate run
+   final_result = run_multi_configurations(configurations)
 
-         # Init and run
-         model = M.init_model(; params...)
-         mdf = M.run_ricebph!(model)
-
-         # Without this, oom
-         type_compress!(mdf; compress_float = true)
-
-         # Store intermediate result and only return the file name
-         savejdf(outputfile, mdf)
-         GC.gc()
-         return outputfile
-      end
-   end
-
-   # TODO:
-   # Worst case scenario: the computer does not 
-   # have enough memory to load everything
-   all_result = mapreduce(vcat, result_files) do file
-      @info file
-      DataFrame(JDF.loadjdf(file))
-   end
-   JDF.savejdf(output_file, all_result)
+   JDF.savejdf(output_file, final_result)
    @info "Output written to $(output_file)"
 end

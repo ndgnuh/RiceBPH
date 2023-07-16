@@ -31,7 +31,7 @@ const SOBOL_FLOWER_P0 = SobolInput(;
    num_samples = 100,
    output = "outputs/flower-p0",
    energy_transfer = (0.03f0, 0.03f0),
-   init_pr_eliminate = (0.0f0, 0.2f0),
+   init_pr_eliminate = (0.0f0, 0.3f0),
    flower_width = (0, 21),
    init_num_bphs = (200, 200),
    order = [2],
@@ -51,7 +51,7 @@ const SOBOL_FLOWER_P0_WIDE = SobolInput(;
 
 const SCAN_N0 = ModelOFAT(;
    factor = "init_num_bphs",
-   values = "trunc.(Int, exp10.(range(start=log10(50), stop=log10(500), length=10)))",
+   values = "trunc.(Int, range(25, 500, length=20))",
    num_steps = 2881,
    num_replications = 100,
    output = "outputs/scan-num-init-bphs",
@@ -65,7 +65,7 @@ const SCAN_N0 = ModelOFAT(;
 
 const SCAN_ET = ModelOFAT(;
    factor = "energy_transfer",
-   values = "0.01f0:0.005f0:0.1f0",
+   values = "range(0.005f0, 0.1f0, length=20)",
    num_steps = 2881,
    num_replications = 100,
    output = "outputs/scan-energy-transfer",
@@ -84,9 +84,46 @@ const SCAN_SF_P0 = ModelParamScan(;
    params = Dict(
       "energy_transfer" => [0.03],
       "map_size" => [125],
-      "flower_width" => collect(0:3:21),
+      "flower_width" => 2:2:20,
       "init_pr_eliminate" =>
-         collect(range(0.01f0, 0.15f0; length = 8)),
+         collect(range(0.03f0, 0.3f0; length = 10)),
       "init_num_bphs" => [200],
    ),
+)
+
+const SCAN_SF_P0_WIDE = ModelParamScan(;
+   output = "outputs/scan-sf-p0-wide",
+   num_replications = 10,
+   num_steps = 2881,
+   params = Dict(
+      "energy_transfer" => [0.03],
+      "map_size" => [125],
+      "flower_width" => 2:2:40,
+      "init_pr_eliminate" =>
+         collect(range(0.05f0, 1.0f0; length = 20)),
+      "init_num_bphs" => [200],
+   ),
+)
+
+const SCAN_DUMMY = ModelParamScan(;
+   output = "outputs/scan-dev",
+   num_replications = 3,
+   num_steps = 2881,
+   params = Dict(
+      "energy_transfer" => [0.03],
+      "map_size" => [125],
+      "flower_width" => [10, 20],
+      "init_pr_eliminate" => [0.2f0, 0.3f0],
+      "init_num_bphs" => [200],
+   ),
+)
+
+const SOBOL_DUMMY = SobolInput(;
+   num_samples = 10,
+   output = "outputs/sobol-dev",
+   energy_transfer = (0.01f0, 0.1f0),
+   init_pr_eliminate = (0.0f0, 0.0f0),
+   flower_width = (0, 0),
+   init_num_bphs = (200, 200),
+   nboot = 1,
 )

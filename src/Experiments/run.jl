@@ -137,48 +137,17 @@ function Base.run(config::ModelParamScan)
    end
    ignores = Symbol.(ignores_str)
 
-   # Replicate
-   total = length(configurations)
-   results = mapreduce(
+   # Create configurations over seed first
+   configurations = mapreduce(
       vcat, enumerate(configurations)
    ) do (i, params)
-      @info "Configuration #$(i)/$(total): $(params)"
-
-      # Run with each seed
-      results = @showprogress pmap(
-         1:num_replications
-      ) do seed
-         # Init and run
-         model = init_model(; seed = seed, params...)
-         _, mdf = run!(
-            model,
-            agent_step!,
-            model_step!,
-            num_steps;
-            mdata = Models.MDATA,
-         )
-
-         # Populate with factor name and seed
-         num_rows = size(mdf, 1)
-         for (key, value) in params
-            if !(key in ignores)
-               mdf[!, key] = fill(value, num_rows)
-            end
-         end
-         mdf[!, :seed] = fill(seed, num_rows)
-
-         # Without this, oom
-         type_compress!(mdf; compress_float = true)
-         GC.gc()
-         return mdf
+      map(1:num_replications) do seed
+         Dict(:seed => seed, params...)
       end
-      agg = reduce(vcat, results)
-      return agg
    end
 
-   #
-   # Store results
-   #
-   JDF.save(output, results)
+   # Run simulations
+   final_result = run_multi_configurations(configurations)
+   JDF.save(output, final_result)
    @info "Output written to $(output)"
 end
