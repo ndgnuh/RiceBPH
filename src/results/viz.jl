@@ -383,7 +383,9 @@ function draw_phase(df, xcol)
    return fig
 end
 
-function draw_phase_2f(df, xname, yname, zname)
+function draw_phase_2f(
+   df, xname, yname, zname; limit01 = false
+)
    fig = Figure(; figure_padding = (10, 1, 1, 1))
    legend_height = 32
    ax = Axis3(
@@ -433,7 +435,9 @@ function draw_phase_2f(df, xname, yname, zname)
    surface!(ax, x, y, z; color = (COLORSCHEME.color2, 0.2))
 
    # Fix z axis scale
-   zlims!(ax, 0, 1)
+   if limit01
+      zlims!(ax, 0, 1)
+   end
 
    # Legend
    _, _, sl = scatter(
@@ -441,14 +445,14 @@ function draw_phase_2f(df, xname, yname, zname)
       [1];
       marker = :rect,
       color = COLORSCHEME.color1,
-      label = LaTeXString("Lower bound"),
+      label = LaTeXString(L"\min"),
    )
    _, _, sh = scatter(
       [1],
       [1];
       marker = :rect,
       color = COLORSCHEME.color2,
-      label = LaTeXString("Higher bound"),
+      label = LaTeXString(L"\max"),
    )
    Legend(
       fig[2, 1],
@@ -464,4 +468,57 @@ function draw_phase_2f(df, xname, yname, zname)
    resize_to_layout!(fig)
    Makie.trim!(fig.layout)
    fig
+end
+
+function draw_scan_heatmap(
+   statsdf,
+   xname,
+   yname,
+   zname;
+   colormap = :grays,
+   text_color_low = :white,
+   text_color_high = :black,
+)
+   # Unpack
+   fig = Figure()
+   x = statsdf[!, xname]
+   y = statsdf[!, yname]
+   z = statsdf[!, zname]
+
+   # To heatmap args
+   all_x = unique(x)
+   all_y = unique(y)
+   xsize = length(all_x)
+   ysize = length(all_y)
+   zmap = reshape(z, xsize, ysize)
+
+   # Draw heatmap
+   ax = Axis(
+      fig[1, 1];
+      xticks = (1:xsize, format_float.(all_x)),
+      yticks = (1:ysize, format_float.(all_y)),
+   )
+   heatmap!(ax, 1:xsize, 1:ysize, zmap; colormap = colormap)
+
+   # Put target text on the formap
+   text_color_threshold = mean(zmap)
+   for i in 1:xsize, j in 1:ysize
+      zij = zmap[i, j]
+      text = format_float(zij)
+
+      # Text property
+      color = if zij > text_color_threshold
+         text_color_high
+      else
+         text_color_low
+      end
+      position = (i, j)
+      align = (:center, :center)
+
+      # Yank
+      text!(ax, text; color, position, align)
+   end
+
+   # Return figure
+   return fig
 end
