@@ -52,16 +52,51 @@ function plot_sobol_sa(figdir)
       end
 
       # If multiple inputs
+      #
       if num_inputs == 2
-         outputpath = basename(config.output)
-         outputpath = "phase-$(outputpath).png"
-         outputpath = joinpath(figdir, outputpath)
-         fig = R.draw_phase_2f(
-            df, result.factors..., :pct_rices
+         # 3d phase diagram for rice related observations
+         limit01 = Dict(
+            :pct_rices => true, :spd_rices => false
          )
-         save(outputpath, fig; px_per_unit)
-         @info "Output written to $outputpath"
+         for observation in [:pct_rices, :spd_rices]
+            outputpath = basename(config.output)
+            outputpath = "phase-$(outputpath)-$(observation).png"
+            outputpath = joinpath(figdir, outputpath)
+            fig = R.draw_phase_2f(
+               df,
+               result.factors...,
+               observation;
+               limit01 = limit01[observation],
+            )
+            save(outputpath, fig; px_per_unit)
+            @info "Output written to $outputpath"
+         end
       end
+   end
+end
+
+function plot_scan_experiment(figdir)
+   config = E.SCAN_SF_P0
+   result = SimulationResult(config.output)
+   # scan heat map for 
+   fit_df = R.fit_rices(result)
+   stats = R.compute_stats(fit_df, result.factors)
+   xname, yname = result.factors
+
+   for zname in [:pct_rices, :spd_rices],
+      stat in [:mean, :std]
+
+      fig = R.draw_scan_heatmap(
+         getproperty(stats, stat),
+         "$(xname)_value",
+         "$(yname)_value",
+         zname;
+      )
+      outputpath = basename(config.output)
+      outputpath = "heat-$(stat)-$(outputpath)-$(zname).png"
+      outputpath = joinpath(figdir, outputpath)
+      save(outputpath, fig; px_per_unit)
+      @info "Output written to $outputpath"
    end
 end
 
@@ -122,7 +157,8 @@ function main()
    @info "Figure written to $output_file"
    result = nothing
 
-   #  result
+   # result
+   # plot_scan_experiment(figdir)
    plot_sobol_sa(figdir)
 end
 
