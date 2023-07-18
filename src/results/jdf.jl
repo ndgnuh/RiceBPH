@@ -113,6 +113,7 @@ end
 @kwdef struct SimulationResult
    factors::Vector{Symbol}
    seed_factors::Vector{Symbol}
+   output::String
    outputs::Vector{Symbol}
    num_replications::Int
    num_steps::Int
@@ -125,6 +126,7 @@ function Base.show(io::IO, r::SimulationResult)
    factors = join(r.factors, ",")
    num_cfgs = join(r.num_configurations, ", ")
    println(io, "SimulationResult:")
+   println(io, "\tFile: $(r.output)")
    println(io, "\tFactors: $factors")
    println(io, "\tNum steps: $(r.num_steps)")
    println(io, "\tNum replications: $(r.num_replications)")
@@ -135,9 +137,16 @@ function SimulationResult(paths::AbstractString...)
    df = mapreduce(vcat, paths) do path
       DataFrame(JDF.load(path))
    end
-   SimulationResult(df)
+   filename = if length(paths) > 1
+      "<mutliple-files>"
+   else
+      only(paths)
+   end
+   SimulationResult(df, filename)
 end
-function SimulationResult(df::DataFrame; infer = true)
+function SimulationResult(
+   df::DataFrame, filename::String; infer = true
+)
    type_compress!(df; compress_float = true)
    df = if infer
       df = infer_stats!(df)
@@ -187,6 +196,7 @@ function SimulationResult(df::DataFrame; infer = true)
    SimulationResult(;
       factors,
       seed_factors,
+      output = filename,
       outputs,
       df,
       configurations,
