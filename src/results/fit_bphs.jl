@@ -21,6 +21,9 @@ function fit_bphs(
             name => mean(_)
          end
       end
+
+      # Clean up
+      GC.gc(false)
       NamedTuple(results)
    end
 end
