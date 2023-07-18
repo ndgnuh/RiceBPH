@@ -198,4 +198,30 @@ function compute_observations(result::SimulationResult)
    )
 end
 
+function get_observation_path(result::SimulationResult)
+   joinpath(result.output, "observation")
+end
+
+function cached_compute_observations!(
+   result::SimulationResult
+)
+   ob_path = get_observation_path(result)
+   GC.gc()
+   if isfile(ob_path) || isdir(ob_path)
+      df = DataFrame(JDF.load(path))
+      return df
+   else
+      rice_params = fit_rices(result)
+      bph_params = fit_bphs(result)
+      df = innerjoin(
+         rice_params, bph_params; on = result.seed_factors
+      )
+      GC.gc()
+
+      # Cache the observation DF
+      JDF.save(ob_path, df)
+      return df
+   end
+end
+
 end # module Results

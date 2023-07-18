@@ -29,12 +29,9 @@ function main()
 
       # Fit 
       GC.gc()
-      ob = R.compute_observations(result)
+      R.cached_compute_observations!(result)
 
-      output_file = joinpath(
-         "observations", basename(config.output)
-      )
-      savejdf(output_file, ob)
+      output_file = R.get_observation_path(result)
       @info "Output written to $output_file"
    end
 end
