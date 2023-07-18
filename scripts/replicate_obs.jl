@@ -2,7 +2,7 @@ import RiceBPH.Experiments as E
 import RiceBPH.Results as R
 using JDF
 
-function main_observation()
+function main()
    # Dummy experiment to test the code
    #= rm(E.SCAN_DUMMY.output, force=true, recursive=true) =#
    #= rm(E.SOBOL_DUMMY.output, force=true, recursive=true) =#
@@ -32,3 +32,4 @@ function main_observation()
       @info "Output written to $output_file"
    end
 end
+main()
