@@ -77,9 +77,11 @@ end
 
 function plot_scan_experiment(figdir)
    config = E.SCAN_SF_P0
-   result = SimulationResult(config.output)
    # scan heat map for 
-   fit_df = R.fit_rices(result)
+   fit_df = R.cached_compute_observations!(config)
+   GC.gc()
+   result = R.SimulationResult(config.output)
+   GC.gc()
    stats = R.compute_stats(fit_df, result.factors)
    xname, yname = result.factors
 
@@ -91,6 +93,9 @@ function plot_scan_experiment(figdir)
          "$(xname)_value",
          "$(yname)_value",
          zname;
+         colormap = Makie.cgrad([
+            COLORSCHEME.color1, COLORSCHEME.color2
+         ]),
       )
       outputpath = basename(config.output)
       outputpath = "heat-$(stat)-$(outputpath)-$(zname).png"
@@ -158,7 +163,7 @@ function main()
    result = nothing
 
    # result
-   # plot_scan_experiment(figdir)
+   plot_scan_experiment(figdir)
    plot_sobol_sa(figdir)
 end
 
