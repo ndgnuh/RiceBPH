@@ -38,11 +38,7 @@ function run_multi_configurations(configurations)
       savejdf(outputfile, mdf)
 
       # GC 
-      GC.safepoint()
-      if i % 50 == 0
-         @everywhere GC.gc()
-      end
-
+      GC.gc(false)
       return outputfile
    end
 

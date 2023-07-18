@@ -497,7 +497,12 @@ function draw_scan_heatmap(
       fig[1, 1];
       xticks = (1:xsize, format_float.(all_x)),
       yticks = (1:ysize, format_float.(all_y)),
+      xlabel = latex_name(xname),
+      ylabel = latex_name(yname),
    )
+   ax.xlabelsize = latex_font_size
+   ax.ylabelsize = latex_font_size
+
    heatmap!(ax, 1:xsize, 1:ysize, zmap; colormap = colormap)
 
    # Put target text on the formap

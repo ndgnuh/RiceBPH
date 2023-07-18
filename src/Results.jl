@@ -202,23 +202,41 @@ function get_observation_path(config)
    joinpath(config.output, "observation")
 end
 
-function cached_compute_observations!(config)
-   result = SimulationResult(config.output)
-   ob_path = get_observation_path(result)
-   GC.gc()
+function cached_compute_observations!(
+   config; force::Bool = false
+)
+   ob_path = get_observation_path(config)
+   if force
+      rm(ob_path; force = true, recursive = true)
+   end
+
    if isfile(ob_path) || isdir(ob_path)
-      df = DataFrame(JDF.load(path))
+      df = DataFrame(JDF.load(ob_path))
       return df
    else
+      # Load result
+      result = SimulationResult(config.output)
+      GC.gc()
+
+      # Find rice params
       rice_params = fit_rices(result)
+      type_compress!(rice_params; compress_float = true)
+      GC.gc()
+
+      # Find bph params
       bph_params = fit_bphs(result)
+      type_compress!(bph_params; compress_float = true)
+      GC.gc()
+
+      # Join results
       df = innerjoin(
          rice_params, bph_params; on = result.seed_factors
       )
       GC.gc()
 
-      # Cache the observation DF
+      # Cache the observation DF and clean up
       JDF.save(ob_path, df)
+      GC.gc()
       return df
    end
 end
