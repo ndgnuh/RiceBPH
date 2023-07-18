@@ -22,16 +22,12 @@ function main()
       E.SCAN_SF_P0_WIDE,
    ]
    for config in configs
-      # Load
-      GC.gc()
-      result = R.SimulationResult(config.output)
-      @info "Computing observations for $(config.output)"
-
       # Fit 
       GC.gc()
-      R.cached_compute_observations!(result)
+      @info "Computing observations for $(config.output)"
+      R.cached_compute_observations!(config)
 
-      output_file = R.get_observation_path(result)
+      output_file = R.get_observation_path(config)
       @info "Output written to $output_file"
    end
 end
