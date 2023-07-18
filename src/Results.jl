@@ -198,13 +198,12 @@ function compute_observations(result::SimulationResult)
    )
 end
 
-function get_observation_path(result::SimulationResult)
-   joinpath(result.output, "observation")
+function get_observation_path(config)
+   joinpath(config.output, "observation")
 end
 
-function cached_compute_observations!(
-   result::SimulationResult
-)
+function cached_compute_observations!(config)
+   result = SimulationResult(config.output)
    ob_path = get_observation_path(result)
    GC.gc()
    if isfile(ob_path) || isdir(ob_path)
