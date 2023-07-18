@@ -94,7 +94,7 @@ function plot_scan_experiment(figdir)
          "$(yname)_value",
          zname;
          colormap = Makie.cgrad([
-            COLORSCHEME.color1, COLORSCHEME.color2
+            R.COLORSCHEME.color1, R.COLORSCHEME.color2
          ]),
       )
       outputpath = basename(config.output)
