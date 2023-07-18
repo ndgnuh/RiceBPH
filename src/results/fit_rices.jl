@@ -27,7 +27,6 @@ function fit_rices(
    total = length(groups)
    pbar = Progress(total, "Fitting rice")
 
-   count = 0
    combine(groups) do g
       g = sort(g, :step)
 
@@ -53,11 +52,7 @@ function fit_rices(
       # GC just to be sure
       # Julia has this habit of GC lazily and only after reduction
       next!(pbar)
-      GC.safepoint()
-      count = count + 1
-      if gc && count == 100
-         GC.gc()
-      end
+      GC.gc(false)
       return (; pct_rices, spd_rices)
    end
 end
