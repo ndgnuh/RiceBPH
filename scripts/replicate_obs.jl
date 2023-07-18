@@ -22,7 +22,13 @@ function main()
       E.SCAN_SF_P0_WIDE,
    ]
    for config in configs
+      # Load
+      GC.gc()
       result = R.SimulationResult(config.output)
+      @info "Computing observations for $(config.output)"
+
+      # Fit 
+      GC.gc()
       ob = R.compute_observations(result)
 
       output_file = joinpath(
