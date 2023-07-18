@@ -38,7 +38,9 @@ function run_multi_configurations(configurations)
       savejdf(outputfile, mdf)
 
       # GC 
-      GC.gc(false)
+      if i == 20
+         @everywhere GC.gc(false)
+      end
       return outputfile
    end
 
