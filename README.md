@@ -53,3 +53,9 @@ And then replicate the figures:
 julia --project scripts/replicate_figures.jl
 ```
 The figures will be stored in `figures`.
+
+If the replication is too slow, try using multi-processing. It's really simple:
+```shell
+# Eight processes
+julia -p 8 --project scripts/replicate_data.jl
+```
