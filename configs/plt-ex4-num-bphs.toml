@@ -1,8 +1,0 @@
-output = "figures/ex+N_I+n_A.png"
-normalize_y = false
-
-[data]
-path = "outputs/num-init-bphs"
-columns = ["pct_nymphs", "pct_macros", "pct_brachys"]
-stable_step = false
-
