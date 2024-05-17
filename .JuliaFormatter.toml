@@ -1,6 +1,6 @@
 style = "blue"
 indent = 3
-margin = 60
+margin = 84
 always_for_in = true
 for_in_replacement = "in"
 whitespace_typedefs = true
