@@ -18,9 +18,7 @@ function get_param_basenames(_::RiceLogistic)
 end
 
 function fit_rices(
-   result::SimulationResult,
-   groupkey = result.seed_factors;
-   gc = false,
+   result::SimulationResult, groupkey = result.seed_factors; gc = false
 )
    df::DataFrame = result.df
    groups = groupby(df, groupkey)
@@ -55,4 +53,61 @@ function fit_rices(
       GC.gc(false)
       return (; pct_rices, spd_rices)
    end
+end
+
+function fit_rice(steps, pct_rice)
+   params = [1.0f0, 1.0f0] # Lavenberg-Marquardt doesn't need super good initial
+   f = RiceLogistic(pct_rice[end], maximum(steps))
+   x = step * 1.0f0
+   y = pct_rice * 1.0f0
+   curve_fit(f, x, y, params)
+end
+
+struct PwLogistic
+   A2::Float32
+   L2::Float32
+   T0::Int
+   Tmax::Int
+end
+
+function (f::PwLogistic)(t, param)
+   A2, L2, T0, Tmax = f.A2, f.L2, f.T0, f.Tmax
+   t = @. t / Tmax
+   T0 = T0 / Tmax
+   B1, T1, B2, T2 = param
+
+   # Continous condition
+   w1 = 1 + exp(B1 * (T0 - T1))
+   w2 = 1 + exp(B2 * (T0 - T2))
+   A1 = ((A2 + (L2 - A2) / w2) * w1 - 1) / (w1 - 1 + 1e-6)
+
+   # Pieces
+   mask = @. t < T0
+   s1 = @. A1 + (1 - A1) / (1 + exp(B1 * (t - T1)))
+   s2 = @. A2 + (L2 - A2) / (1 + exp(B2 * (t - T2)))
+   @. mask * s1 + (1 - mask) * s2
+end
+
+function fit_rice_pw(steps, pct_rice)
+   # Find T0 
+   min_T = minimum(steps)
+   max_T = maximum(steps)
+   q1_T = trunc(Int, (max_T - min_T) * 0.25)
+   q3_T = trunc(Int, (max_T - min_T) * 0.75)
+   T0 = argmin(abs.(diff(pct_rice[q1_T:q3_T]))) + q1_T
+   L2 = pct_rice[T0]
+   A2 = pct_rice[end]
+
+   # Starting parameters
+   # Lavenberg-Marquardt doesn't need super good initial
+   # so this is good enough
+   B1, B2 = 1.0f0, 1.0f0
+   T1, T2 = 0.25f0, 0.75f0
+   params = [B1, T1, B2, T2]
+
+   # Fit data
+   f = PwLogistic(A2, L2, T0, max_T)
+   x = steps * 1.0f0
+   y = pct_rice * 1.0f0
+   f, curve_fit(f, x, y, params)
 end
