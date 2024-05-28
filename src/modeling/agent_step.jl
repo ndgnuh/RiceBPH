@@ -1,6 +1,8 @@
 using Random
 using ..Utils: @return_if
 
+const VERY_SMALL_NEGATIVE = -999999.0f0
+
 #
 # Agent actions: grow up, move, eat, reproduce and die
 #
@@ -35,7 +37,7 @@ function agent_action_growup!(agent, model)
    # Assign new stage cooldown
    #
    stage_cd_dist = get_stage_countdown(agent.stage, agent.gender, agent.form)
-   agent.stage_cd = trunc(Int16, rand(model.rng, stage_cd_dist))
+   agent.stage_cd = trunc(Int16, rand(abmrng(model), stage_cd_dist))
 end
 
 @doc raw"""
@@ -98,16 +100,17 @@ function agent_action_move!(agent, model)
    agent.energy = agent.energy - model.energy_consume
 
    # Sample a direction base on food
-   rng = model.rng
+   rng = abmrng(model)
    rice_map = model.rice_map
    cell_types = model.cell_types
    directions = shuffle!(rng, model.moving_directions)
+   verysmall = typemin(Int32) * 1.0f0
    direction_weights = map(directions) do (dx, dy)
       x2, y2 = (x + dx, y + dy)
-      rice = get(rice_map, (x2, y2), -Inf32)
+      rice = get(rice_map, (x2, y2), verysmall)
       cell_type = get(cell_types, (x2, y2), RiceCell)
       weight = (cell_type == FlowerCell) ? 0.5f0 : rice
-      weight = weight + (dx == 0) * (dy == 0) * (rice + -Inf32 * (rice == 0))
+      weight = weight + (dx == 0) * (dy == 0) * (rice + verysmall * (rice == 0))
       return weight
    end
    dx, dy = wsample(rng, directions, Weights(direction_weights))
@@ -152,6 +155,7 @@ function agent_action_eat!(agent, model)
    # Eat
    model.rice_map[x, y] -= transfer
    agent.energy += transfer
+   model.is_healthy[x, y] = model.rice_map[x, y] >= 0.5f0
 end
 
 @doc raw"""
@@ -220,10 +224,9 @@ See also: [`get_preoviposition_countdown`](@ref), [`get_reproduction_countdown`]
    # 
    # Reproduction
    #
-   rng = model.rng
+   rng = abmrng(model)
    num_offsprings = trunc(Int, rand(rng, DST_NUM_OFFSPRINGS))
    for _ in 1:num_offsprings
-      id = nextid(model)
       energy = agent.energy # copy from parent energy
       pos = agent.pos
       stage = Egg
@@ -232,10 +235,7 @@ See also: [`get_preoviposition_countdown`](@ref), [`get_reproduction_countdown`]
       form = wsample(rng, FORMS, FORM_DST)
       dist = get_preoviposition_countdown(form)
       reproduction_cd = trunc(Int, rand(rng, dist))
-      offspring = BPH(;
-         id, energy, pos, stage, stage_cd, form, gender, reproduction_cd
-      )
-      add_agent_pos!(offspring, model)
+      add_agent!(pos, model; energy, stage, stage_cd, form, gender, reproduction_cd)
    end
 
    #

@@ -90,7 +90,7 @@ function init_properties(parameters::ModelParameters, seed::Union{Int, Nothing})
    energy_consume = parameters.energy_transfer / 4.0f0
    rice_map = init_rice_map(map_size)
    cell_types = init_cell_types(map_size, flower_width)
-   is_rice = (cell_types .== RiceCell)
+   is_healthy = (cell_types .== RiceCell) # Initialy all healthy
 
    pr_eliminate_map = init_pr_eliminate(parameters.init_pr_eliminate, cell_types)
    moving_directions = copy(MOVING_DIRECTIONS)
@@ -115,7 +115,7 @@ function init_properties(parameters::ModelParameters, seed::Union{Int, Nothing})
       eliminate_positions,
       rice_map,
       cell_types,
-      is_rice,
+      is_healthy,
       rice_positions,
       num_rice_cells,
       parameters,
@@ -158,14 +158,13 @@ The state variables of agent ``i`` are initialized as follows:
 """
 function init_bphs!(model)
    parameters = model.parameters
-   rng = model.rng
+   rng = abmrng(model)
 
    positions = init_positions(
       rng, parameters.init_position, parameters.init_num_bphs, parameters.map_size
    )
    energy_dst = normal_range(0.0f0, 1.0f0)
    for pos::Tuple{Int, Int} in positions
-      id = nextid(model)
       energy = rand(rng, energy_dst)
       gender = wsample(rng, GENDERS, GENDER_DST)
       form = wsample(rng, FORMS, FORM_DST)
@@ -176,8 +175,7 @@ function init_bphs!(model)
       else
          randt(rng, Int16, get_preoviposition_countdown(form))
       end
-      agent = BPH(; id, energy, pos, gender, form, stage, stage_cd, reproduction_cd)
-      add_agent_pos!(agent, model)
+      add_agent!(pos, model; energy, gender, form, stage, stage_cd, reproduction_cd)
    end
 end
 
@@ -219,7 +217,9 @@ function init_model(parameters; seed::Union{Int, Nothing} = nothing, rng = nothi
    #
    space = GridSpace(properties.rice_map |> size; periodic = false)
    scheduler = Schedulers.ByProperty(:energy)
-   model = AgentBasedModel(BPH, space; rng, properties, scheduler)
+   model = AgentBasedModel(
+      BPH, space; agent_step!, model_step!, rng, properties, scheduler
+   )
 
    #
    # Initalize agents

@@ -81,9 +81,9 @@ Name          | Type      | Description                                        |
    rice_positions::Vector{CartesianIndex}
    num_rice_cells::Int
    cell_types::Matrix{CellType}
-   is_rice::Matrix{Bool}
    energy_consume::Float32
    moving_directions::Vector{Tuple{Int, Int}}
+   is_healthy::Matrix{Bool}
 
    # Statistics
    pct_rices::Float32 = 1.0f0
@@ -108,9 +108,7 @@ Variable | Type | Description
 `stage_cd` | `Int16` | The countdown to agent's next stage
 `reproduction_cd` | `Int16` | The countdown to agent's next reproduction
 """
-@kwdef mutable struct BPH <: AbstractAgent
-   id::Int
-   pos::Dims{2}
+@agent struct BPH(GridAgent{2})
    energy::Float16
    gender::Gender
    form::Form

@@ -44,9 +44,9 @@ function model_action_summarize!(model)
    #
    # Percentage of total rice energy
    #
-   rice_map = model.rice_map
-   is_rice = model.is_rice 
-   num_heathy_rice_cells = count(@. is_rice * (rice_map > 0.5))
+   #= rice_map = model.rice_map =#
+   #= is_rice = model.is_rice  =#
+   num_heathy_rice_cells = count(model.is_healthy)
    pct_rices = num_heathy_rice_cells / model.num_rice_cells
 
    #
@@ -57,7 +57,7 @@ function model_action_summarize!(model)
    num_macros = 0
    num_brachys = 0
    num_females = 0
-   for (_, agent) in (model.agents)
+   for agent in allagents(model)
       stage = agent.stage
       if agent.gender == Female && stage != Egg
          num_females = num_females + 1
@@ -102,7 +102,7 @@ function model_action_eliminate!(model)
       count = 0
       for agent in aip
          pr = pdf(dist, count)
-         if rand(model.rng, Float32) < pr
+         if rand(abmrng(model), Float32) < pr
             remove_agent!(agent, model)
             count = count + 1
          end
