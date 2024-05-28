@@ -45,10 +45,8 @@ function model_action_summarize!(model)
    # Percentage of total rice energy
    #
    rice_map = model.rice_map
-   num_heathy_rice_cells =
-      count(model.rice_positions) do idx
-         rice_map[idx] >= 0.5f0
-      end
+   is_rice = model.is_rice 
+   num_heathy_rice_cells = count(@. is_rice * (rice_map > 0.5))
    pct_rices = num_heathy_rice_cells / model.num_rice_cells
 
    #

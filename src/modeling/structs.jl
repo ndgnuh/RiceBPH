@@ -15,13 +15,13 @@ Variable            | Type                   | Default          | Description   
 `energy_transfer`   | `Float32`              | `0.032`          | The energy conversion from rice to BPHs.             | ``E_T``
 """
 @option struct ModelParameters
-    # Initialization parameters
-    flower_width::Int
-    init_num_bphs::Int
-    init_pr_eliminate::Float32
-    energy_transfer::Float32 = 0.032f0
-    map_size::Int = 125
-    init_position::InitPosition = Corner
+   # Initialization parameters
+   flower_width::Int
+   init_num_bphs::Int
+   init_pr_eliminate::Float32
+   energy_transfer::Float32 = 0.032f0
+   map_size::Int = 125
+   init_position::InitPosition = Corner
 end
 
 @doc raw"""
@@ -66,37 +66,38 @@ Name          | Type      | Description                                        |
 `num_females` | `Int`     | Number of female BPHs, counting nymphs and adults  | ``n_{F}``
 """
 @kwdef mutable struct ModelProperties
-    # Input parameters
-    seed::Union{Int, Nothing}
-    map_size::Int
-    flower_width::Int
-    init_num_bphs::Int
-    init_pr_eliminate::Float32
-    energy_transfer::Float32
+   # Input parameters
+   seed::Union{Int, Nothing}
+   map_size::Int
+   flower_width::Int
+   init_num_bphs::Int
+   init_pr_eliminate::Float32
+   energy_transfer::Float32
 
-    parameters::ModelParameters
-    rice_map::Matrix{Float32}
-    pr_eliminate_map::Matrix{Float32}
-    eliminate_positions::Vector{Tuple{Int, Int}}
-    rice_positions::Vector{CartesianIndex}
-    num_rice_cells::Int
-    cell_types::Matrix{CellType}
-    energy_consume::Float32
-    moving_directions::Vector{Tuple{Int, Int}}
+   parameters::ModelParameters
+   rice_map::Matrix{Float32}
+   pr_eliminate_map::Matrix{Float32}
+   eliminate_positions::Vector{Tuple{Int, Int}}
+   rice_positions::Vector{CartesianIndex}
+   num_rice_cells::Int
+   cell_types::Matrix{CellType}
+   is_rice::Matrix{Bool}
+   energy_consume::Float32
+   moving_directions::Vector{Tuple{Int, Int}}
 
-    # Statistics
-    pct_rices::Float32 = 1.0f0
-    num_eggs::Int = 0
-    num_nymphs::Int = 0
-    num_brachys::Int = 0
-    num_macros::Int = 0
-    num_females::Int = 0
+   # Statistics
+   pct_rices::Float32 = 1.0f0
+   num_eggs::Int = 0
+   num_nymphs::Int = 0
+   num_brachys::Int = 0
+   num_macros::Int = 0
+   num_females::Int = 0
 end
 
 """
 The BPH agents, with the following state variables.
 
-Variable | Type | Description 
+Variable | Type | Description
 :--- | :--- | :---
 `id`| `Int` | The agent identifier number
 `pos` | `Dims{2}` |  The agent's position on the environment grid
@@ -108,12 +109,12 @@ Variable | Type | Description
 `reproduction_cd` | `Int16` | The countdown to agent's next reproduction
 """
 @kwdef mutable struct BPH <: AbstractAgent
-    id::Int
-    pos::Dims{2}
-    energy::Float16
-    gender::Gender
-    form::Form
-    stage::Stage
-    stage_cd::Int16
-    reproduction_cd::Int16
+   id::Int
+   pos::Dims{2}
+   energy::Float16
+   gender::Gender
+   form::Form
+   stage::Stage
+   stage_cd::Int16
+   reproduction_cd::Int16
 end
