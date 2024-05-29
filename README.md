@@ -1,5 +1,9 @@
 # RiceBPH Model
 
+> TO REPLICATE THE RESULT FROM THE PAPER, PLEASE USE THIS BRANCH:
+> 
+> https://github.com/ndgnuh/RiceBPH/tree/paper-replicate
+
 This is a model to simulate the rice-brown plant hopper dynamic.
 The goal of this model is to research the effect of cultivated flower on the spread inside rice fields of brown plant hopper (a dangerous rice pest).
 
