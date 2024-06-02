@@ -88,9 +88,7 @@ end
 
 Construct a [`ModelProperties`](@ref) from [`ModelParameters`](@ref).
 """
-function init_properties(
-   parameters::ModelParameters, seed::Int
-)
+function init_properties(parameters::ModelParameters, seed)
    # unpack
    map_size = parameters.map_size
    flower_width = parameters.flower_width
