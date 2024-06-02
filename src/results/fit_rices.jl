@@ -56,7 +56,7 @@ function fit_rices(
 end
 
 function fit_rice(steps, pct_rice)
-   params = [1.0f0, 1.0f0] # Lavenberg-Marquardt doesn't need super good initial
+   params = [1.0f0, 0.5f0] # Lavenberg-Marquardt doesn't need super good initial
    f = RiceLogistic(pct_rice[end], maximum(steps))
    x = steps * 1.0f0
    y = pct_rice * 1.0f0
