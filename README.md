@@ -1,5 +1,6 @@
 # RiceBPH Model
 
+> We are cleaning up the code for this reporsitory.
 > To reproduce the result from the paper, please use this branch:
 > 
 > https://github.com/ndgnuh/RiceBPH/tree/paper-replicate
